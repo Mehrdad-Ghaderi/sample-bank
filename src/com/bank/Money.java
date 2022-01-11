@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 public class Money implements Serializable {
 
     private String currency;
-    private BigDecimal amount ;
+    private BigDecimal amount = new BigDecimal(String.valueOf(BigDecimal.ZERO));
 
     public Money(String currency, BigDecimal amount) {
         this.currency = currency;
@@ -18,6 +18,7 @@ public class Money implements Serializable {
 
         }
     }
+
 
     public void setCurrency(String currency) {
         this.currency = currency;

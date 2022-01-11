@@ -1,6 +1,7 @@
 package com.bank.repository;
 
 import com.bank.Client;
+import com.bank.Money;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -23,6 +24,9 @@ public class ClientRepository implements Serializable {
         for (Client client : clients) {
             if (client.getId().equals(newClient.getId())) {
                 System.out.println(newClient.getName() + ", ID: " + newClient.getId() + ", already exists in the bank");
+                if (!client.isMember()) {
+                    System.out.println("But " + client.getName() + " is deactivated");
+                }
                 return;
             }
         }
@@ -31,9 +35,21 @@ public class ClientRepository implements Serializable {
     }
 
     public void removeClient(Client client) {
+        if (!client.isMember()) {
+            System.out.println(client.getName() + " is no longer a member.\n Removal operation was unsuccessful.");
+            return;
+        }
         if (findClientById(client.getId()) != null) {
-            clients.remove(client);
-            System.out.println(client.getName() + " has been deleted from the bank repository");
+            for (Money foundMoney : client.getAccount().getMoneys()) {
+                System.out.println(foundMoney.getAmount() + " " + foundMoney.getCurrency() + " must be refunded to " + client.getName());
+                foundMoney.getAmount().subtract(foundMoney.getAmount());
+                System.out.println("The amount was refunded to the client, current balance: " + foundMoney.getAmount());
+            }
+
+            client.getAccount().setActive(false);
+            System.out.println("The account was deactivated.");
+            client.setMember(false);
+            System.out.println(client.getName() + "is no longer a member and has been deleted from the bank repository");
             return;
         }
         System.out.println(client.getName() + " does not exist in the bank repository.\n" +

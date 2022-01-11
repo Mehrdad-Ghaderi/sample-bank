@@ -9,7 +9,6 @@ import java.util.Scanner;
 
 public class Main {
     private static final Scanner scanner = new Scanner(System.in);
-    //private static Services services = new Services();
     static Bank bank = Services.restoreBackup();
     private static ClientRepository clientRepository = bank.getClientRepository();
     //private static AccountRepository accountRepository = bank.getAccountRepository();

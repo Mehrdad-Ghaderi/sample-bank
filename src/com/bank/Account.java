@@ -7,10 +7,12 @@ import java.util.ArrayList;
 public class Account implements Serializable {
 
     private int accountNumber;
+    private boolean active;
     private ArrayList<Money> moneys = new ArrayList<>();
     private ArrayList<Transaction> transactions = new ArrayList<>();
 
     public Account(String currency, BigDecimal amount) {
+        this.active = true;
         Bank.accountCounter++;
         this.accountNumber = Bank.getAccountCounter() + 100;
         System.out.println("Account number '" + this.accountNumber + "' was specified to the client.");
@@ -26,6 +28,14 @@ public class Account implements Serializable {
 
     }
 
+    public Money findMoneyByCurrency(String currency) {
+        for (Money foundMoney : moneys) {
+            if (foundMoney.getCurrency().equals(currency)) {
+                return foundMoney;
+            }
+        }
+        return null;
+    }
 
     public int getAccountNumber() {
         return accountNumber;
@@ -51,10 +61,19 @@ public class Account implements Serializable {
         this.transactions = transactions;
     }
 
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     @Override
     public String toString() {
         return "Account{" +
                 "accountNumber=" + accountNumber +
+                ", active=" + active +
                 ", moneys=" + moneys +
                 ", transactions=" + transactions +
                 '}';

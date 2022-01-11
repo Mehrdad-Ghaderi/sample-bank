@@ -59,6 +59,8 @@ public class Client implements Serializable {
         this.account = account;
     }
 
+
+
     @Override
     public String toString() {
         return "Client{" +
