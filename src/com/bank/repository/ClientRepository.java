@@ -48,7 +48,7 @@ public class ClientRepository implements Serializable {
             client.getAccount().setActive(false);
             System.out.println("The account was deactivated.");
             client.setMember(false);
-            System.out.println(client.getName() + "is no longer a member and has been deleted from the bank repository");
+            System.out.println(client.getName() + " is no longer a member and has been deleted from the bank repository");
             return;
         }
         System.out.println(client.getName() + " does not exist in the bank repository.\n" +

@@ -1,7 +1,9 @@
 package com.bank;
 
 //import com.bank.repository.AccountRepository;
+import com.bank.repository.AccountRepository;
 import com.bank.repository.ClientRepository;
+import com.bank.repository.TransactionRepository;
 //import com.bank.repository.TransactionRepository;
 
 import java.math.BigDecimal;
@@ -11,8 +13,8 @@ public class Main {
     private static final Scanner scanner = new Scanner(System.in);
     static Bank bank = Services.restoreBackup();
     private static ClientRepository clientRepository = bank.getClientRepository();
-    //private static AccountRepository accountRepository = bank.getAccountRepository();
-   // private static TransactionRepository transactionRepository = bank.getTransactionRepository();
+    private static AccountRepository accountRepository = bank.getAccountRepository();
+    private static TransactionRepository transactionRepository = bank.getTransactionRepository();
 
     public static void main(String[] args) {
         //This needs a go back option at all time, which is not written yet.
@@ -26,31 +28,26 @@ public class Main {
                 backup();
                 continue;
             }
-
             if (userInput == 2) {
                 updatePhoneNumber();
                 backup();
                 continue;
             }
-
             if (userInput == 3) {
                 removeClient();
                 backup();
                 continue;
             }
-
-
             if (userInput == 4) {
                 viewAllClients();
                 continue;
             }
-
             if (userInput == 0) {
                 System.out.println("The system was shut down bu the user.");
                 backup();
                 break;
             } else {
-                System.out.println("The option you chose is not available.");
+                System.out.println("The option you chose is not valid.");
             }
         }
 
