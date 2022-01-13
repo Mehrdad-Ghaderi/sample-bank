@@ -40,7 +40,7 @@ class Services implements Serializable{
             return new Bank();
     }
 
-    public static String getPATH() {
+    static String getPATH() {
         return PATH;
     }
 }

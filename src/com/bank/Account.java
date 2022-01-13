@@ -24,7 +24,9 @@ public class Account implements Serializable {
         System.out.println(transaction.toString());
     }
 
-    public Account() { // only for the bank account
+    public Account() {
+        // only for the bank account
+        this.setActive(true);
 
     }
 

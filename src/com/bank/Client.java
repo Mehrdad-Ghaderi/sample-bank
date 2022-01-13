@@ -48,11 +48,6 @@ public class Client implements Serializable {
         return account;
     }
 
-    public void setAccount(Account account) {
-        this.account = account;
-    }
-
-
 
     @Override
     public String toString() {

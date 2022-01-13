@@ -6,12 +6,12 @@ import java.math.BigDecimal;
 public class Money implements Serializable {
 
     private String currency;
-    private BigDecimal amount = new BigDecimal(String.valueOf(BigDecimal.ZERO));
+    private BigDecimal amount = BigDecimal.ZERO;
 
     public Money(String currency, BigDecimal amount) {
         this.currency = currency;
         if (amount.compareTo(BigDecimal.ONE) > 0) {
-            this.amount.add(amount);
+            this.amount = this.amount.add(amount);
         } else {
             System.out.println("Negative numbers cannot be applied as an initial amount.\n" +
                     "This operation deposit was unsuccessful.");

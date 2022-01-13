@@ -1,7 +1,10 @@
 package com.bank.repository;
 
 import com.bank.Client;
+import com.bank.Main;
 import com.bank.Money;
+import com.bank.Transaction;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -35,24 +38,24 @@ public class ClientRepository implements Serializable {
 
     public void removeClient(Client client) {
         if (!client.isMember()) {
-            System.out.println(client.getName() + " is no longer a member.\n Removal operation was unsuccessful.");
+            System.out.println(client.getName() + " is no longer a member.\n This removal operation was unsuccessful.");
             return;
         }
-        if (findClientById(client.getId()) != null) {
-            for (Money foundMoney : client.getAccount().getMoneys()) {
-                System.out.println(foundMoney.getAmount() + " " + foundMoney.getCurrency() + " must be refunded to " + client.getName());
-                foundMoney.getAmount().subtract(foundMoney.getAmount());
-                System.out.println("The amount was refunded to the client, current balance: " + foundMoney.getAmount());
-            }
 
-            client.getAccount().setActive(false);
-            System.out.println("The account was deactivated.");
-            client.setMember(false);
-            System.out.println(client.getName() + " is no longer a member and has been deleted from the bank repository");
-            return;
+        for (Money foundMoney : client.getAccount().getMoneys()) {
+            System.out.println(foundMoney.getAmount() + " " + foundMoney.getCurrency() + " must be refunded to " + client.getName());
+            Transaction transaction = new Transaction(foundMoney, Main.bank.getAccount(), client.getAccount());
+            Main.bank.getTransactionRepository().getTransactions().add(transaction);
+            foundMoney.setAmount(foundMoney.getAmount().subtract(foundMoney.getAmount()));
+            System.out.println("The amount was refunded to the client, current balance: " + foundMoney.getAmount());
         }
-        System.out.println(client.getName() + " does not exist in the bank repository.\n" +
-                "Removal operation was unsuccessful.");
+
+        client.getAccount().setActive(false);
+        System.out.println("The account was deactivated.");
+        client.setMember(false);
+        System.out.println(client.getName() + " is no longer a member and has been deleted from the bank repository");
+
+
     }
 
     public void viewAllClients() {

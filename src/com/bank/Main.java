@@ -11,10 +11,10 @@ import java.util.Scanner;
 
 public class Main {
     private static final Scanner scanner = new Scanner(System.in);
-    static Bank bank = Services.restoreBackup();
-    private static ClientRepository clientRepository = bank.getClientRepository();
-    private static AccountRepository accountRepository = bank.getAccountRepository();
-    private static TransactionRepository transactionRepository = bank.getTransactionRepository();
+    public static Bank bank = Services.restoreBackup();
+    public static ClientRepository clientRepository = bank.getClientRepository();
+    public static AccountRepository accountRepository = bank.getAccountRepository();
+    public static TransactionRepository transactionRepository = bank.getTransactionRepository();
 
     public static void main(String[] args) {
         //This needs a go back option at all time, which is not written yet.
@@ -53,35 +53,6 @@ public class Main {
 
     }
 
-    private static void updatePhoneNumber() {
-        System.out.println("CLIENT UPDATE:");
-        System.out.println("Enter the ID of the client whose phone number you would like to update:");
-        String id = getUserInputString();
-        Client foundClient = clientRepository.findClientById(id);
-        if (foundClient != null) {
-            System.out.println("Enter the new phone number:");
-            String newPhoneNumber = getUserInputString();
-            System.out.println(foundClient.getName() + "'s old phone number," + foundClient.getPhoneNumber() + ", was removed.");
-            foundClient.setPhoneNumber(newPhoneNumber);
-            System.out.println(foundClient.getName() + "'s new number has been set to " + newPhoneNumber + ".");
-        }
-    }
-
-    private static void viewAllClients() {
-        clientRepository.viewAllClients();
-    }
-
-    private static void removeClient() {
-        System.out.println("CLIENT REMOVAL:");
-        System.out.println("Enter the ID: ");
-        String id = getUserInputString();
-
-        Client client = clientRepository.findClientById(id);
-        if (client != null) {
-            clientRepository.removeClient(client);
-        }
-    }
-
     private static void addNewClient() {
         System.out.println("CLIENT ADDITION:");
         System.out.println("Enter the ID: ");
@@ -103,6 +74,35 @@ public class Main {
 
         Client newClient = new Client(name, phoneNumber, id, currency, amount);
         clientRepository.addClient(newClient);
+    }
+
+    private static void updatePhoneNumber() {
+        System.out.println("CLIENT UPDATE:");
+        System.out.println("Enter the ID of the client whose phone number you would like to update:");
+        String id = getUserInputString();
+        Client foundClient = clientRepository.findClientById(id);
+        if (foundClient != null) {
+            System.out.println("Enter the new phone number:");
+            String newPhoneNumber = getUserInputString();
+            System.out.println(foundClient.getName() + "'s old phone number," + foundClient.getPhoneNumber() + ", was removed.");
+            foundClient.setPhoneNumber(newPhoneNumber);
+            System.out.println(foundClient.getName() + "'s new number has been set to " + newPhoneNumber + ".");
+        }
+    }
+
+    private static void removeClient() {
+        System.out.println("CLIENT REMOVAL:");
+        System.out.println("Enter the ID: ");
+        String id = getUserInputString();
+
+        Client client = clientRepository.findClientById(id);
+        if (client != null) {
+            clientRepository.removeClient(client);
+        }
+    }
+
+    private static void viewAllClients() {
+        clientRepository.viewAllClients();
     }
 
     private static void printMenu() {
