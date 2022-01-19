@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 public class ClientRepository implements Serializable {
 
-    private final ArrayList<Client> clients = new ArrayList<>();
+    private final ArrayList<Client> clients = new ArrayList<>(); // Abbas
 
     public Client findClientById(String id) {
         for (Client client : clients) {
