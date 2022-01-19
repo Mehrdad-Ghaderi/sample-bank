@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 public class ClientRepository implements Serializable {
 
-    private ArrayList<Client> clients = new ArrayList<>();
+    private final ArrayList<Client> clients = new ArrayList<>();
 
     public Client findClientById(String id) {
         for (Client client : clients) {
@@ -71,7 +71,4 @@ public class ClientRepository implements Serializable {
         return clients;
     }
 
-    public void setClients(ArrayList<Client> clients) {
-        this.clients = clients;
-    }
 }
