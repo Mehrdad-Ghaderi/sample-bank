@@ -27,7 +27,6 @@ public class Account implements Serializable {
     public Account() {
         // only for the bank account
         this.setActive(true);
-
     }
 
     public Money findMoneyByCurrency(String currency) {
@@ -49,10 +48,6 @@ public class Account implements Serializable {
 
     public ArrayList<Money> getMoneys() {
         return moneys;
-    }
-
-    public void setMoneys(ArrayList<Money> moneys) {
-        this.moneys = moneys;
     }
 
     public ArrayList<Transaction> getTransactions() {

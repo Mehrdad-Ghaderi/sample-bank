@@ -35,7 +35,6 @@ public class Client implements Serializable {
         return id;
     }
 
-
     String getPhoneNumber() {
         return phoneNumber;
     }
@@ -47,7 +46,6 @@ public class Client implements Serializable {
     public Account getAccount() {
         return account;
     }
-
 
     @Override
     public String toString() {

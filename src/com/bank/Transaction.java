@@ -34,4 +34,5 @@ public class Transaction implements Serializable {
                 ", receiver=" + receiver +
                 '}';
     }
+
 }

@@ -9,7 +9,6 @@ class Services implements Serializable{
 
 
     static void backup(Object object, String path) {
-
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(path);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
@@ -22,7 +21,6 @@ class Services implements Serializable{
     }
 
     static Bank restoreBackup() {
-
         try {
             FileInputStream fileInputStream = new FileInputStream(PATH);
             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
@@ -31,7 +29,6 @@ class Services implements Serializable{
             if (bank != null) {
                 return bank;
             }
-
 
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -43,4 +40,5 @@ class Services implements Serializable{
     static String getPATH() {
         return PATH;
     }
+
 }

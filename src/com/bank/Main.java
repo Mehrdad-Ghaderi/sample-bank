@@ -1,15 +1,14 @@
 package com.bank;
 
-//import com.bank.repository.AccountRepository;
 import com.bank.repository.AccountRepository;
 import com.bank.repository.ClientRepository;
 import com.bank.repository.TransactionRepository;
-//import com.bank.repository.TransactionRepository;
 
 import java.math.BigDecimal;
 import java.util.Scanner;
 
 public class Main {
+
     private static final Scanner scanner = new Scanner(System.in);
     public static Bank bank = Services.restoreBackup();
     public static ClientRepository clientRepository = bank.getClientRepository();
@@ -17,8 +16,10 @@ public class Main {
     public static TransactionRepository transactionRepository = bank.getTransactionRepository();
 
     public static void main(String[] args) {
+
         //This needs a go back option at all time, which is not written yet.
         while (true) {
+
             printMenu();
 
             int userInput = getUserInputInt();
@@ -39,7 +40,7 @@ public class Main {
                 continue;
             }
             if (userInput == 4) {
-                viewAllClients();
+                printAllClients();
                 continue;
             }
             if (userInput == 0) {
@@ -50,7 +51,6 @@ public class Main {
                 System.out.println("The option you chose is not valid.");
             }
         }
-
     }
 
     private static void addNewClient() {
@@ -58,10 +58,12 @@ public class Main {
         System.out.println("Enter the ID: ");
         String id = getUserInputString();
         Client foundClient = clientRepository.findClientById(id);
+
         if (foundClient != null) {
             System.out.println("The client already exists in the bank > "+ foundClient.toString());
             return;
         }
+
         System.out.println("Enter the name:");
         String name = getUserInputString();
         System.out.println("Enter the phone number:");
@@ -81,6 +83,7 @@ public class Main {
         System.out.println("Enter the ID of the client whose phone number you would like to update:");
         String id = getUserInputString();
         Client foundClient = clientRepository.findClientById(id);
+
         if (foundClient != null) {
             System.out.println("Enter the new phone number:");
             String newPhoneNumber = getUserInputString();
@@ -94,14 +97,14 @@ public class Main {
         System.out.println("CLIENT REMOVAL:");
         System.out.println("Enter the ID: ");
         String id = getUserInputString();
-
         Client client = clientRepository.findClientById(id);
+
         if (client != null) {
             clientRepository.removeClient(client);
         }
     }
 
-    private static void viewAllClients() {
+    private static void printAllClients() {
         clientRepository.viewAllClients();
     }
 
@@ -144,13 +147,11 @@ public class Main {
                 System.out.println("Please enter ONLY numbers.\nTry again:");
             }
             scanner.nextLine();
-
         }
     }
 
     private static void backup() {
         Services.backup(bank, Services.getPATH());
-
     }
 
 }

@@ -15,13 +15,7 @@ public class Money implements Serializable {
         } else {
             System.out.println("Negative numbers cannot be applied as an initial amount.\n" +
                     "This operation deposit was unsuccessful.");
-
         }
-    }
-
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
     }
 
     public void setAmount(BigDecimal amount) {
