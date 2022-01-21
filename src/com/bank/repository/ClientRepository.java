@@ -1,12 +1,8 @@
 package com.bank.repository;
 
 import com.bank.Client;
-import com.bank.Main;
-import com.bank.Money;
-import com.bank.Transaction;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -56,21 +52,6 @@ public class ClientRepository implements Serializable {
             return;
         }
 
-        for (Money foundMoney : client.getAccount().getMoneys()) {
-
-            if (foundMoney.getAmount().compareTo(BigDecimal.ZERO) == 0) {
-                continue;
-            }
-
-            System.out.println(foundMoney.getAmount() + " " + foundMoney.getCurrency() + " must be refunded to " + client.getName());
-            Transaction transaction = new Transaction(foundMoney, client.getAccount(), Main.bank.getAccount());
-            Main.bank.getTransactionRepository().getTransactions().add(transaction);
-            foundMoney.setAmount(foundMoney.getAmount().subtract(foundMoney.getAmount()));
-            System.out.println("The amount was refunded to the client, current balance: " + foundMoney.getAmount());
-        }
-
-        client.getAccount().setActive(false);
-        System.out.println("The account was deactivated.");
         client.setMember(false);
         System.out.println(client.getName() + " is no longer a member and has been deleted from the bank repository");
     }

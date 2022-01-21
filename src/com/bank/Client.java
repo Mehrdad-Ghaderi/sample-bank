@@ -8,15 +8,12 @@ public class Client implements Serializable {
     private String name;
     private String id;
     private String phoneNumber;
-    private Account account;
 
-    Client(String name, String phoneNumber, String id, String currency, BigDecimal amount) {
+    Client(String name, String phoneNumber, String id) {
         this.isMember = true;
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.id = id;
-        this.account = new Account(currency, amount);
-        Main.bank.getAccountRepository().getAccounts().add(account);
     }
 
     public boolean isMember() {
@@ -43,10 +40,6 @@ public class Client implements Serializable {
         this.phoneNumber = phoneNumber;
     }
 
-    public Account getAccount() {
-        return account;
-    }
-
     @Override
     public String toString() {
         return "Client{" +
@@ -54,7 +47,6 @@ public class Client implements Serializable {
                 ", name='" + name + '\'' +
                 ", id='" + id + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
-                ", account=" + account +
                 '}';
     }
 }

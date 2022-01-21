@@ -1,8 +1,6 @@
 package com.bank;
 
-import com.bank.repository.AccountRepository;
 import com.bank.repository.ClientRepository;
-import com.bank.repository.TransactionRepository;
 
 import java.math.BigDecimal;
 import java.util.Scanner;
@@ -12,8 +10,6 @@ public class Main {
     private static final Scanner scanner = new Scanner(System.in);
     public static Bank bank = Services.restoreBackup();
     public static ClientRepository clientRepository = bank.getClientRepository();
-    public static AccountRepository accountRepository = bank.getAccountRepository();
-    public static TransactionRepository transactionRepository = bank.getTransactionRepository();
 
     public static void main(String[] args) {
 
@@ -74,7 +70,7 @@ public class Main {
         System.out.println("Enter The amount the client would like to deposit:");
         BigDecimal amount = getUserInputBigDecimal();
 
-        Client newClient = new Client(name, phoneNumber, id, currency, amount);
+        Client newClient = new Client(name, phoneNumber, id);
         clientRepository.addClient(newClient);
     }
 
