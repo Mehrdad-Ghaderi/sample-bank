@@ -3,6 +3,7 @@ package com.bank;
 import java.io.Serializable;
 
 public class Client implements Serializable {
+
     private boolean isMember;
     private String name;
     private String id;

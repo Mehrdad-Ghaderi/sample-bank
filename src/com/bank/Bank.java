@@ -6,7 +6,6 @@ import java.io.Serializable;
 
 public class Bank implements Serializable {
 
-    private static int accountCounter = 0;
     private String name = "TNB";
     private ClientRepository clientRepository = new ClientRepository();
 
@@ -17,16 +16,8 @@ public class Bank implements Serializable {
         return name;
     }
 
-    public static int getAccountCounter() {
-        return accountCounter;
-    }
-
     public ClientRepository getClientRepository() {
         return clientRepository;
-    }
-
-    public static void setAccountCounter(int accountCounter) {
-        Bank.accountCounter = accountCounter;
     }
 
     public void setName(String name) {

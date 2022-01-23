@@ -3,6 +3,7 @@ package com.bank;
 import com.bank.repository.ClientRepository;
 import com.bank.service.BackupService;
 
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main {
@@ -14,7 +15,6 @@ public class Main {
     public static void main(String[] args) {
         //This needs a go back option at all time, which is not written yet.
         while (true) {
-
             printMenu();
 
             int userInput = getUserInputInt();
@@ -38,6 +38,11 @@ public class Main {
                 printAllClients();
                 continue;
             }
+            if (userInput == 5) {
+                activateOrDeactivateClient();
+                backup();
+                continue;
+            }
             if (userInput == 0) {
                 System.out.println("The system was shut down by the user.");
                 backup();
@@ -48,14 +53,30 @@ public class Main {
         }
     }
 
+    private static void activateOrDeactivateClient() {
+        System.out.println("Enter the client ID:");
+        String id = getUserInputString();
+        Client foundClient = clientRepository.getClientById(id);
+        if (foundClient == null) {
+            return;
+        }
+        activateOrDeactivateClient(foundClient);
+    }
+
     private static void addNewClient() {
         System.out.println("CLIENT ADDITION:");
         System.out.println("Enter the ID: ");
         String id = getUserInputString();
-        Client foundClient = clientRepository.findClientById(id);
+        Client foundClient = clientRepository.getClientById(id);
 
         if (foundClient != null) {
             System.out.println("The client already exists in the bank > " + foundClient.toString());
+
+            if (foundClient.isNotMember()) {
+                activateOrDeactivateClient(foundClient);
+                return;
+            }
+
             return;
         }
 
@@ -68,11 +89,39 @@ public class Main {
         clientRepository.addClient(newClient);
     }
 
+    private static void activateOrDeactivateClient(Client client) {
+        String userChoice;
+
+        while (true) {
+            if (client.isNotMember()) {
+                System.out.println(client.getName() + " is inactive");
+                System.out.println("Press A to ACTIVATE the client's membership:");
+                userChoice = scanner.next().toUpperCase();
+                if (userChoice.equals("A")) {
+                    client.setMember(true);
+                    System.out.println(client.getName() + " has been activated.");
+                }
+                return;
+            }
+
+            System.out.println(client.getName() + " is active");
+            System.out.println("Press D to DEACTIVATE the client's membership,");
+            userChoice = scanner.next().toUpperCase();
+            if (userChoice.equals("D")) {
+                client.setMember(false);
+                System.out.println(client.getName() + " has been deactivated.");
+                return;
+            }
+
+            System.out.println("The input value was NOT valid.\n Please try again.");
+        }
+    }
+
     private static void updatePhoneNumber() {
         System.out.println("CLIENT UPDATE:");
         System.out.println("Enter the ID of the client whose phone number you would like to update:");
         String id = getUserInputString();
-        Client foundClient = clientRepository.findClientById(id);
+        Client foundClient = clientRepository.getClientById(id);
 
         if (foundClient != null) {
             System.out.println("Enter the new phone number:");
@@ -87,7 +136,7 @@ public class Main {
         System.out.println("CLIENT REMOVAL:");
         System.out.println("Enter the ID: ");
         String id = getUserInputString();
-        Client client = clientRepository.findClientById(id);
+        Client client = clientRepository.getClientById(id);
 
         if (client != null) {
             clientRepository.removeClient(client);
@@ -95,7 +144,13 @@ public class Main {
     }
 
     private static void printAllClients() {
-        clientRepository.printAllClients();
+        ArrayList<Client> clients = clientRepository.getAllClients();
+        for (Client client : clients) {
+            System.out.println(client.toString());
+        }
+        if (clients.isEmpty()) {
+            System.out.println("The bank has no clients.");
+        }
     }
 
     private static void printMenu() {
@@ -104,13 +159,14 @@ public class Main {
                 "Enter 1 to add a client.\n" +
                 "Enter 2 to update a client's phone number\n" +
                 "Enter 3 to remove a client.\n" +
-                "Enter 4 to view all clients.\n");
-//                "Enter 5 to transfer money.\n" +
-//                "Enter 6 to deposit money.\n" +
-//                "Enter 7 to withdraw money.\n" +
-//                "Enter 8 to view the transactions of an account.\n" +
-//                "Enter 9 to view the balance of an account.\n" +
-//                "Enter 10 to view the balance of the bank.\n" +
+                "Enter 4 to view all clients.\n" +
+                "Enter 5 to activate a client's membership.\n");
+//                "Enter 6 to transfer money.\n" +
+//                "Enter 7 to deposit money.\n" +
+//                "Enter 8 to withdraw money.\n" +
+//                "Enter 9 to view the transactions of an account.\n" +
+//                "Enter 10 to view the balance of an account.\n" +
+//                "Enter 11 to view the balance of the bank.\n" +
 
     }
 
@@ -123,6 +179,7 @@ public class Main {
             if (scanner.hasNextInt()) {
                 return scanner.nextInt();
             } else {
+
                 System.out.println("Please enter ONLY numbers.\nTry again:");
             }
             scanner.nextLine();
