@@ -102,7 +102,6 @@ public class Main {
                     System.out.println(client.getName() + " has been activated.");
                 }
                 return;
-
             }
 
             System.out.println(client.getName() + " is active");
