@@ -2,10 +2,11 @@ package com.bank.repository;
 
 import com.bank.model.Client;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ClientRepository {
+public class ClientRepository implements Serializable {
 
     private final Map<String, Client> clients = new HashMap<>();
 
@@ -36,7 +37,7 @@ public class ClientRepository {
         }
 
         client.setMember(false);
-        System.out.println(client.getName() + " is no longer a member and has been deleted from the bank repository");
+        System.out.println(client.getName() + " is no longer a member and has been deactivated.");
     }
 
     public Map<String, Client> getAllClients() {

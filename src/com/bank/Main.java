@@ -132,30 +132,40 @@ public class Main {
     }
 
     private static void activateOrDeactivateClient(Client client) {
-        String userChoice;
+        String userChoice = "";
 
         while (true) {
             if (client.isNotMember()) {
                 System.out.println(client.getName() + " is inactive");
                 System.out.println("Press A to ACTIVATE the client's membership:");
+                System.out.println("Press Q to go back to main menu.");
                 userChoice = scanner.next().toUpperCase();
                 if (userChoice.equals("A")) {
                     client.setMember(true);
                     System.out.println(client.getName() + " has been activated.");
+                    return;
                 }
-                return;
             }
 
-            System.out.println(client.getName() + " is active");
-            System.out.println("Press D to DEACTIVATE the client's membership,");
-            userChoice = scanner.next().toUpperCase();
-            if (userChoice.equals("D")) {
-                client.setMember(false);
-                System.out.println(client.getName() + " has been deactivated.");
-                return;
+            if (!client.isNotMember()) {
+                System.out.println(client.getName() + " is active");
+                System.out.println("Press D to DEACTIVATE the client's membership,");
+                System.out.println("Press Q to go back to main menu.");
+                userChoice = scanner.next().toUpperCase();
+                if (userChoice.equals("D")) {
+                    client.setMember(false);
+                    System.out.println(client.getName() + " has been deactivated.");
+                    return;
+                }
             }
 
-            System.out.println("The input value was NOT valid.\n Please try again.");
+
+            if (userChoice.equals("Q")) {
+                System.out.println("Operation was canceled.");
+                break;
+            }
+            System.out.println("The input value was NOT valid.\nPlease try again.");
+
         }
     }
 
@@ -177,7 +187,7 @@ public class Main {
     }
 
     private static String getUserInputString() {
-        return scanner.next();
+        return scanner.next().toUpperCase();
     }
 
     private static int getUserInputInt() {

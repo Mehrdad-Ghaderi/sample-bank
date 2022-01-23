@@ -4,7 +4,7 @@ import com.bank.Bank;
 
 import java.io.*;
 
-public class BackupService {
+public class BackupService implements Serializable {
 
     private static final String PATH = "C:\\Users\\Metallica\\IdeaProjects\\sample-bank\\src\\com\\bank\\BankData.ser";
 
