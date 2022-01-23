@@ -4,24 +4,24 @@ import java.io.Serializable;
 
 public class Client implements Serializable {
 
-    private boolean isMember;
+    private boolean member;
     private String name;
     private String id;
     private String phoneNumber;
 
     public Client(String name, String phoneNumber, String id) {
-        this.isMember = true;
+        this.member = true;
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.id = id;
     }
 
     public boolean isNotMember() {
-        return !isMember;
+        return !member;
     }
 
     public void setMember(boolean member) {
-        isMember = member;
+        this.member = member;
     }
 
     public String getName() {
@@ -43,7 +43,7 @@ public class Client implements Serializable {
     @Override
     public String toString() {
         return "Client{" +
-                "isMember=" + isMember +
+                "member=" + member +
                 ", name='" + name + '\'' +
                 ", id='" + id + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
