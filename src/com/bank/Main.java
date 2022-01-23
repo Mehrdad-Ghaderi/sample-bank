@@ -8,7 +8,7 @@ import java.util.Scanner;
 public class Main {
 
     private static final Scanner scanner = new Scanner(System.in);
-    public static final Bank bank = BackupService.restoreBackup();
+    private static final Bank bank = BackupService.restoreBackup();
     private static final ClientRepository clientRepository = bank.getClientRepository();
 
     public static void main(String[] args) {

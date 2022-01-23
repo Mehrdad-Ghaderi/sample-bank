@@ -28,7 +28,7 @@ public class ClientRepository implements Serializable {
 
         if (foundClient != null) {
             System.out.println(newClient.getName() + ", ID: " + newClient.getId() + ", already exists in the bank");
-            if (!foundClient.isMember()) {
+            if (foundClient.isNotMember()) {
                 System.out.println("But " + foundClient.getName() + " is deactivated");
 
                 System.out.println("Press A to reactivate the client's membership, any other key to leave it inactive:");
@@ -47,7 +47,7 @@ public class ClientRepository implements Serializable {
 
     public void removeClient(Client client) {
 
-        if (!client.isMember()) {
+        if (client.isNotMember()) {
             System.out.println(client.getName() + " is no longer a member.\n The removal operation was unsuccessful.");
             return;
         }

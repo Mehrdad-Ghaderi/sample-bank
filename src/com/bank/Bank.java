@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 public class Bank implements Serializable {
 
-    static int accountCounter = 0;
+    private static int accountCounter = 0;
     private String name = "TNB";
     private ClientRepository clientRepository = new ClientRepository();
 

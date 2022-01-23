@@ -15,8 +15,8 @@ public class Client implements Serializable {
         this.id = id;
     }
 
-    public boolean isMember() {
-        return isMember;
+    public boolean isNotMember() {
+        return !isMember;
     }
 
     public void setMember(boolean member) {
