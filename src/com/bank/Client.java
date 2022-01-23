@@ -1,7 +1,6 @@
 package com.bank;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 
 public class Client implements Serializable {
     private boolean isMember;
@@ -49,4 +48,5 @@ public class Client implements Serializable {
                 ", phoneNumber='" + phoneNumber + '\'' +
                 '}';
     }
+
 }

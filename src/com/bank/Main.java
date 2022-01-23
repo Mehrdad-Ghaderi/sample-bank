@@ -1,14 +1,15 @@
 package com.bank;
 
 import com.bank.repository.ClientRepository;
+import com.bank.service.BackupService;
 
 import java.util.Scanner;
 
 public class Main {
 
     private static final Scanner scanner = new Scanner(System.in);
-    private static Bank bank = Services.restoreBackup();
-    private static ClientRepository clientRepository = bank.getClientRepository();
+    public static final Bank bank = BackupService.restoreBackup();
+    private static final ClientRepository clientRepository = bank.getClientRepository();
 
     public static void main(String[] args) {
         //This needs a go back option at all time, which is not written yet.
@@ -38,7 +39,7 @@ public class Main {
                 continue;
             }
             if (userInput == 0) {
-                System.out.println("The system was shut down bu the user.");
+                System.out.println("The system was shut down by the user.");
                 backup();
                 break;
             } else {
@@ -94,7 +95,7 @@ public class Main {
     }
 
     private static void printAllClients() {
-        clientRepository.viewAllClients();
+        clientRepository.printAllClients();
     }
 
     private static void printMenu() {
@@ -129,7 +130,7 @@ public class Main {
     }
 
     private static void backup() {
-        Services.backup(bank, Services.getPATH());
+        BackupService.backup(bank, BackupService.getPATH());
     }
 
 }

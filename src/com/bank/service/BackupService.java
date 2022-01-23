@@ -1,14 +1,14 @@
-package com.bank;
+package com.bank.service;
+
+import com.bank.Bank;
 
 import java.io.*;
 
-class Services implements Serializable{
+public class BackupService {
 
     private static final String PATH = "C:\\Users\\Metallica\\IdeaProjects\\sample-bank\\src\\com\\bank\\BankData.ser";
 
-
-
-    static void backup(Object object, String path) {
+    public static void backup(Object object, String path) {
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(path);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
@@ -20,7 +20,7 @@ class Services implements Serializable{
         }
     }
 
-    static Bank restoreBackup() {
+    public static Bank restoreBackup() {
         try {
             FileInputStream fileInputStream = new FileInputStream(PATH);
             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
@@ -37,7 +37,7 @@ class Services implements Serializable{
             return new Bank();
     }
 
-    static String getPATH() {
+    public static String getPATH() {
         return PATH;
     }
 

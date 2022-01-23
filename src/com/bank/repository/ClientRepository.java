@@ -8,7 +8,7 @@ import java.util.Scanner;
 
 public class ClientRepository implements Serializable {
 
-    private final ArrayList<Client> clients = new ArrayList<>(); // Abbas
+    private final ArrayList<Client> clients = new ArrayList<>();
 
     public Client findClientById(String id) {
 
@@ -56,7 +56,7 @@ public class ClientRepository implements Serializable {
         System.out.println(client.getName() + " is no longer a member and has been deleted from the bank repository");
     }
 
-    public void viewAllClients() {
+    public void printAllClients() {
         for (Client client : clients) {
             System.out.println(client.toString());
         }
