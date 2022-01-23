@@ -1,9 +1,10 @@
 package com.bank;
 
+import com.bank.model.Client;
 import com.bank.repository.ClientRepository;
 import com.bank.service.BackupService;
 
-import java.util.ArrayList;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Main {
@@ -53,16 +54,6 @@ public class Main {
         }
     }
 
-    private static void activateOrDeactivateClient() {
-        System.out.println("Enter the client ID:");
-        String id = getUserInputString();
-        Client foundClient = clientRepository.getClientById(id);
-        if (foundClient == null) {
-            return;
-        }
-        activateOrDeactivateClient(foundClient);
-    }
-
     private static void addNewClient() {
         System.out.println("CLIENT ADDITION:");
         System.out.println("Enter the ID: ");
@@ -87,6 +78,57 @@ public class Main {
 
         Client newClient = new Client(name, phoneNumber, id);
         clientRepository.addClient(newClient);
+    }
+
+    private static void updatePhoneNumber() {
+        System.out.println("CLIENT UPDATE:");
+        System.out.println("Enter the ID of the client whose phone number you would like to update:");
+        String id = getUserInputString();
+        Client foundClient = clientRepository.getClientById(id);
+
+        if (foundClient != null) {
+            System.out.println("Enter the new phone number:");
+            String newPhoneNumber = getUserInputString();
+            System.out.println(foundClient.getName() + "'s old phone number," + foundClient.getPhoneNumber() + ", was removed.");
+            foundClient.setPhoneNumber(newPhoneNumber);
+            System.out.println(foundClient.getName() + "'s new number has been set to " + newPhoneNumber + ".");
+        }
+    }
+
+    private static void removeClient() {
+        System.out.println("CLIENT REMOVAL:");
+        System.out.println("Enter the ID: ");
+        String id = getUserInputString();
+        Client client = clientRepository.getClientById(id);
+
+        if (client != null) {
+            clientRepository.removeClient(client);
+
+        }
+        System.out.println(id + " is not a member of this bank.");
+
+    }
+
+    private static void printAllClients() {
+        Map<String, Client> clients = clientRepository.getAllClients();
+
+        if (clients.isEmpty()) {
+            System.out.println("The bank has no clients.");
+            return;
+        }
+        for (String key : clients.keySet()) {
+            System.out.println(clients.get(key).toString());
+        }
+    }
+
+    private static void activateOrDeactivateClient() {
+        System.out.println("Enter the client ID:");
+        String id = getUserInputString();
+        Client foundClient = clientRepository.getClientById(id);
+        if (foundClient == null) {
+            return;
+        }
+        activateOrDeactivateClient(foundClient);
     }
 
     private static void activateOrDeactivateClient(Client client) {
@@ -114,42 +156,6 @@ public class Main {
             }
 
             System.out.println("The input value was NOT valid.\n Please try again.");
-        }
-    }
-
-    private static void updatePhoneNumber() {
-        System.out.println("CLIENT UPDATE:");
-        System.out.println("Enter the ID of the client whose phone number you would like to update:");
-        String id = getUserInputString();
-        Client foundClient = clientRepository.getClientById(id);
-
-        if (foundClient != null) {
-            System.out.println("Enter the new phone number:");
-            String newPhoneNumber = getUserInputString();
-            System.out.println(foundClient.getName() + "'s old phone number," + foundClient.getPhoneNumber() + ", was removed.");
-            foundClient.setPhoneNumber(newPhoneNumber);
-            System.out.println(foundClient.getName() + "'s new number has been set to " + newPhoneNumber + ".");
-        }
-    }
-
-    private static void removeClient() {
-        System.out.println("CLIENT REMOVAL:");
-        System.out.println("Enter the ID: ");
-        String id = getUserInputString();
-        Client client = clientRepository.getClientById(id);
-
-        if (client != null) {
-            clientRepository.removeClient(client);
-        }
-    }
-
-    private static void printAllClients() {
-        ArrayList<Client> clients = clientRepository.getAllClients();
-        for (Client client : clients) {
-            System.out.println(client.toString());
-        }
-        if (clients.isEmpty()) {
-            System.out.println("The bank has no clients.");
         }
     }
 

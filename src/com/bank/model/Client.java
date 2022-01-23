@@ -1,4 +1,4 @@
-package com.bank;
+package com.bank.model;
 
 import java.io.Serializable;
 
@@ -9,7 +9,7 @@ public class Client implements Serializable {
     private String id;
     private String phoneNumber;
 
-    Client(String name, String phoneNumber, String id) {
+    public Client(String name, String phoneNumber, String id) {
         this.isMember = true;
         this.name = name;
         this.phoneNumber = phoneNumber;
@@ -32,11 +32,11 @@ public class Client implements Serializable {
         return id;
     }
 
-    String getPhoneNumber() {
+    public String getPhoneNumber() {
         return phoneNumber;
     }
 
-    void setPhoneNumber(String phoneNumber) {
+    public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
 
