@@ -91,3 +91,23 @@ For open source projects, say how it is licensed.
 ## Project status
 If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
 
+## Requirements
+this application must be able to:
+- add a new client
+- support different currencies on only account number
+- update a client's phone number
+- deposit, withdraw, and transfer money
+- show the balance of an account in each currency
+- store transaction data with the date
+- show desired number of recent transactions of an account
+- remove (deactivate) a client
+- freeze an account
+- show the balance of the bank
+- abort an operation at any time of the process
+
+## Constraints
+- no client without an account
+- all clients have only one account
+- only USD, EURO, POUND, and CAD are supported
+- removal of a member does not remove their past records
+
