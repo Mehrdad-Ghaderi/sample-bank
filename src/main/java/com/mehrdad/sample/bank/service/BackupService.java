@@ -1,6 +1,6 @@
-package com.bank.service;
+package com.mehrdad.sample.bank.service;
 
-import com.bank.Bank;
+import com.mehrdad.sample.bank.Bank;
 
 import java.io.*;
 
