@@ -1,6 +1,6 @@
-package com.bank.repository;
+package com.mehrdad.sample.bank.repository;
 
-import com.bank.model.Client;
+import com.mehrdad.sample.bank.model.Client;
 
 import java.io.Serializable;
 import java.util.HashMap;

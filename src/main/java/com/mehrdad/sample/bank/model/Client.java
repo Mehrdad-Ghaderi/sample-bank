@@ -1,4 +1,4 @@
-package com.bank.model;
+package com.mehrdad.sample.bank.model;
 
 import java.io.Serializable;
 

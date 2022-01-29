@@ -1,8 +1,8 @@
-package com.bank;
+package com.mehrdad.sample.bank;
 
-import com.bank.model.Client;
-import com.bank.repository.ClientRepository;
-import com.bank.service.BackupService;
+import com.mehrdad.sample.bank.model.Client;
+import com.mehrdad.sample.bank.repository.ClientRepository;
+import com.mehrdad.sample.bank.service.BackupService;
 
 import java.util.Map;
 import java.util.Scanner;
