@@ -5,8 +5,8 @@ import java.io.Serializable;
 public class Client implements Serializable {
 
     private boolean member;
-    private String name;
-    private String id;
+    private final String name;
+    private final String id;
     private String phoneNumber;
 
     public Client(String name, String phoneNumber, String id) {
