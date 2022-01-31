@@ -1,18 +1,19 @@
 package com.mehrdad.sample.bank;
 
 import com.mehrdad.sample.bank.repository.ClientRepository;
+import com.mehrdad.sample.bank.service.BackupService;
 
-import java.io.Serializable;
+public class Bank {
 
-public class Bank implements Serializable {
+    private final static ClientRepository CLIENT_REPOSITORY = new ClientRepository();
+    private final static BackupService BACKUP_SERVICE = new BackupService(CLIENT_REPOSITORY);
 
-    private ClientRepository clientRepository = new ClientRepository();
-
-    public Bank() {
+    public static BackupService getBackupService() {
+        return BACKUP_SERVICE;
     }
 
-    ClientRepository getClientRepository() {
-        return clientRepository;
+    public static ClientRepository getClientRepository() {
+        return CLIENT_REPOSITORY;
     }
 
 }

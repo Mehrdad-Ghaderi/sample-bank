@@ -2,16 +2,14 @@ package com.mehrdad.sample.bank.repository;
 
 import com.mehrdad.sample.bank.model.Client;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-public class ClientRepository implements Serializable {
+public class ClientRepository {
 
-    private final Map<String, Client> clients = new HashMap<>();
+    private final Map<String, Client> clientMap = new HashMap<>();
 
     public Client getClientById(String id) {
-        return clients.get(id);
+        return clientMap.get(id);
     }
 
     public void addClient(Client newClient) {
@@ -26,7 +24,7 @@ public class ClientRepository implements Serializable {
             return;
         }
 
-        clients.put(newClient.getId(), newClient);
+        clientMap.put(newClient.getId(), newClient);
         System.out.println(newClient.getName() + ", ID: " + newClient.getId() + ", was added to the bank.");
     }
 
@@ -40,8 +38,15 @@ public class ClientRepository implements Serializable {
         System.out.println(client.getName() + " is no longer a member and has been deactivated.");
     }
 
-    public Map<String, Client> getAllClients() {
-        return clients;
+    public Collection<Client> getAllClients() {
+        return clientMap.values();
+    }
+
+    public void setClients(Collection<Client> clients) {
+        clientMap.clear();
+        for (Client client : clients) {
+            clientMap.put(client.getId(), client);
+        }
     }
 
 }

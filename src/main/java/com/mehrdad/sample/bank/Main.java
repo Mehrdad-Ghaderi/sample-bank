@@ -4,16 +4,24 @@ import com.mehrdad.sample.bank.model.Client;
 import com.mehrdad.sample.bank.repository.ClientRepository;
 import com.mehrdad.sample.bank.service.BackupService;
 
-import java.util.Map;
+import java.util.Collection;
 import java.util.Scanner;
 
 public class Main {
 
     private static final Scanner scanner = new Scanner(System.in);
-    private static final Bank bank = BackupService.restoreBackup();
-    private static final ClientRepository clientRepository = bank.getClientRepository();
+    private static final BackupService backupService = Bank.getBackupService();
+    private static final ClientRepository clientRepository = Bank.getClientRepository();
 
     public static void main(String[] args) {
+
+        try {
+            backupService.restoreBackup();
+        } catch (Exception e) {
+            System.out.println("Could not restore the backups. contiruing without ...");
+            e.printStackTrace();
+        }
+
         //This needs a go back option at all time, which is not written yet.
         while (true) {
             printMenu();
@@ -22,17 +30,17 @@ public class Main {
 
             if (userInput == 1) {
                 addNewClient();
-                backup();
+                backupService.backup();
                 continue;
             }
             if (userInput == 2) {
                 updatePhoneNumber();
-                backup();
+                backupService.backup();
                 continue;
             }
             if (userInput == 3) {
                 removeClient();
-                backup();
+                backupService.backup();
                 continue;
             }
             if (userInput == 4) {
@@ -41,12 +49,12 @@ public class Main {
             }
             if (userInput == 5) {
                 activateOrDeactivateClient();
-                backup();
+                backupService.backup();
                 continue;
             }
             if (userInput == 0) {
                 System.out.println("The system was shut down by the user.");
-                backup();
+                backupService.backup();
                 break;
             } else {
                 System.out.println("The option you chose is not valid.");
@@ -110,14 +118,14 @@ public class Main {
     }
 
     private static void printAllClients() {
-        Map<String, Client> clients = clientRepository.getAllClients();
+        Collection<Client> clients = clientRepository.getAllClients();
 
         if (clients.isEmpty()) {
             System.out.println("The bank has no clients.");
             return;
         }
-        for (String key : clients.keySet()) {
-            System.out.println(clients.get(key).toString());
+        for (Client client : clients) {
+            System.out.println(client);
         }
     }
 
@@ -200,10 +208,6 @@ public class Main {
             }
             scanner.nextLine();
         }
-    }
-
-    private static void backup() {
-        BackupService.backup(bank, BackupService.getPATH());
     }
 
 }

@@ -1,44 +1,59 @@
 package com.mehrdad.sample.bank.service;
 
-import com.mehrdad.sample.bank.Bank;
+import com.mehrdad.sample.bank.model.Client;
+import com.mehrdad.sample.bank.repository.ClientRepository;
 
 import java.io.*;
+import java.util.Collection;
+import java.util.Collections;
 
 public class BackupService implements Serializable {
 
-    private static final String PATH = "C:\\Users\\Metallica\\IdeaProjects\\sample-bank\\src\\com\\bank\\BankData.ser";
+    private static final String CLIENT_PATH = "src/main/resources/backups/Clients.back";
 
-    public static void backup(Object object, String path) {
+    private final ClientRepository clientRepository;
+
+    public BackupService(ClientRepository clientRepository) {
+        this.clientRepository = clientRepository;
+    }
+
+    public void backup() {
+        saveAllClients();
+    }
+
+    public void restoreBackup() {
+        clientRepository.setClients(readAllClients());
+    }
+
+    private void saveAllClients() {
+
         try {
-            FileOutputStream fileOutputStream = new FileOutputStream(path);
+            FileOutputStream fileOutputStream = new FileOutputStream(CLIENT_PATH);
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-            objectOutputStream.writeObject(object);
+            objectOutputStream.writeObject(clientRepository.getAllClients());
             objectOutputStream.close();
 
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException("Something went wrong during clients back-up", e);
         }
     }
 
-    public static Bank restoreBackup() {
+    private Collection<Client> readAllClients() {
+
         try {
-            FileInputStream fileInputStream = new FileInputStream(PATH);
+            FileInputStream fileInputStream = new FileInputStream(CLIENT_PATH);
             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-            Bank bank = (Bank) objectInputStream.readObject();
+            Collection<Client> clients = (Collection<Client>) objectInputStream.readObject();
 
-            if (bank != null) {
-                return bank;
+            if ((clients == null) || clients.isEmpty()) {
+                System.out.println("There is no information to restore.");
+                return Collections.emptyList();
             }
+            return clients;
 
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException("Something went wrong during restoring clients", e);
         }
-            System.out.println("There is no information to restore.");
-            return new Bank();
-    }
-
-    public static String getPATH() {
-        return PATH;
     }
 
 }
