@@ -9,11 +9,11 @@ public class Client implements Serializable {
     private final String id;
     private String phoneNumber;
 
-    public Client(String name, String phoneNumber, String id) {
-        this.member = true;
+    public Client(String id, String name, String phoneNumber, boolean isMember) {
+        this.id = id;
         this.name = name;
         this.phoneNumber = phoneNumber;
-        this.id = id;
+        this.member = isMember;
     }
 
     public boolean isNotMember() {

@@ -4,12 +4,12 @@ import com.mehrdad.sample.bank.model.Client;
 import com.mehrdad.sample.bank.repository.ClientRepository;
 
 import java.io.*;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
 
 public class BackupService implements Serializable {
 
     private static final String CLIENT_PATH = "src/main/resources/backups/Clients.back";
+    private static final String CLIENT_PATH1 = "src/main/resources/backups/ClientsString.back";
 
     private final ClientRepository clientRepository;
 
@@ -18,42 +18,51 @@ public class BackupService implements Serializable {
     }
 
     public void backup() {
-        saveAllClients();
+        saveAllClientsToFile();
     }
 
     public void restoreBackup() {
-        clientRepository.setClients(readAllClients());
+        clientRepository.setClients(loadAllClientsFromFile());
     }
 
-    private void saveAllClients() {
+    private void saveAllClientsToFile() {
 
         try {
-            FileOutputStream fileOutputStream = new FileOutputStream(CLIENT_PATH);
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-            objectOutputStream.writeObject(clientRepository.getAllClients());
-            objectOutputStream.close();
-
-        } catch (Exception e) {
-            throw new RuntimeException("Something went wrong during clients back-up", e);
-        }
-    }
-
-    private Collection<Client> readAllClients() {
-
-        try {
-            FileInputStream fileInputStream = new FileInputStream(CLIENT_PATH);
-            ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-            Collection<Client> clients = (Collection<Client>) objectInputStream.readObject();
-
-            if ((clients == null) || clients.isEmpty()) {
-                System.out.println("There is no information to restore.");
-                return Collections.emptyList();
+            BufferedWriter writer = new BufferedWriter(new FileWriter(CLIENT_PATH1));
+            for (Client client : clientRepository.getAllClients()) {
+                writer.write(client.getId() + " /");
+                writer.write(client.getName() + " /");
+                writer.write(client.getPhoneNumber() + " /");
+                writer.write(client.isNotMember() + "\n");
             }
-            return clients;
-
-        } catch (Exception e) {
-            throw new RuntimeException("Something went wrong during restoring clients", e);
+            writer.close();
+        } catch (IOException ex) {
+            System.out.println("couldn't write the clientList out");
+            ex.printStackTrace();
         }
+    }
+
+    private Collection<Client> loadAllClientsFromFile() {
+
+        ArrayList<Client> clients = new ArrayList<>();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(CLIENT_PATH1));
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                clients.add(createClient(line));
+            }
+            reader.close();
+            return clients;
+        } catch(Exception ex) {
+            throw new RuntimeException("Something went wrong during restoring clients", ex);
+        }
+    }
+
+    private Client createClient(String lineToParse) {
+
+        String[] result = lineToParse.split("/");
+        boolean isMember = result[3].equals("true");
+        return new Client(result[0], result[1], result[2], isMember);
     }
 
 }

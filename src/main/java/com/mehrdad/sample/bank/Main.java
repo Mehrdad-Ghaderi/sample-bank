@@ -18,7 +18,7 @@ public class Main {
         try {
             backupService.restoreBackup();
         } catch (Exception e) {
-            System.out.println("Could not restore the backups. contiruing without ...");
+            System.out.println("Could not restore the backups. continuing without ...");
             e.printStackTrace();
         }
 
@@ -83,8 +83,9 @@ public class Main {
         String name = getUserInputString();
         System.out.println("Enter the phone number:");
         String phoneNumber = getUserInputString();
+        boolean isMember = true;
 
-        Client newClient = new Client(name, phoneNumber, id);
+        Client newClient = new Client(id, name, phoneNumber, isMember);
         clientRepository.addClient(newClient);
     }
 
@@ -95,11 +96,11 @@ public class Main {
         Client foundClient = clientRepository.getClientById(id);
 
         if (foundClient != null) {
-            System.out.println("Enter the new phone number:");
+            System.out.println("Enter " + foundClient.getName() + "'s new phone number :");
             String newPhoneNumber = getUserInputString();
-            System.out.println(foundClient.getName() + "'s old phone number," + foundClient.getPhoneNumber() + ", was removed.");
+            System.out.println(foundClient.getName() + "'s old phone number, " + foundClient.getPhoneNumber() + ", was removed.");
             foundClient.setPhoneNumber(newPhoneNumber);
-            System.out.println(foundClient.getName() + "'s new number has been set to " + newPhoneNumber + ".");
+            System.out.println("The new number has been set to " + newPhoneNumber + ".");
         }
     }
 
@@ -184,7 +185,7 @@ public class Main {
                 "Enter 2 to update a client's phone number\n" +
                 "Enter 3 to remove a client.\n" +
                 "Enter 4 to view all clients.\n" +
-                "Enter 5 to activate a client's membership.\n");
+                "Enter 5 to activate or deactivate a client's membership.\n");
 //                "Enter 6 to transfer money.\n" +
 //                "Enter 7 to deposit money.\n" +
 //                "Enter 8 to withdraw money.\n" +

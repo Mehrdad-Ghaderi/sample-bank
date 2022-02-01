@@ -8,10 +8,6 @@ public class ClientRepository {
 
     private final Map<String, Client> clientMap = new HashMap<>();
 
-    public Client getClientById(String id) {
-        return clientMap.get(id);
-    }
-
     public void addClient(Client newClient) {
         Client foundClient = getClientById(newClient.getId());
 
@@ -36,6 +32,10 @@ public class ClientRepository {
 
         client.setMember(false);
         System.out.println(client.getName() + " is no longer a member and has been deactivated.");
+    }
+
+    public Client getClientById(String id) {
+        return clientMap.get(id);
     }
 
     public Collection<Client> getAllClients() {
