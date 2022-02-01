@@ -1,9 +1,11 @@
 package com.mehrdad.sample.bank.repository;
 
 import com.mehrdad.sample.bank.model.Client;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+@Component
 public class ClientRepository {
 
     private final Map<String, Client> clientMap = new HashMap<>();

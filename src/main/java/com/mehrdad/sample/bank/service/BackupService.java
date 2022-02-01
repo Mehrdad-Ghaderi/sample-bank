@@ -2,13 +2,18 @@ package com.mehrdad.sample.bank.service;
 
 import com.mehrdad.sample.bank.model.Client;
 import com.mehrdad.sample.bank.repository.ClientRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.*;
 
-public class BackupService implements Serializable {
+@Service
+public class BackupService {
 
     private static final String CLIENT_PATH = "src/main/resources/backups/ClientsString.back";
+
     private final ClientRepository clientRepository;
 
     public BackupService(ClientRepository clientRepository) {

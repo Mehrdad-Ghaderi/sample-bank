@@ -1,19 +1,28 @@
-package com.mehrdad.sample.bank;
+package com.mehrdad.sample.bank.view;
 
 import com.mehrdad.sample.bank.model.Client;
 import com.mehrdad.sample.bank.repository.ClientRepository;
 import com.mehrdad.sample.bank.service.BackupService;
+import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.Scanner;
 
-public class Main {
+@Component
+public class UserInterface {
 
-    private static final Scanner scanner = new Scanner(System.in);
-    private static final BackupService backupService = Bank.getBackupService();
-    private static final ClientRepository clientRepository = Bank.getClientRepository();
+    private final Scanner scanner;
 
-    public static void main(String[] args) {
+    private final BackupService backupService;
+    private final ClientRepository clientRepository;
+
+    public UserInterface(Scanner scanner, BackupService backupService, ClientRepository clientRepository) {
+        this.scanner = scanner;
+        this.backupService = backupService;
+        this.clientRepository = clientRepository;
+    }
+
+    public void start(String[] args) {
 
         try {
             backupService.restoreBackup();
@@ -62,7 +71,7 @@ public class Main {
         }
     }
 
-    private static void addNewClient() {
+    private void addNewClient() {
         System.out.println("CLIENT ADDITION:");
         System.out.println("Enter the ID: ");
         String id = getUserInputString();
@@ -89,7 +98,7 @@ public class Main {
         clientRepository.addClient(newClient);
     }
 
-    private static void updatePhoneNumber() {
+    private void updatePhoneNumber() {
         System.out.println("CLIENT UPDATE:");
         System.out.println("Enter the ID of the client whose phone number you would like to update:");
         String id = getUserInputString();
@@ -104,7 +113,7 @@ public class Main {
         }
     }
 
-    private static void removeClient() {
+    private void removeClient() {
         System.out.println("CLIENT REMOVAL:");
         System.out.println("Enter the ID: ");
         String id = getUserInputString();
@@ -118,7 +127,7 @@ public class Main {
 
     }
 
-    private static void printAllClients() {
+    private void printAllClients() {
         Collection<Client> clients = clientRepository.getAllClients();
 
         if (clients.isEmpty()) {
@@ -130,7 +139,7 @@ public class Main {
         }
     }
 
-    private static void activateOrDeactivateClient() {
+    private void activateOrDeactivateClient() {
         System.out.println("Enter the client ID:");
         String id = getUserInputString();
         Client foundClient = clientRepository.getClientById(id);
@@ -140,7 +149,7 @@ public class Main {
         activateOrDeactivateClient(foundClient);
     }
 
-    private static void activateOrDeactivateClient(Client client) {
+    private void activateOrDeactivateClient(Client client) {
         String userChoice = "";
 
         while (true) {
@@ -178,7 +187,7 @@ public class Main {
         }
     }
 
-    private static void printMenu() {
+    private void printMenu() {
         System.out.println("************************************************\n" +
                 "Available Options:\n" +
                 "Enter 1 to add a client.\n" +
@@ -195,11 +204,11 @@ public class Main {
 
     }
 
-    private static String getUserInputString() {
+    private String getUserInputString() {
         return scanner.next().toUpperCase();
     }
 
-    private static int getUserInputInt() {
+    private int getUserInputInt() {
         while (true) {
             if (scanner.hasNextInt()) {
                 return scanner.nextInt();

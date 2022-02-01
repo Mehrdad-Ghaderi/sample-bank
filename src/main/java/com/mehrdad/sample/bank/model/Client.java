@@ -1,37 +1,51 @@
 package com.mehrdad.sample.bank.model;
 
-import java.io.Serializable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
-public class Client implements Serializable {
+@Entity // shows there a table of this element in DB
+public class Client {
 
-    private boolean member;
-    private final String name;
-    private final String id;
+    private String id;
+    private String name;
     private String phoneNumber;
+    private Boolean member;
 
-    public Client(String id, String name, String phoneNumber, boolean isMember) {
+    protected Client() {
+    }
+
+    public Client(String id, String name, String phoneNumber, Boolean isMember) {
         this.id = id;
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.member = isMember;
     }
 
-    public boolean isNotMember() {
-        return !member;
-    }
-
-    public void setMember(boolean member) {
-        this.member = member;
-    }
-
-    public String getName() {
-        return name;
-    }
-
+    @Id
+    @Size(max = 10)
     public String getId() {
         return id;
     }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    @NotNull
+    @Size(max = 45)
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @NotNull
+    @Size(max = 15)
     public String getPhoneNumber() {
         return phoneNumber;
     }
@@ -40,14 +54,14 @@ public class Client implements Serializable {
         this.phoneNumber = phoneNumber;
     }
 
-    @Override
-    public String toString() {
-        return "Client{" +
-                "member=" + member +
-                ", name='" + name + '\'' +
-                ", id='" + id + '\'' +
-                ", phoneNumber='" + phoneNumber + '\'' +
-                '}';
+    @NotNull
+    @Column(name = "active", columnDefinition = "tinyint(1) default 1")
+    public Boolean isMember() {
+        return member;
+    }
+
+    public void setMember(Boolean member) {
+        this.member = member;
     }
 
 }
