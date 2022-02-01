@@ -8,9 +8,7 @@ import java.util.*;
 
 public class BackupService implements Serializable {
 
-    private static final String CLIENT_PATH = "src/main/resources/backups/Clients.back";
-    private static final String CLIENT_PATH1 = "src/main/resources/backups/ClientsString.back";
-
+    private static final String CLIENT_PATH = "src/main/resources/backups/ClientsString.back";
     private final ClientRepository clientRepository;
 
     public BackupService(ClientRepository clientRepository) {
@@ -28,7 +26,7 @@ public class BackupService implements Serializable {
     private void saveAllClientsToFile() {
 
         try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(CLIENT_PATH1));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(CLIENT_PATH));
             for (Client client : clientRepository.getAllClients()) {
                 writer.write(client.getId() + " /");
                 writer.write(client.getName() + " /");
@@ -46,7 +44,7 @@ public class BackupService implements Serializable {
 
         ArrayList<Client> clients = new ArrayList<>();
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(CLIENT_PATH1));
+            BufferedReader reader = new BufferedReader(new FileReader(CLIENT_PATH));
             String line = null;
             while ((line = reader.readLine()) != null) {
                 clients.add(createClient(line));
