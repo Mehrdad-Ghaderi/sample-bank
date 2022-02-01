@@ -36,7 +36,7 @@ public class BackupService {
                 writer.write(client.getId() + " /");
                 writer.write(client.getName() + " /");
                 writer.write(client.getPhoneNumber() + " /");
-                writer.write(client.isNotMember() + "\n");
+                writer.write(client.isMember() + "\n");
             }
             writer.close();
         } catch (IOException ex) {

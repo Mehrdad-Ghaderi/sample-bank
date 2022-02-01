@@ -78,9 +78,9 @@ public class UserInterface {
         Client foundClient = clientRepository.getClientById(id);
 
         if (foundClient != null) {
-            System.out.println("The client already exists in the bank > " + foundClient.toString());
+            System.out.println("The client already exists in the bank > " + foundClient);
 
-            if (foundClient.isNotMember()) {
+            if (!foundClient.isMember()) {
                 activateOrDeactivateClient(foundClient);
                 return;
             }
@@ -153,7 +153,7 @@ public class UserInterface {
         String userChoice = "";
 
         while (true) {
-            if (client.isNotMember()) {
+            if (!client.isMember()) {
                 System.out.println(client.getName() + " is inactive");
                 System.out.println("Press A to ACTIVATE the client's membership:");
                 System.out.println("Press Q to go back to main menu.");
@@ -165,7 +165,7 @@ public class UserInterface {
                 }
             }
 
-            if (!client.isNotMember()) {
+            if (client.isMember()) {
                 System.out.println(client.getName() + " is active");
                 System.out.println("Press D to DEACTIVATE the client's membership,");
                 System.out.println("Press Q to go back to main menu.");

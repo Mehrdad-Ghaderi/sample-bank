@@ -15,7 +15,7 @@ public class ClientRepository {
 
         if (foundClient != null) {
             System.out.println(foundClient.getName() + ", ID: " + foundClient.getId() + ", already exists in the bank");
-            if (foundClient.isNotMember()) {
+            if (!foundClient.isMember()) {
                 System.out.println("But their membership status has been set to inactive.");
                 System.out.println("You can reactivate the membership later in the main menu.");
             }
@@ -27,7 +27,7 @@ public class ClientRepository {
     }
 
     public void removeClient(Client client) {
-        if (client.isNotMember()) {
+        if (!client.isMember()) {
             System.out.println(client.getName() + " is not a member.\n The removal operation was unsuccessful.");
             return;
         }
