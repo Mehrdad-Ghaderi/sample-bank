@@ -4,16 +4,24 @@ import com.mehrdad.sample.bank.model.Client;
 import com.mehrdad.sample.bank.repository.ClientRepository;
 import com.mehrdad.sample.bank.service.BackupService;
 
-import java.util.Map;
+import java.util.Collection;
 import java.util.Scanner;
 
 public class Main {
 
     private static final Scanner scanner = new Scanner(System.in);
-    private static final Bank bank = BackupService.restoreBackup();
-    private static final ClientRepository clientRepository = bank.getClientRepository();
+    private static final BackupService backupService = Bank.getBackupService();
+    private static final ClientRepository clientRepository = Bank.getClientRepository();
 
     public static void main(String[] args) {
+
+        try {
+            backupService.restoreBackup();
+        } catch (Exception e) {
+            System.out.println("Could not restore the backups. continuing without ...");
+            e.printStackTrace();
+        }
+
         //This needs a go back option at all time, which is not written yet.
         while (true) {
             printMenu();
@@ -22,17 +30,17 @@ public class Main {
 
             if (userInput == 1) {
                 addNewClient();
-                backup();
+                backupService.backup();
                 continue;
             }
             if (userInput == 2) {
                 updatePhoneNumber();
-                backup();
+                backupService.backup();
                 continue;
             }
             if (userInput == 3) {
                 removeClient();
-                backup();
+                backupService.backup();
                 continue;
             }
             if (userInput == 4) {
@@ -41,12 +49,12 @@ public class Main {
             }
             if (userInput == 5) {
                 activateOrDeactivateClient();
-                backup();
+                backupService.backup();
                 continue;
             }
             if (userInput == 0) {
                 System.out.println("The system was shut down by the user.");
-                backup();
+                backupService.backup();
                 break;
             } else {
                 System.out.println("The option you chose is not valid.");
@@ -75,8 +83,9 @@ public class Main {
         String name = getUserInputString();
         System.out.println("Enter the phone number:");
         String phoneNumber = getUserInputString();
+        boolean isMember = true;
 
-        Client newClient = new Client(name, phoneNumber, id);
+        Client newClient = new Client(id, name, phoneNumber, isMember);
         clientRepository.addClient(newClient);
     }
 
@@ -87,11 +96,11 @@ public class Main {
         Client foundClient = clientRepository.getClientById(id);
 
         if (foundClient != null) {
-            System.out.println("Enter the new phone number:");
+            System.out.println("Enter " + foundClient.getName() + "'s new phone number :");
             String newPhoneNumber = getUserInputString();
-            System.out.println(foundClient.getName() + "'s old phone number," + foundClient.getPhoneNumber() + ", was removed.");
+            System.out.println(foundClient.getName() + "'s old phone number, " + foundClient.getPhoneNumber() + ", was removed.");
             foundClient.setPhoneNumber(newPhoneNumber);
-            System.out.println(foundClient.getName() + "'s new number has been set to " + newPhoneNumber + ".");
+            System.out.println("The new number has been set to " + newPhoneNumber + ".");
         }
     }
 
@@ -110,14 +119,14 @@ public class Main {
     }
 
     private static void printAllClients() {
-        Map<String, Client> clients = clientRepository.getAllClients();
+        Collection<Client> clients = clientRepository.getAllClients();
 
         if (clients.isEmpty()) {
             System.out.println("The bank has no clients.");
             return;
         }
-        for (String key : clients.keySet()) {
-            System.out.println(clients.get(key).toString());
+        for (Client client : clients) {
+            System.out.println(client);
         }
     }
 
@@ -176,7 +185,7 @@ public class Main {
                 "Enter 2 to update a client's phone number\n" +
                 "Enter 3 to remove a client.\n" +
                 "Enter 4 to view all clients.\n" +
-                "Enter 5 to activate a client's membership.\n");
+                "Enter 5 to activate or deactivate a client's membership.\n");
 //                "Enter 6 to transfer money.\n" +
 //                "Enter 7 to deposit money.\n" +
 //                "Enter 8 to withdraw money.\n" +
@@ -200,10 +209,6 @@ public class Main {
             }
             scanner.nextLine();
         }
-    }
-
-    private static void backup() {
-        BackupService.backup(bank, BackupService.getPATH());
     }
 
 }
