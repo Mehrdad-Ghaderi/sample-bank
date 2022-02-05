@@ -12,7 +12,6 @@ import java.util.Scanner;
 public class UserInterface {
 
     private final Scanner scanner;
-
     private final BackupService backupService;
     private final ClientRepository clientRepository;
 
@@ -27,14 +26,12 @@ public class UserInterface {
         try {
             backupService.restoreBackup();
         } catch (Exception e) {
-            System.out.println("Could not restore the backups. continuing without ...");
+            System.err.println("Could not restore the backups. continuing without ...");
             e.printStackTrace();
         }
-
         //This needs a go back option at all time, which is not written yet.
         while (true) {
             printMenu();
-
             int userInput = getUserInputInt();
 
             if (userInput == 1) {
@@ -84,7 +81,6 @@ public class UserInterface {
                 activateOrDeactivateClient(foundClient);
                 return;
             }
-
             return;
         }
 
@@ -124,7 +120,6 @@ public class UserInterface {
 
         }
         System.out.println(id + " is not a member of this bank.");
-
     }
 
     private void printAllClients() {
@@ -177,13 +172,11 @@ public class UserInterface {
                 }
             }
 
-
             if (userChoice.equals("Q")) {
                 System.out.println("Operation was canceled.");
                 break;
             }
             System.out.println("The input value was NOT valid.\nPlease try again.");
-
         }
     }
 
@@ -194,13 +187,14 @@ public class UserInterface {
                 "Enter 2 to update a client's phone number\n" +
                 "Enter 3 to remove a client.\n" +
                 "Enter 4 to view all clients.\n" +
-                "Enter 5 to activate or deactivate a client's membership.\n");
+                "Enter 5 to activate or deactivate a client's membership.\n" +
 //                "Enter 6 to transfer money.\n" +
 //                "Enter 7 to deposit money.\n" +
 //                "Enter 8 to withdraw money.\n" +
 //                "Enter 9 to view the transactions of an account.\n" +
 //                "Enter 10 to view the balance of an account.\n" +
 //                "Enter 11 to view the balance of the bank.\n" +
+                "Enter 0 to shut down");
 
     }
 
