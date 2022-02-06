@@ -2,33 +2,25 @@ package com.mehrdad.sample.bank.view;
 
 import com.mehrdad.sample.bank.model.Client;
 import com.mehrdad.sample.bank.repository.ClientRepository;
-import com.mehrdad.sample.bank.service.BackupService;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
+import java.util.Iterator;
+import java.util.Optional;
 import java.util.Scanner;
 
 @Component
 public class UserInterface {
 
     private final Scanner scanner;
-    private final BackupService backupService;
     private final ClientRepository clientRepository;
 
-    public UserInterface(Scanner scanner, BackupService backupService, ClientRepository clientRepository) {
+    public UserInterface(Scanner scanner, ClientRepository clientRepository) {
         this.scanner = scanner;
-        this.backupService = backupService;
         this.clientRepository = clientRepository;
     }
 
     public void start(String[] args) {
 
-        try {
-            backupService.restoreBackup();
-        } catch (Exception e) {
-            System.err.println("Could not restore the backups. continuing without ...");
-            e.printStackTrace();
-        }
         //This needs a go back option at all time, which is not written yet.
         while (true) {
             printMenu();
@@ -36,17 +28,14 @@ public class UserInterface {
 
             if (userInput == 1) {
                 addNewClient();
-                backupService.backup();
                 continue;
             }
             if (userInput == 2) {
                 updatePhoneNumber();
-                backupService.backup();
                 continue;
             }
             if (userInput == 3) {
                 removeClient();
-                backupService.backup();
                 continue;
             }
             if (userInput == 4) {
@@ -55,12 +44,10 @@ public class UserInterface {
             }
             if (userInput == 5) {
                 activateOrDeactivateClient();
-                backupService.backup();
                 continue;
             }
             if (userInput == 0) {
                 System.out.println("The system was shut down by the user.");
-                backupService.backup();
                 break;
             } else {
                 System.out.println("The option you chose is not valid.");
@@ -72,13 +59,15 @@ public class UserInterface {
         System.out.println("CLIENT ADDITION:");
         System.out.println("Enter the ID: ");
         String id = getUserInputString();
-        Client foundClient = clientRepository.getClientById(id);
+        Optional<Client> foundClient = clientRepository.findById(id);
 
-        if (foundClient != null) {
-            System.out.println("The client already exists in the bank > " + foundClient);
+        if (foundClient.isPresent()) {
+            Client existingClient = foundClient.get();
 
-            if (!foundClient.isMember()) {
-                activateOrDeactivateClient(foundClient);
+            System.out.println("The client already exists in the bank > " + existingClient);
+
+            if (!existingClient.isMember()) {
+                activateOrDeactivateClient(existingClient);
                 return;
             }
             return;
@@ -91,20 +80,22 @@ public class UserInterface {
         boolean isMember = true;
 
         Client newClient = new Client(id, name, phoneNumber, isMember);
-        clientRepository.addClient(newClient);
+        clientRepository.save(newClient);
     }
 
     private void updatePhoneNumber() {
         System.out.println("CLIENT UPDATE:");
         System.out.println("Enter the ID of the client whose phone number you would like to update:");
         String id = getUserInputString();
-        Client foundClient = clientRepository.getClientById(id);
+        Optional<Client> foundClient = clientRepository.findById(id);
 
-        if (foundClient != null) {
-            System.out.println("Enter " + foundClient.getName() + "'s new phone number :");
+        if (foundClient.isPresent()) {
+            Client existingClient = foundClient.get();
+
+            System.out.println("Enter " + existingClient.getName() + "'s new phone number :");
             String newPhoneNumber = getUserInputString();
-            System.out.println(foundClient.getName() + "'s old phone number, " + foundClient.getPhoneNumber() + ", was removed.");
-            foundClient.setPhoneNumber(newPhoneNumber);
+            System.out.println(existingClient.getName() + "'s old phone number, " + existingClient.getPhoneNumber() + ", was removed.");
+            existingClient.setPhoneNumber(newPhoneNumber);
             System.out.println("The new number has been set to " + newPhoneNumber + ".");
         }
     }
@@ -113,35 +104,41 @@ public class UserInterface {
         System.out.println("CLIENT REMOVAL:");
         System.out.println("Enter the ID: ");
         String id = getUserInputString();
-        Client client = clientRepository.getClientById(id);
+        Optional<Client> foundClient = clientRepository.findById(id);
 
-        if (client != null) {
-            clientRepository.removeClient(client);
-
+        if (foundClient.isEmpty()) {
+            System.out.println(id + " is not a member of this bank.");
+            return;
         }
-        System.out.println(id + " is not a member of this bank.");
+        Client existingClient = foundClient.get();
+
+        existingClient.setMember(false);
+        clientRepository.save(existingClient);
     }
 
     private void printAllClients() {
-        Collection<Client> clients = clientRepository.getAllClients();
+        Iterable<Client> clients = clientRepository.findAll();
 
-        if (clients.isEmpty()) {
+        Iterator<Client> clientIterator = clients.iterator();
+        if (!clientIterator.hasNext()) {
             System.out.println("The bank has no clients.");
             return;
         }
-        for (Client client : clients) {
+
+        do {
+            Client client = clientIterator.next();
             System.out.println(client);
-        }
+        } while (clientIterator.hasNext());
     }
 
     private void activateOrDeactivateClient() {
         System.out.println("Enter the client ID:");
         String id = getUserInputString();
-        Client foundClient = clientRepository.getClientById(id);
-        if (foundClient == null) {
+        Optional<Client> foundClient = clientRepository.findById(id);
+        if (foundClient.isEmpty()) {
             return;
         }
-        activateOrDeactivateClient(foundClient);
+        activateOrDeactivateClient(foundClient.get());
     }
 
     private void activateOrDeactivateClient(Client client) {

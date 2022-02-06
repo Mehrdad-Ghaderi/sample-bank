@@ -55,13 +55,19 @@ public class Client {
     }
 
     @NotNull
-    @Column(name = "active", columnDefinition = "tinyint(1) default 1")
+    @Column(name = "active", columnDefinition = "BIT default 1", length = 1)
     public Boolean isMember() {
         return member;
     }
 
     public void setMember(Boolean member) {
         this.member = member;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Client{id='%s', name='%s', phoneNumber='%s', member=%s}",
+                id, name, phoneNumber, member);
     }
 
 }
