@@ -12,7 +12,7 @@ public class Client {
     private String id;
     private String name;
     private String phoneNumber;
-    private Boolean member;
+    private Boolean active;
 
     protected Client() {
     }
@@ -21,7 +21,7 @@ public class Client {
         this.id = id;
         this.name = name;
         this.phoneNumber = phoneNumber;
-        this.member = isMember;
+        this.active = isMember;
     }
 
     @Id
@@ -56,18 +56,18 @@ public class Client {
 
     @NotNull
     @Column(name = "active", columnDefinition = "BIT default 1", length = 1)
-    public Boolean isMember() {
-        return member;
+    public Boolean isActive() {
+        return active;
     }
 
-    public void setMember(Boolean member) {
-        this.member = member;
+    public void setActive(Boolean member) {
+        this.active = member;
     }
 
     @Override
     public String toString() {
         return String.format("Client{id='%s', name='%s', phoneNumber='%s', member=%s}",
-                id, name, phoneNumber, member);
+                id, name, phoneNumber, active);
     }
 
 }

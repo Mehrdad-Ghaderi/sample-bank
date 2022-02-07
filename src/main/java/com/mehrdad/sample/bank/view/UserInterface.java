@@ -4,9 +4,7 @@ import com.mehrdad.sample.bank.model.Client;
 import com.mehrdad.sample.bank.repository.ClientRepository;
 import org.springframework.stereotype.Component;
 
-import java.util.Iterator;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.*;
 
 @Component
 public class UserInterface {
@@ -63,10 +61,9 @@ public class UserInterface {
 
         if (foundClient.isPresent()) {
             Client existingClient = foundClient.get();
-
             System.out.println("The client already exists in the bank > " + existingClient);
 
-            if (!existingClient.isMember()) {
+            if (!existingClient.isActive()) {
                 activateOrDeactivateClient(existingClient);
                 return;
             }
@@ -81,6 +78,7 @@ public class UserInterface {
 
         Client newClient = new Client(id, name, phoneNumber, isMember);
         clientRepository.save(newClient);
+        System.out.println(newClient.getName() + " was added to the repository.");
     }
 
     private void updatePhoneNumber() {
@@ -91,7 +89,6 @@ public class UserInterface {
 
         if (foundClient.isPresent()) {
             Client existingClient = foundClient.get();
-
             System.out.println("Enter " + existingClient.getName() + "'s new phone number :");
             String newPhoneNumber = getUserInputString();
             System.out.println(existingClient.getName() + "'s old phone number, " + existingClient.getPhoneNumber() + ", was removed.");
@@ -107,12 +104,16 @@ public class UserInterface {
         Optional<Client> foundClient = clientRepository.findById(id);
 
         if (foundClient.isEmpty()) {
-            System.out.println(id + " is not a member of this bank.");
+            System.out.println("No client with that ID was found.");
             return;
         }
         Client existingClient = foundClient.get();
-
-        existingClient.setMember(false);
+        if (!existingClient.isActive()) {
+            System.out.println(existingClient.getName() + "'s membership status is already inactive.");
+            return;
+        }
+        existingClient.setActive(false);
+        System.out.println(existingClient.getName() + "'s membership status has been set to inactive.");
         clientRepository.save(existingClient);
     }
 
@@ -136,6 +137,7 @@ public class UserInterface {
         String id = getUserInputString();
         Optional<Client> foundClient = clientRepository.findById(id);
         if (foundClient.isEmpty()) {
+            System.out.println("No client with that ID was found.");
             return;
         }
         activateOrDeactivateClient(foundClient.get());
@@ -145,25 +147,25 @@ public class UserInterface {
         String userChoice = "";
 
         while (true) {
-            if (!client.isMember()) {
+            if (!client.isActive()) {
                 System.out.println(client.getName() + " is inactive");
                 System.out.println("Press A to ACTIVATE the client's membership:");
                 System.out.println("Press Q to go back to main menu.");
                 userChoice = scanner.next().toUpperCase();
                 if (userChoice.equals("A")) {
-                    client.setMember(true);
+                    client.setActive(true);
                     System.out.println(client.getName() + " has been activated.");
                     return;
                 }
             }
 
-            if (client.isMember()) {
+            if (client.isActive()) {
                 System.out.println(client.getName() + " is active");
                 System.out.println("Press D to DEACTIVATE the client's membership,");
                 System.out.println("Press Q to go back to main menu.");
                 userChoice = scanner.next().toUpperCase();
                 if (userChoice.equals("D")) {
-                    client.setMember(false);
+                    client.setActive(false);
                     System.out.println(client.getName() + " has been deactivated.");
                     return;
                 }
@@ -196,18 +198,24 @@ public class UserInterface {
     }
 
     private String getUserInputString() {
-        return scanner.next().toUpperCase();
+        while (true) {
+            try {
+                return scanner.next().toUpperCase();
+            } catch (NoSuchElementException e) {
+                System.err.println("Unsupported characters.\n Try again:");
+                scanner.nextLine();
+            }
+        }
     }
 
     private int getUserInputInt() {
         while (true) {
-            if (scanner.hasNextInt()) {
+            try {
                 return scanner.nextInt();
-            } else {
-
+            } catch (InputMismatchException e){
                 System.out.println("Please enter ONLY numbers.\nTry again:");
+                scanner.nextLine();
             }
-            scanner.nextLine();
         }
     }
 
