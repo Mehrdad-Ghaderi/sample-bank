@@ -1,7 +1,8 @@
 package com.mehrdad.sample.bank.view;
 
-import com.mehrdad.sample.bank.model.Client;
-import com.mehrdad.sample.bank.repository.ClientRepository;
+import com.mehrdad.sample.bank.api.dto.ClientDto;
+import com.mehrdad.sample.bank.core.entity.ClientEntity;
+import com.mehrdad.sample.bank.core.service.ClientService;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -10,11 +11,11 @@ import java.util.*;
 public class UserInterface {
 
     private final Scanner scanner;
-    private final ClientRepository clientRepository;
+    private final ClientService clientService;
 
-    public UserInterface(Scanner scanner, ClientRepository clientRepository) {
+    public UserInterface(Scanner scanner, ClientService clientService) {
         this.scanner = scanner;
-        this.clientRepository = clientRepository;
+        this.clientService = clientService;
     }
 
     public void start(String[] args) {
@@ -57,15 +58,14 @@ public class UserInterface {
         System.out.println("CLIENT ADDITION:");
         System.out.println("Enter the ID: ");
         String id = getUserInputString();
-        Optional<Client> foundClient = clientRepository.findById(id);
 
-        if (foundClient.isPresent()) {
-            Client existingClient = foundClient.get();
-            System.out.println("The client already exists in the bank > " + existingClient);
+        ClientDto client = clientService.getClientById(id);
 
-            if (!existingClient.isActive()) {
-                activateOrDeactivateClient(existingClient);
-                return;
+        if (client != null) {
+            System.out.println("The client is already a member of this bank.");
+
+            if (!client.isActive()) {
+                activateOrDeactivateClient(client);
             }
             return;
         }
@@ -74,10 +74,9 @@ public class UserInterface {
         String name = getUserInputString();
         System.out.println("Enter the phone number:");
         String phoneNumber = getUserInputString();
-        boolean isMember = true;
 
-        Client newClient = new Client(id, name, phoneNumber, isMember);
-        clientRepository.save(newClient);
+        ClientDto newClient = new ClientDto(id, name, phoneNumber, true);
+        clientService.createClientEntity(newClient);
         System.out.println(newClient.getName() + " was added to the repository.");
     }
 
@@ -85,14 +84,13 @@ public class UserInterface {
         System.out.println("CLIENT UPDATE:");
         System.out.println("Enter the ID of the client whose phone number you would like to update:");
         String id = getUserInputString();
-        Optional<Client> foundClient = clientRepository.findById(id);
+        ClientDto foundClient = clientService.getClientById(id);
 
-        if (foundClient.isPresent()) {
-            Client existingClient = foundClient.get();
-            System.out.println("Enter " + existingClient.getName() + "'s new phone number :");
+        if (foundClient != null) {
+            System.out.println("Enter " + foundClient.getName() + "'s new phone number :");
             String newPhoneNumber = getUserInputString();
-            System.out.println(existingClient.getName() + "'s old phone number, " + existingClient.getPhoneNumber() + ", was removed.");
-            existingClient.setPhoneNumber(newPhoneNumber);
+            System.out.println(foundClient.getName() + "'s old phone number, " + foundClient.getPhoneNumber() + ", was removed.");
+            clientService.setPhoneNumber(id, newPhoneNumber);
             System.out.println("The new number has been set to " + newPhoneNumber + ".");
         }
     }
@@ -101,72 +99,70 @@ public class UserInterface {
         System.out.println("CLIENT REMOVAL:");
         System.out.println("Enter the ID: ");
         String id = getUserInputString();
-        Optional<Client> foundClient = clientRepository.findById(id);
+        ClientDto foundClientDto = clientService.getClientById(id);
 
-        if (foundClient.isEmpty()) {
+        if (foundClientDto == null) {
             System.out.println("No client with that ID was found.");
             return;
         }
-        Client existingClient = foundClient.get();
-        if (!existingClient.isActive()) {
-            System.out.println(existingClient.getName() + "'s membership status is already inactive.");
+
+        if (!foundClientDto.isActive()) {
+            System.out.println(foundClientDto.getName() + "'s membership status is already inactive.");
             return;
         }
-        existingClient.setActive(false);
-        System.out.println(existingClient.getName() + "'s membership status has been set to inactive.");
-        clientRepository.save(existingClient);
+
+        clientService.setActive(id, false);
+        System.out.println(foundClientDto.getName() + "'s membership status has been set to inactive.");
     }
 
     private void printAllClients() {
-        Iterable<Client> clients = clientRepository.findAll();
+        Collection<ClientDto> clientDtos = clientService.getAllClientDtos();
 
-        Iterator<Client> clientIterator = clients.iterator();
-        if (!clientIterator.hasNext()) {
+        if (clientDtos.isEmpty()) {
             System.out.println("The bank has no clients.");
             return;
         }
 
-        do {
-            Client client = clientIterator.next();
-            System.out.println(client);
-        } while (clientIterator.hasNext());
+        for (ClientDto clientDto : clientDtos) {
+                System.out.println(clientDto);
+        }
     }
 
     private void activateOrDeactivateClient() {
         System.out.println("Enter the client ID:");
         String id = getUserInputString();
-        Optional<Client> foundClient = clientRepository.findById(id);
-        if (foundClient.isEmpty()) {
+        ClientDto foundClientDto = clientService.getClientById(id);
+        if (foundClientDto == null) {
             System.out.println("No client with that ID was found.");
             return;
         }
-        activateOrDeactivateClient(foundClient.get());
+        activateOrDeactivateClient(foundClientDto);
     }
 
-    private void activateOrDeactivateClient(Client client) {
+    private void activateOrDeactivateClient(ClientDto clientDto) {
         String userChoice = "";
 
         while (true) {
-            if (!client.isActive()) {
-                System.out.println(client.getName() + " is inactive");
+            if (!clientDto.isActive()) {
+                System.out.println(clientDto.getName() + " is inactive");
                 System.out.println("Press A to ACTIVATE the client's membership:");
                 System.out.println("Press Q to go back to main menu.");
                 userChoice = scanner.next().toUpperCase();
                 if (userChoice.equals("A")) {
-                    client.setActive(true);
-                    System.out.println(client.getName() + " has been activated.");
+                    clientService.setActive(clientDto.getId(),true);
+                    System.out.println(clientDto.getName() + " has been activated.");
                     return;
                 }
             }
 
-            if (client.isActive()) {
-                System.out.println(client.getName() + " is active");
+            if (clientDto.isActive()) {
+                System.out.println(clientDto.getName() + " is active");
                 System.out.println("Press D to DEACTIVATE the client's membership,");
                 System.out.println("Press Q to go back to main menu.");
                 userChoice = scanner.next().toUpperCase();
                 if (userChoice.equals("D")) {
-                    client.setActive(false);
-                    System.out.println(client.getName() + " has been deactivated.");
+                    clientService.setActive(clientDto.getId(), false);
+                    System.out.println(clientDto.getName() + " has been deactivated.");
                     return;
                 }
             }
@@ -194,7 +190,6 @@ public class UserInterface {
 //                "Enter 10 to view the balance of an account.\n" +
 //                "Enter 11 to view the balance of the bank.\n" +
                 "Enter 0 to shut down");
-
     }
 
     private String getUserInputString() {
@@ -212,7 +207,7 @@ public class UserInterface {
         while (true) {
             try {
                 return scanner.nextInt();
-            } catch (InputMismatchException e){
+            } catch (InputMismatchException e) {
                 System.out.println("Please enter ONLY numbers.\nTry again:");
                 scanner.nextLine();
             }
