@@ -8,15 +8,29 @@ import org.springframework.stereotype.Component;
 public class ClientMapper {
 
     public ClientDto toClientDto(ClientEntity entity) {
+        if (entity == null) {
+            return null;
+        }
 
         ClientDto dto = new ClientDto();
-
         dto.setId(entity.getId());
         dto.setName(entity.getName());
         dto.setPhoneNumber(entity.getPhoneNumber());
         dto.setActive(entity.isActive());
-
         return dto;
+    }
+
+    public ClientEntity toClientEntity(ClientDto dto) {
+        if (dto == null) {
+            return null;
+        }
+
+        return new ClientEntity(
+                dto.getId(),
+                dto.getName(),
+                dto.getPhoneNumber(),
+                dto.isActive()
+        );
     }
 
 }

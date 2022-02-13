@@ -1,11 +1,11 @@
 package com.mehrdad.sample.bank.view;
 
 import com.mehrdad.sample.bank.api.dto.ClientDto;
-import com.mehrdad.sample.bank.core.entity.ClientEntity;
 import com.mehrdad.sample.bank.core.service.ClientService;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class UserInterface {
@@ -59,14 +59,16 @@ public class UserInterface {
         System.out.println("Enter the ID: ");
         String id = getUserInputString();
 
-        ClientDto client = clientService.getClientById(id);
+        Optional<ClientDto> client = clientService.getClientById(id);
 
-        if (client != null) {
+        if (client.isPresent()) {
             System.out.println("The client is already a member of this bank.");
 
-            if (!client.isActive()) {
-                activateOrDeactivateClient(client);
+            ClientDto foundClient = client.get();
+            if (!foundClient.isActive()) {
+                activateOrDeactivateClient(foundClient);
             }
+
             return;
         }
 
@@ -76,7 +78,7 @@ public class UserInterface {
         String phoneNumber = getUserInputString();
 
         ClientDto newClient = new ClientDto(id, name, phoneNumber, true);
-        clientService.createClientEntity(newClient);
+        clientService.saveClient(newClient);
         System.out.println(newClient.getName() + " was added to the repository.");
     }
 
@@ -84,85 +86,86 @@ public class UserInterface {
         System.out.println("CLIENT UPDATE:");
         System.out.println("Enter the ID of the client whose phone number you would like to update:");
         String id = getUserInputString();
-        ClientDto foundClient = clientService.getClientById(id);
 
-        if (foundClient != null) {
-            System.out.println("Enter " + foundClient.getName() + "'s new phone number :");
-            String newPhoneNumber = getUserInputString();
-            System.out.println(foundClient.getName() + "'s old phone number, " + foundClient.getPhoneNumber() + ", was removed.");
-            clientService.setPhoneNumber(id, newPhoneNumber);
-            System.out.println("The new number has been set to " + newPhoneNumber + ".");
+        Optional<ClientDto> client = clientService.getClientById(id);
+        if (client.isEmpty()) {
+            System.out.println("The client does not exist.");
+            return;
         }
+
+        ClientDto foundClient = client.get();
+        System.out.println("Enter " + foundClient.getName() + "'s new phone number :");
+        String newPhoneNumber = getUserInputString();
+        System.out.println(foundClient.getName() + "'s old phone number, " + foundClient.getPhoneNumber() + ", was removed.");
+        clientService.setClientPhoneNumber(id, newPhoneNumber);
+        System.out.println("The new number has been set to " + newPhoneNumber + ".");
     }
 
     private void removeClient() {
         System.out.println("CLIENT REMOVAL:");
         System.out.println("Enter the ID: ");
         String id = getUserInputString();
-        ClientDto foundClientDto = clientService.getClientById(id);
 
-        if (foundClientDto == null) {
+        Optional<ClientDto> client = clientService.getClientById(id);
+        if (client.isEmpty()) {
             System.out.println("No client with that ID was found.");
             return;
         }
 
-        if (!foundClientDto.isActive()) {
-            System.out.println(foundClientDto.getName() + "'s membership status is already inactive.");
+        ClientDto foundClient = client.get();
+        if (!foundClient.isActive()) {
+            System.out.println(foundClient.getName() + "'s membership status is already inactive.");
             return;
         }
 
-        clientService.setActive(id, false);
-        System.out.println(foundClientDto.getName() + "'s membership status has been set to inactive.");
+        clientService.removeClient(foundClient);
+        System.out.println(foundClient.getName() + "'s membership status has been set to inactive.");
     }
 
     private void printAllClients() {
-        Collection<ClientDto> clientDtos = clientService.getAllClientDtos();
+        List<ClientDto> allClients = clientService.getAllClients()
+                .peek(System.out::println)
+                .collect(Collectors.toList());
 
-        if (clientDtos.isEmpty()) {
-            System.out.println("The bank has no clients.");
-            return;
-        }
-
-        for (ClientDto clientDto : clientDtos) {
-                System.out.println(clientDto);
-        }
+        System.out.println(allClients.size() + " clients were found!");
     }
 
     private void activateOrDeactivateClient() {
         System.out.println("Enter the client ID:");
         String id = getUserInputString();
-        ClientDto foundClientDto = clientService.getClientById(id);
-        if (foundClientDto == null) {
+        Optional<ClientDto> client = clientService.getClientById(id);
+        if (client.isEmpty()) {
             System.out.println("No client with that ID was found.");
             return;
         }
-        activateOrDeactivateClient(foundClientDto);
+
+        activateOrDeactivateClient(client.get());
     }
 
-    private void activateOrDeactivateClient(ClientDto clientDto) {
+    private void activateOrDeactivateClient(ClientDto client) {
         String userChoice = "";
 
         while (true) {
-            if (!clientDto.isActive()) {
-                System.out.println(clientDto.getName() + " is inactive");
+            if (!client.isActive()) {
+                System.out.println(client.getName() + " is inactive");
                 System.out.println("Press A to ACTIVATE the client's membership:");
                 System.out.println("Press Q to go back to main menu.");
                 userChoice = scanner.next().toUpperCase();
                 if (userChoice.equals("A")) {
-                    clientService.setActive(clientDto.getId(),true);
-                    System.out.println(clientDto.getName() + " has been activated.");
+                    clientService.activateClient(client.getId());
+                    System.out.println(client.getName() + " has been activated.");
                     return;
                 }
             }
 
-            if (clientDto.isActive()) {
-                System.out.println(clientDto.getName() + " is active");
+            if (client.isActive()) {
+                System.out.println(client.getName() + " is active");
                 System.out.println("Press D to DEACTIVATE the client's membership,");
                 System.out.println("Press Q to go back to main menu.");
                 userChoice = scanner.next().toUpperCase();
                 if (userChoice.equals("D")) {
-                    clientService.setActive(clientDto.getId(), false);
-                    System.out.println(clientDto.getName() + " has been deactivated.");
+                    clientService.deactivateClient(client.getId());
+                    System.out.println(client.getName() + " has been deactivated.");
                     return;
                 }
             }

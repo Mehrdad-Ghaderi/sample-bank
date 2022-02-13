@@ -1,7 +1,7 @@
 package com.mehrdad.sample.bank.core.repository;
 
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ClientRepository extends CrudRepository<ClientEntity, String> {
+public interface ClientRepository extends JpaRepository<ClientEntity, String> {
 }

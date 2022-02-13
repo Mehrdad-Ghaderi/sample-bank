@@ -2,11 +2,13 @@ package com.mehrdad.sample.bank.core.service;
 
 import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
+import com.mehrdad.sample.bank.core.exception.ClientNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.ClientMapper;
 import com.mehrdad.sample.bank.core.repository.ClientRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 @Service
 public class ClientService {
@@ -19,38 +21,45 @@ public class ClientService {
         this.clientMapper = clientMapper;
     }
 
-    public ClientDto getClientById(String id) {
-        Optional<ClientEntity> clientEntity = clientRepository.findById(id);
-        return clientEntity.map(clientMapper::toClientDto).orElse(null);
+    public Optional<ClientDto> getClientById(String clientId) {
+        return clientRepository.findById(clientId).map(clientMapper::toClientDto);
     }
 
-    public Collection<ClientDto> getAllClientDtos() {
-        Iterable<ClientEntity> clients = clientRepository.findAll();
-        Iterator<ClientEntity> iter = clients.iterator();
-        ArrayList<ClientDto> clientDtos = new ArrayList<>();
-        while (iter.hasNext()) {
-            clientDtos.add(clientMapper.toClientDto(iter.next()));
-        }
-        return clientDtos;
+    public Stream<ClientDto> getAllClients() {
+        return clientRepository.findAll().stream().map(clientMapper::toClientDto);
     }
 
-    public void createClientEntity(ClientDto newClient) {
-        ClientEntity clientEntity = new ClientEntity(newClient.getId(), newClient.getName(), newClient.getPhoneNumber(), true);
-        addClientEntity(clientEntity);
+    public void saveClient(ClientDto client) {
+        clientRepository.save(clientMapper.toClientEntity(client));
     }
 
-    private void addClientEntity(ClientEntity clientEntity) {
-        clientRepository.save(clientEntity);
+    public void setClientPhoneNumber(String clientId, String phoneNumber) {
+        ClientEntity foundClientEntity = clientRepository.findById(clientId)
+                .orElseThrow(() -> new ClientNotFoundException(clientId));
+
+        foundClientEntity.setPhoneNumber(phoneNumber);
+        clientRepository.save(foundClientEntity);
     }
 
-    public void setPhoneNumber(String id, String newPhoneNumber) {
-        Optional<ClientEntity> foundClientEntity = clientRepository.findById(id);
-        foundClientEntity.ifPresent(clientEntity -> clientEntity.setPhoneNumber(newPhoneNumber));
+    public void removeClient(ClientDto client) {
+        deactivateClient(client.getId());
     }
 
-    public void setActive(String id, Boolean status) {
-        Optional<ClientEntity> foundClientEntity = clientRepository.findById(id);
-        foundClientEntity.ifPresent(clientEntity -> clientEntity.setActive(status));
+    public void activateClient(String clientId) {
+        activateOrDeactivateClient(clientId, true);
 
     }
+
+    public void deactivateClient(String clientId) {
+        activateOrDeactivateClient(clientId, false);
+    }
+
+    private void activateOrDeactivateClient(String clientId, boolean status) {
+        ClientEntity foundClientEntity = clientRepository.findById(clientId)
+                .orElseThrow(() -> new ClientNotFoundException(clientId));
+
+        foundClientEntity.setActive(status);
+        clientRepository.save(foundClientEntity);
+    }
+
 }
