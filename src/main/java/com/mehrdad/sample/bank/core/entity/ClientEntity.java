@@ -1,4 +1,6 @@
-package com.mehrdad.sample.bank.model;
+package com.mehrdad.sample.bank.core.entity;
+
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -7,21 +9,21 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @Entity // shows there a table of this element in DB
-public class Client {
+public class ClientEntity {
 
     private String id;
     private String name;
     private String phoneNumber;
-    private Boolean member;
+    private Boolean active;
 
-    protected Client() {
+    protected ClientEntity() {
     }
 
-    public Client(String id, String name, String phoneNumber, Boolean isMember) {
+    public ClientEntity(String id, String name, String phoneNumber, Boolean status) {
         this.id = id;
         this.name = name;
         this.phoneNumber = phoneNumber;
-        this.member = isMember;
+        this.active = status;
     }
 
     @Id
@@ -56,18 +58,18 @@ public class Client {
 
     @NotNull
     @Column(name = "active", columnDefinition = "BIT default 1", length = 1)
-    public Boolean isMember() {
-        return member;
+    public Boolean isActive() {
+        return active;
     }
 
-    public void setMember(Boolean member) {
-        this.member = member;
+    public void setActive(Boolean status) {
+        this.active = status;
     }
 
     @Override
     public String toString() {
-        return String.format("Client{id='%s', name='%s', phoneNumber='%s', member=%s}",
-                id, name, phoneNumber, member);
+        return String.format("Client{id='%s', name='%s', phoneNumber='%s', active=%s}",
+                id, name, phoneNumber, active);
     }
 
 }
