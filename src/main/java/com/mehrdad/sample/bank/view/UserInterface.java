@@ -68,7 +68,6 @@ public class UserInterface {
             if (!foundClient.isActive()) {
                 activateOrDeactivateClient(foundClient);
             }
-
             return;
         }
 
