@@ -1,8 +1,6 @@
 package com.mehrdad.sample.bank.core.entity;
 
 import javax.persistence.*;
-import java.sql.Time;
-import java.sql.Timestamp;
 
 @Entity
 public class TransactionEntity {
@@ -10,6 +8,8 @@ public class TransactionEntity {
     private String id;
     private AccountEntity sender;
     private AccountEntity receiver;
+    @OneToOne
+    @JoinColumn(name = "money_id")
     private MoneyEntity moneyEntity;
 
     public MoneyEntity getMoneyEntity() {
@@ -70,7 +70,7 @@ public class TransactionEntity {
                 "id='" + id + '\'' +
                 ", sender=" + sender.getNumber() +
                 ", receiver=" + receiver.getNumber() +
-                ", amount=" + moneyEntity.getBalance() + " " + moneyEntity.getCurrency() +
+                ", amount=" + moneyEntity.getAmount() + " " + moneyEntity.getCurrency() +
                 ", date= " +
                 '}';
     }

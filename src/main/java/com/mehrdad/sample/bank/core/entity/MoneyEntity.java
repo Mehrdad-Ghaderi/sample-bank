@@ -12,13 +12,13 @@ public class MoneyEntity {
 
     private String id;
     private String currency;
-    private BigDecimal balance;
+    private BigDecimal amount;
     private AccountEntity account;
 
-    public MoneyEntity(String currency, BigDecimal balance, AccountEntity account) {
+    public MoneyEntity(String currency, BigDecimal amount, AccountEntity account) {
         this.id = account.getNumber() + currency;
         this.currency = currency;
-        this.balance = balance;
+        this.amount = amount;
         this.account = account;
     }
 
@@ -44,12 +44,12 @@ public class MoneyEntity {
     }
 
     @NotNull
-    public BigDecimal getBalance() {
-        return balance;
+    public BigDecimal getAmount() {
+        return amount;
     }
 
-    public void setBalance(BigDecimal balance) {
-        this.balance = balance;
+    public void setAmount(BigDecimal balance) {
+        this.amount = balance;
     }
 
     @NotNull
@@ -66,7 +66,7 @@ public class MoneyEntity {
     public String toString() {
         return "MoneyEntity{" +
                 ", currency='" + currency + '\'' +
-                ", balance=" + balance +
+                ", balance=" + amount +
                 ", account=" + account.getNumber() +
                 '}';
     }

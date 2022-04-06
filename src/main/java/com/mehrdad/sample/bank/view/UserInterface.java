@@ -2,10 +2,12 @@ package com.mehrdad.sample.bank.view;
 
 import com.mehrdad.sample.bank.api.dto.AccountDto;
 import com.mehrdad.sample.bank.api.dto.ClientDto;
+import com.mehrdad.sample.bank.api.dto.MoneyDto;
 import com.mehrdad.sample.bank.core.service.AccountService;
 import com.mehrdad.sample.bank.core.service.ClientService;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,7 +39,7 @@ public class UserInterface {
                 "Enter 8 to view information on an account:\n" +
                 "Enter 9 to view all accounts in the bank:\n" +
                 "Enter 10 to freeze or unfreeze an account:\n" +
-//                "Enter  to deposit money.\n" +
+                "Enter 11 to deposit money.\n" +
 //                "Enter  to withdraw money.\n" +
 //                "Enter  to transfer money.\n" +
 //                "Enter  to view the transactions of an account.\n" +
@@ -91,6 +93,9 @@ public class UserInterface {
             if (userInput == 10) {
                 freezeOrUnfreezeAccount();
                 continue;
+            }
+            if (userInput == 11) {
+                depositMoney();
             }
             if (userInput == 0) {
                 System.out.println("The system was shut down by the user.");
@@ -244,7 +249,8 @@ public class UserInterface {
         }
 
         while (true) {
-            System.out.println("Enter an account number to allocate to the client:");
+            System.out.println("Enter an account number to allocate to the client: accountnumber + .1" +
+                    "example: 111.1 or 111.2");
             String accountNumber = getUserInputString();
             if (accounts.stream().anyMatch(account -> account.getNumber().equals(accountNumber))) {
                 System.out.println("Account number " + accountNumber + " has already been allocated to " + client.getName() + ".");
@@ -311,9 +317,35 @@ public class UserInterface {
             }
             System.out.println("The input value was NOT valid.\nPlease try again.");
         }
+    }
+
+    private void depositMoney() {
+        System.out.println("Enter the account number you would like to deposit money into:");
+        String accountNumber = getUserInputString();
+        Optional<AccountDto> account = accountService.getAccountByAccountNumber(accountNumber);
+        if (account.isEmpty()) {
+            System.out.println("Account number, " + accountNumber + ", was NOT fount.");
+            return;
+        }
+
+        System.out.println("Enter the currency:");
+        String currency = getUserInputString();
+        System.out.println("Enter the amount:");
+        BigDecimal amount = getUserBigDecimal();
+        MoneyDto money = new MoneyDto(currency, amount, account.get());
 
     }
 
+    private BigDecimal getUserBigDecimal() {
+        while (true) {
+            try {
+                return scanner.nextBigDecimal();
+            } catch (InputMismatchException e) {
+                System.out.println("Please enter ONLY numbers.\nTry again:");
+                scanner.nextLine();
+            }
+        }
+    }
 
     private String getUserInputString() {
         while (true) {
