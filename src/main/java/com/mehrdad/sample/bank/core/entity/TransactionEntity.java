@@ -1,6 +1,7 @@
 package com.mehrdad.sample.bank.core.entity;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
 @Entity
 public class TransactionEntity {
@@ -8,24 +9,19 @@ public class TransactionEntity {
     private String id;
     private AccountEntity sender;
     private AccountEntity receiver;
-    @OneToOne
-    @JoinColumn(name = "money_id")
-    private MoneyEntity moneyEntity;
+    private MoneyEntity money;
 
-    public MoneyEntity getMoneyEntity() {
-        return moneyEntity;
-    }
-
-    public TransactionEntity(AccountEntity sender, AccountEntity receiver, MoneyEntity moneyEntity) {
+    public TransactionEntity(AccountEntity sender, AccountEntity receiver, MoneyEntity money) {
         this.sender = sender;
         this.receiver = receiver;
-        this.moneyEntity = moneyEntity;
+        this.money = money;
     }
 
     public TransactionEntity() {
     }
 
     @Id
+    @NotNull
     public String getId() {
         return id;
     }
@@ -34,6 +30,7 @@ public class TransactionEntity {
         this.id = id;
     }
 
+    @NotNull
     @OneToOne
     @JoinColumn(name = "sender_id")
     public AccountEntity getSender() {
@@ -44,6 +41,7 @@ public class TransactionEntity {
         this.sender = sender;
     }
 
+    @NotNull
     @OneToOne
     @JoinColumn(name = "receiver_id")
     public AccountEntity getReceiver() {
@@ -54,14 +52,15 @@ public class TransactionEntity {
         this.receiver = receiver;
     }
 
+    @NotNull
     @OneToOne
-    @JoinColumn(name = "amount")
+    @JoinColumn(name = "money_id")
     public MoneyEntity getMoney() {
-        return moneyEntity;
+        return money;
     }
 
-    public void setMoney(MoneyEntity moneyEntity) {
-        this.moneyEntity = moneyEntity;
+    public void setMoney(MoneyEntity money) {
+        this.money = money;
     }
 
     @Override
@@ -70,7 +69,7 @@ public class TransactionEntity {
                 "id='" + id + '\'' +
                 ", sender=" + sender.getNumber() +
                 ", receiver=" + receiver.getNumber() +
-                ", amount=" + moneyEntity.getAmount() + " " + moneyEntity.getCurrency() +
+                ", amount=" + money.getAmount() + " " + money.getCurrency() +
                 ", date= " +
                 '}';
     }

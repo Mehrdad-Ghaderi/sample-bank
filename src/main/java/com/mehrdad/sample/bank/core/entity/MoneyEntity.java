@@ -1,10 +1,12 @@
 package com.mehrdad.sample.bank.core.entity;
 
-import javax.persistence.Entity;
+import javax.persistence.*;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 
 @Entity
@@ -26,6 +28,8 @@ public class MoneyEntity {
     }
 
     @Id
+    @NotBlank
+    @Size(max = 10)
     public String getId() {
         return id;
     }
@@ -44,6 +48,7 @@ public class MoneyEntity {
     }
 
     @NotNull
+    @JoinColumn(name = "amount")
     public BigDecimal getAmount() {
         return amount;
     }

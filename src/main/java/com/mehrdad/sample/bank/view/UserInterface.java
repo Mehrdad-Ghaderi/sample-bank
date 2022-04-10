@@ -5,6 +5,7 @@ import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.api.dto.MoneyDto;
 import com.mehrdad.sample.bank.core.service.AccountService;
 import com.mehrdad.sample.bank.core.service.ClientService;
+import com.mehrdad.sample.bank.core.service.TransactionService;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -19,11 +20,13 @@ public class UserInterface {
     private final Scanner scanner;
     private final ClientService clientService;
     private final AccountService accountService;
+    private final TransactionService transactionService;
 
-    public UserInterface(Scanner scanner, ClientService clientService, AccountService accountService) {
+    public UserInterface(Scanner scanner, ClientService clientService, AccountService accountService, TransactionService transactionService) {
         this.scanner = scanner;
         this.clientService = clientService;
         this.accountService = accountService;
+        this.transactionService = transactionService;
     }
 
     private void printMenu() {
@@ -334,6 +337,7 @@ public class UserInterface {
         BigDecimal amount = getUserBigDecimal();
         MoneyDto money = new MoneyDto(currency, amount, account.get());
 
+        transactionService.depositMoney(money);
     }
 
     private BigDecimal getUserBigDecimal() {

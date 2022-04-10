@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 @Service
 public class AccountService {
 
+    //private final AccountDto bankAccount = getBankAccount();
     private final ClientRepository clientRepository;
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
@@ -31,10 +32,18 @@ public class AccountService {
         this.clientMapper = clientMapper;
     }
 
+    private AccountDto getBankAccount() {
+        Optional<AccountDto> bankAccount = getAccountByAccountNumber("111.1");
+        if (bankAccount.isPresent()) {
+            return bankAccount.get();
+        }
+        System.out.println("The main account of the Bank was not found");
+        return null;
+    }
+
     public Optional<AccountDto> getAccountByAccountNumber(String accountNumber) {
         ClientDto clientDto = getClientByAccountNumber(accountNumber);
-        Optional<AccountDto> accountDto = accountRepository.findById(accountNumber).map(accountEntity -> accountMapper.toAccountDto(accountEntity, clientDto));
-        return accountDto;
+        return accountRepository.findById(accountNumber).map(accountEntity -> accountMapper.toAccountDto(accountEntity, clientDto));
               //  .orElseThrow(() -> new AccountNotFoundException(accountNumber)));
         /*return Optional.ofNullable(accountRepository.findById(accountNumber).map(accountEntity -> accountMapper.toAccountDto(accountEntity, clientDto))
                 .orElseThrow(() -> new AccountNotFoundException(accountNumber)));*/
@@ -123,4 +132,5 @@ public class AccountService {
         foundAccount.setActive(b);
         accountRepository.save(foundAccount);
     }
+
 }
