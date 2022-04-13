@@ -31,7 +31,7 @@ public class TransactionEntity {
     }
 
     @NotNull
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "sender_id")
     public AccountEntity getSender() {
         return sender;
@@ -42,7 +42,7 @@ public class TransactionEntity {
     }
 
     @NotNull
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "receiver_id")
     public AccountEntity getReceiver() {
         return receiver;
@@ -53,7 +53,7 @@ public class TransactionEntity {
     }
 
     @NotNull
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "money_id")
     public MoneyEntity getMoney() {
         return money;

@@ -335,9 +335,18 @@ public class UserInterface {
         String currency = getUserInputString();
         System.out.println("Enter the amount:");
         BigDecimal amount = getUserBigDecimal();
-        MoneyDto money = new MoneyDto(currency, amount, account.get());
-
-        transactionService.depositMoney(money);
+        MoneyDto money;
+        if (amount.compareTo(BigDecimal.ZERO) > 0) {
+            money = new MoneyDto(currency, amount, account.get());
+            boolean deposit = transactionService.deposit(money);
+            if (deposit) {
+                System.out.println(amount + currency + " was successfully deposited into account number " + account + ".");
+            } else {
+                System.out.println("Transaction was unsuccessful.");
+            }
+        } else {
+            System.out.println("Negative amounts cannot be deposited");
+        }
     }
 
     private BigDecimal getUserBigDecimal() {

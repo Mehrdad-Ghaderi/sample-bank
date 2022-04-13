@@ -21,6 +21,7 @@ public class MoneyMapper {
 
     public MoneyEntity toMoneyEntity(MoneyDto moneyDto) {
         MoneyEntity moneyEntity = new MoneyEntity();
+        moneyEntity.setId(moneyDto.getId());
         moneyEntity.setCurrency(moneyDto.getCurrency());
         moneyEntity.setAmount(moneyDto.getAmount());
 
@@ -33,6 +34,7 @@ public class MoneyMapper {
 
     public MoneyDto toMonetDto(MoneyEntity moneyEntity) {
         MoneyDto moneyDto = new MoneyDto();
+        moneyDto.setId(moneyEntity.getId());
         moneyDto.setCurrency(moneyEntity.getCurrency());
         moneyDto.setAmount(moneyEntity.getAmount());
 
