@@ -44,7 +44,7 @@ public class AccountService {
     public Optional<AccountDto> getAccountByAccountNumber(String accountNumber) {
         ClientDto clientDto = getClientByAccountNumber(accountNumber);
         return accountRepository.findById(accountNumber).map(accountEntity -> accountMapper.toAccountDto(accountEntity, clientDto));
-              //  .orElseThrow(() -> new AccountNotFoundException(accountNumber)));
+        //  .orElseThrow(() -> new AccountNotFoundException(accountNumber)));
         /*return Optional.ofNullable(accountRepository.findById(accountNumber).map(accountEntity -> accountMapper.toAccountDto(accountEntity, clientDto))
                 .orElseThrow(() -> new AccountNotFoundException(accountNumber)));*/
     }

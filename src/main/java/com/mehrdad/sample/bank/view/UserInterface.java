@@ -43,8 +43,8 @@ public class UserInterface {
                 "Enter 9 to view all accounts in the bank:\n" +
                 "Enter 10 to freeze or unfreeze an account:\n" +
                 "Enter 11 to deposit money.\n" +
-//                "Enter  to withdraw money.\n" +
-//                "Enter  to transfer money.\n" +
+                "Enter 12 to withdraw money.\n" +
+                "Enter 13 to transfer money.\n" +
 //                "Enter  to view the transactions of an account.\n" +
 //                "Enter  to view the balance of an account.\n" +
 //                "Enter  to view the balance of the bank.\n" +
@@ -100,6 +100,13 @@ public class UserInterface {
             if (userInput == 11) {
                 depositMoney();
             }
+            if (userInput == 12) {
+                withdrawMoney();
+            }
+            if (userInput == 13) {
+                transferMoney();
+            }
+
             if (userInput == 0) {
                 System.out.println("The system was shut down by the user.");
                 break;
@@ -281,12 +288,8 @@ public class UserInterface {
 
     private void freezeOrUnfreezeAccount() {
         System.out.println("Enter the account number you would like to freeze:");
-        String accountNumber = getUserInputString();
-        Optional<AccountDto> account = accountService.getAccountByAccountNumber(accountNumber);
-        if (account.isEmpty()) {
-            System.out.println("Account number, " + accountNumber + ", was NOT fount.");
-            return;
-        }
+        Optional<AccountDto> account = getAccount();
+        if (account.isEmpty()) return;
         freezeOrUnfreezeAccount(account.get());
     }
 
@@ -324,28 +327,60 @@ public class UserInterface {
 
     private void depositMoney() {
         System.out.println("Enter the account number you would like to deposit money into:");
-        String accountNumber = getUserInputString();
-        Optional<AccountDto> account = accountService.getAccountByAccountNumber(accountNumber);
-        if (account.isEmpty()) {
-            System.out.println("Account number, " + accountNumber + ", was NOT fount.");
-            return;
-        }
+        Optional<AccountDto> account = getAccount();
+        if (account.isEmpty()) return;
 
+        MoneyDto money = createMoney(account);
+        if (money == null) return;
+
+        boolean deposit = transactionService.deposit(money);
+        transactionLog(account, money, deposit);
+    }
+
+    private void withdrawMoney() {
+        System.out.println("Enter the account number you would like to withdraw money from:");
+        Optional<AccountDto> account = getAccount();
+        if (account.isEmpty()) return;
+
+        MoneyDto money = createMoney(account);
+        if (money == null) return;
+
+        boolean withdraw = transactionService.withdraw(money);
+        transactionLog(account, money, withdraw);
+    }
+
+    private void transferMoney() {
+
+    }
+
+    private MoneyDto createMoney(Optional<AccountDto> account) {
         System.out.println("Enter the currency:");
         String currency = getUserInputString();
         System.out.println("Enter the amount:");
         BigDecimal amount = getUserBigDecimal();
-        MoneyDto money;
         if (amount.compareTo(BigDecimal.ZERO) > 0) {
-            money = new MoneyDto(currency, amount, account.get());
-            boolean deposit = transactionService.deposit(money);
-            if (deposit) {
-                System.out.println(amount + currency + " was successfully deposited into account number " + account + ".");
-            } else {
-                System.out.println("Transaction was unsuccessful.");
-            }
+            return new MoneyDto(currency, amount, account.get());
         } else {
             System.out.println("Negative amounts cannot be deposited");
+            return null;
+        }
+    }
+
+    private Optional<AccountDto> getAccount() {
+        String accountNumber = getUserInputString();
+        Optional<AccountDto> account = accountService.getAccountByAccountNumber(accountNumber);
+        if (account.isEmpty()) {
+            System.out.println("Account number, " + accountNumber + ", was NOT fount.");
+            return Optional.empty();
+        }
+        return account;
+    }
+
+    private void transactionLog(Optional<AccountDto> account, MoneyDto money, boolean withdraw) {
+        if (withdraw) {
+            System.out.println(money.getAmount() + money.getCurrency() + " was successfully deposited into account number " + account.get() + ".");
+        } else {
+            System.out.println("Transaction was unsuccessful.");
         }
     }
 
