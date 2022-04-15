@@ -32,32 +32,36 @@ public class TransactionService {
     }
 
     public boolean transfer(AccountDto sender, AccountDto receiver, MoneyDto money) {
-        if (withdraw(money)) {
+        if (withdraw(money, false)) {
             money.setAccount(receiver);
-            deposit(money);
+            deposit(money, false);
             return true;
         } else {
             return false;
         }
     }
 
-    public boolean deposit(MoneyDto moneyDto) {
+    public boolean deposit(MoneyDto moneyDto, boolean b) {
         if (invalidAmount(moneyDto)) return false;
 
         Optional<MoneyEntity> moneyEntity = moneyRepository.findById(moneyDto.getId());
         if (moneyEntity.isEmpty()) {
             MoneyEntity newMoney = moneyMapper.toMoneyEntity(moneyDto);
             moneyRepository.save(newMoney);
-            subtractFromBankAccount(moneyDto);
+            if (b) {
+                subtractFromBankAccount(moneyDto);
+            }
         } else {
             moneyEntity.get().setAmount(addAmount(moneyEntity.get(), moneyDto));
             moneyRepository.save(moneyEntity.get());
-            subtractFromBankAccount(moneyDto);
+            if (b) {
+                subtractFromBankAccount(moneyDto);
+            }
         }
         return true;
     }
 
-    public boolean withdraw(MoneyDto moneyDto) {
+    public boolean withdraw(MoneyDto moneyDto, boolean b) {
         if (invalidAmount(moneyDto)) return false;
 
         Optional<MoneyEntity> moneyEntity = moneyRepository.findById(moneyDto.getId());
@@ -67,7 +71,9 @@ public class TransactionService {
             if (sufficientBalance(moneyEntity.get(), moneyDto)) {
                 moneyEntity.get().setAmount(subtractAmount(moneyEntity.get(), moneyDto));
                 moneyRepository.save(moneyEntity.get());
-                addToBankAccount(moneyDto);
+                if (b) {
+                    addToBankAccount(moneyDto);
+                }
                 return true;
             }
         }

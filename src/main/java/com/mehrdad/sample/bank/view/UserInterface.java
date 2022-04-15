@@ -331,10 +331,9 @@ public class UserInterface {
         if (account.isEmpty()) return;
 
         MoneyDto money = createMoney(account);
-        if (money == null) return;
 
-        boolean deposit = transactionService.deposit(money);
-        transactionLog(account, money, deposit);
+        boolean deposit = transactionService.deposit(money, true);
+        transactionLog(account.get(), money, "deposited into ",deposit);
     }
 
     private void withdrawMoney() {
@@ -343,10 +342,9 @@ public class UserInterface {
         if (account.isEmpty()) return;
 
         MoneyDto money = createMoney(account);
-        if (money == null) return;
 
-        boolean withdraw = transactionService.withdraw(money);
-        transactionLog(account, money, withdraw);
+        boolean withdraw = transactionService.withdraw(money, true);
+        transactionLog(account.get(), money,"withdrawn from", withdraw);
     }
 
     private void transferMoney() {
@@ -359,21 +357,22 @@ public class UserInterface {
         if (receiverAccount.isEmpty()) return;
 
         MoneyDto money = createMoney(senderAccount);
-        if (money == null) return;
 
         boolean transaction = transactionService.transfer(senderAccount.get(), receiverAccount.get(), money);
+        transactionLog(receiverAccount.get(), money, "transferred from " + senderAccount.get().getNumber() + " to",transaction);
     }
 
     private MoneyDto createMoney(Optional<AccountDto> account) {
         System.out.println("Enter the currency:");
         String currency = getUserInputString();
-        System.out.println("Enter the amount:");
-        BigDecimal amount = getUserBigDecimal();
-        if (amount.compareTo(BigDecimal.ZERO) > 0) {
-            return new MoneyDto(currency, amount, account.get());
-        } else {
-            System.out.println("Negative amounts cannot be deposited");
-            return null;
+        while (true) {
+            System.out.println("Enter the amount:");
+            BigDecimal amount = getUserBigDecimal();
+            if (amount.compareTo(BigDecimal.ZERO) > 0) {
+                return new MoneyDto(currency, amount, account.get());
+            } else {
+                System.out.println("Negative amounts cannot be deposited");
+            }
         }
     }
 
@@ -381,17 +380,17 @@ public class UserInterface {
         String accountNumber = getUserInputString();
         Optional<AccountDto> account = accountService.getAccountByAccountNumber(accountNumber);
         if (account.isEmpty()) {
-            System.out.println("Account number, " + accountNumber + ", was NOT fount.");
+            System.out.println("Account number, " + accountNumber + ", was NOT found.");
             return Optional.empty();
         }
         return account;
     }
 
-    private void transactionLog(Optional<AccountDto> account, MoneyDto money, boolean withdraw) {
-        if (withdraw) {
-            System.out.println(money.getAmount() + money.getCurrency() + " was successfully deposited into account number " + account.get() + ".");
+    private void transactionLog(AccountDto account, MoneyDto money, String string, boolean transactionIsDone) {
+        if (transactionIsDone) {
+            System.out.println(money.getAmount() + money.getCurrency() + " was successfully " + string + " account number " + account.getNumber() + ".");
         } else {
-            System.out.println("Transaction was unsuccessful.");
+            System.out.println("Transaction was not successful.");
         }
     }
 
