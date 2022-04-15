@@ -29,12 +29,16 @@ public class TransactionService {
     }
 
     private void saveTransaction(AccountDto sender, AccountDto Receiver, MoneyDto money) {
-
-
     }
 
-    public void transfer(AccountDto sender, AccountDto receiver, MoneyDto money) {
-
+    public boolean transfer(AccountDto sender, AccountDto receiver, MoneyDto money) {
+        if (withdraw(money)) {
+            money.setAccount(receiver);
+            deposit(money);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public boolean deposit(MoneyDto moneyDto) {

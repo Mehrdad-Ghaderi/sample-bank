@@ -350,7 +350,18 @@ public class UserInterface {
     }
 
     private void transferMoney() {
+        System.out.println("Enter the account number you would like to send money from:");
+        Optional<AccountDto> senderAccount = getAccount();
+        if (senderAccount.isEmpty()) return;
 
+        System.out.println("Enter the account number you would like to send money to:");
+        Optional<AccountDto> receiverAccount = getAccount();
+        if (receiverAccount.isEmpty()) return;
+
+        MoneyDto money = createMoney(senderAccount);
+        if (money == null) return;
+
+        boolean transaction = transactionService.transfer(senderAccount.get(), receiverAccount.get(), money);
     }
 
     private MoneyDto createMoney(Optional<AccountDto> account) {
