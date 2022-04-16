@@ -8,6 +8,7 @@ import com.mehrdad.sample.bank.core.mapper.AccountMapper;
 import com.mehrdad.sample.bank.core.mapper.MoneyMapper;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
 import com.mehrdad.sample.bank.core.repository.MoneyRepository;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -33,12 +34,17 @@ public class TransactionService {
 
     public boolean transfer(AccountDto sender, AccountDto receiver, MoneyDto money) {
         if (withdraw(money, false)) {
-            money.setAccount(receiver);
+            changeMoneyIdAndAccount(receiver, money);
             deposit(money, false);
             return true;
         } else {
             return false;
         }
+    }
+
+    private void changeMoneyIdAndAccount(AccountDto receiver, @NotNull MoneyDto money) {
+        money.setAccount(receiver);
+        money.setId(receiver.getNumber() + money.getCurrency());
     }
 
     public boolean deposit(MoneyDto moneyDto, boolean b) {
@@ -66,6 +72,7 @@ public class TransactionService {
 
         Optional<MoneyEntity> moneyEntity = moneyRepository.findById(moneyDto.getId());
         if (moneyEntity.isEmpty()) {
+            System.out.println("There is no " + moneyDto.getCurrency() + " in account number "+ moneyDto.getAccount().getNumber());
             return false;
         } else {
             if (sufficientBalance(moneyEntity.get(), moneyDto)) {
@@ -84,7 +91,7 @@ public class TransactionService {
         if (moneyEntity.getAmount().compareTo(moneyDto.getAmount()) >= 0) {
             return true;
         }
-        System.out.println("There is not sufficient balance in account number " + moneyEntity.getAccount().getNumber() );
+        System.out.println("There is not sufficient amount of "+ moneyDto.getCurrency()+ "in account number " + moneyEntity.getAccount().getNumber() );
         return false;
     }
 
