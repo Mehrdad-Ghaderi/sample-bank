@@ -1,7 +1,5 @@
 package com.mehrdad.sample.bank.api.dto;
 
-import com.mehrdad.sample.bank.core.entity.AccountEntity;
-
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 

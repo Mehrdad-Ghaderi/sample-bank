@@ -54,15 +54,12 @@ public class TransactionService {
         if (moneyEntity.isEmpty()) {
             MoneyEntity newMoney = moneyMapper.toMoneyEntity(moneyDto);
             moneyRepository.save(newMoney);
-            if (b) {
-                subtractFromBankAccount(moneyDto);
-            }
         } else {
             moneyEntity.get().setAmount(addAmount(moneyEntity.get(), moneyDto));
             moneyRepository.save(moneyEntity.get());
-            if (b) {
-                subtractFromBankAccount(moneyDto);
-            }
+        }
+        if (b) {
+            subtractFromBankAccount(moneyDto);
         }
         return true;
     }
