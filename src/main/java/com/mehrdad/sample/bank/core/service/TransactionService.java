@@ -1,6 +1,5 @@
 package com.mehrdad.sample.bank.core.service;
 
-import com.mehrdad.sample.bank.api.dto.AccountDto;
 import com.mehrdad.sample.bank.api.dto.MoneyDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.MoneyEntity;
@@ -29,25 +28,40 @@ public class TransactionService {
         this.accountMapper = accountMapper;
     }
 
-    private void saveTransaction(AccountDto sender, AccountDto Receiver, MoneyDto money) {
+    private void saveTransaction(com.mehrdad.sample.bank.api.dto.AccountDto sender, com.mehrdad.sample.bank.api.dto.AccountDto receiver, MoneyDto money) {
+        createTransaction(sender, receiver, money);
+
     }
 
-    public boolean transfer(AccountDto sender, AccountDto receiver, MoneyDto money) {
+    private void createTransaction(com.mehrdad.sample.bank.api.dto.AccountDto sender, com.mehrdad.sample.bank.api.dto.AccountDto receiver, MoneyDto money) {
+
+    }
+
+    public boolean transfer(com.mehrdad.sample.bank.api.dto.AccountDto sender, com.mehrdad.sample.bank.api.dto.AccountDto receiver, MoneyDto money) {
         if (withdraw(money, false)) {
             changeMoneyIdAndAccount(receiver, money);
             deposit(money, false);
+            saveTransaction(sender, receiver, money);
             return true;
         } else {
             return false;
         }
     }
 
-    private void changeMoneyIdAndAccount(AccountDto receiver, @NotNull MoneyDto money) {
+    /**
+     * changes the account of MoneyDto after withdrawal from the sender account
+     * in order for the same object to be used for deposit method, which needs a MoneyDto,
+     * but with a different Id and Account.
+     *
+     * @param receiver
+     * @param money
+     */
+    private void changeMoneyIdAndAccount(com.mehrdad.sample.bank.api.dto.AccountDto receiver, @NotNull MoneyDto money) {
         money.setAccount(receiver);
         money.setId(receiver.getNumber() + money.getCurrency());
     }
 
-    public boolean deposit(MoneyDto moneyDto, boolean b) {
+    public boolean deposit(MoneyDto moneyDto, boolean subtractFromBank) {
         if (invalidAmount(moneyDto)) return false;
 
         Optional<MoneyEntity> moneyEntity = moneyRepository.findById(moneyDto.getId());
@@ -58,24 +72,24 @@ public class TransactionService {
             moneyEntity.get().setAmount(addAmount(moneyEntity.get(), moneyDto));
             moneyRepository.save(moneyEntity.get());
         }
-        if (b) {
+        if (subtractFromBank) {
             subtractFromBankAccount(moneyDto);
         }
         return true;
     }
 
-    public boolean withdraw(MoneyDto moneyDto, boolean b) {
+    public boolean withdraw(MoneyDto moneyDto, boolean subtractFromBank) {
         if (invalidAmount(moneyDto)) return false;
 
         Optional<MoneyEntity> moneyEntity = moneyRepository.findById(moneyDto.getId());
         if (moneyEntity.isEmpty()) {
-            System.out.println("There is no " + moneyDto.getCurrency() + " in account number "+ moneyDto.getAccount().getNumber());
+            System.out.println("There is no " + moneyDto.getCurrency() + " in account number " + moneyDto.getAccount().getNumber());
             return false;
         } else {
             if (sufficientBalance(moneyEntity.get(), moneyDto)) {
                 moneyEntity.get().setAmount(subtractAmount(moneyEntity.get(), moneyDto));
                 moneyRepository.save(moneyEntity.get());
-                if (b) {
+                if (subtractFromBank) {
                     addToBankAccount(moneyDto);
                 }
                 return true;
@@ -88,7 +102,7 @@ public class TransactionService {
         if (moneyEntity.getAmount().compareTo(moneyDto.getAmount()) >= 0) {
             return true;
         }
-        System.out.println("There is not sufficient amount of "+ moneyDto.getCurrency()+ "in account number " + moneyEntity.getAccount().getNumber() );
+        System.out.println("There is not sufficient amount of " + moneyDto.getCurrency() + "in account number " + moneyEntity.getAccount().getNumber());
         return false;
     }
 

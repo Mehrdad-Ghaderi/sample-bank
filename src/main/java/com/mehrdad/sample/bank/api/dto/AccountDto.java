@@ -22,7 +22,6 @@ public class AccountDto {
     }
 
     @NotBlank
-    @Size(max = 15)
     public String getNumber() {
         return number;
     }

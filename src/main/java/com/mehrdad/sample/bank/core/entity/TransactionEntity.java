@@ -2,6 +2,8 @@ package com.mehrdad.sample.bank.core.entity;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Entity
 public class TransactionEntity {
@@ -10,11 +12,13 @@ public class TransactionEntity {
     private AccountEntity sender;
     private AccountEntity receiver;
     private MoneyEntity money;
+    private LocalDateTime localDateTime;
 
     public TransactionEntity(AccountEntity sender, AccountEntity receiver, MoneyEntity money) {
         this.sender = sender;
         this.receiver = receiver;
         this.money = money;
+        this.localDateTime = LocalDateTime.now();
     }
 
     public TransactionEntity() {
@@ -63,14 +67,23 @@ public class TransactionEntity {
         this.money = money;
     }
 
+    @NotNull
+    public LocalDateTime getLocalDateTime() {
+        return localDateTime;
+    }
+
+    public void setLocalDateTime(LocalDateTime localDateTime) {
+        this.localDateTime = localDateTime;
+    }
+
     @Override
     public String toString() {
         return "TransactionEntity{" +
                 "id='" + id + '\'' +
-                ", sender=" + sender.getNumber() +
-                ", receiver=" + receiver.getNumber() +
-                ", amount=" + money.getAmount() + " " + money.getCurrency() +
-                ", date= " +
+                ", sender=" + sender +
+                ", receiver=" + receiver +
+                ", money=" + money.getAmount() + money.getCurrency() +
+                ", local date time=" + localDateTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss")) +
                 '}';
     }
 }

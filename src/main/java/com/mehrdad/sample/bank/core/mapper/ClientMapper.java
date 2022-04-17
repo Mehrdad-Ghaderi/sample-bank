@@ -1,7 +1,6 @@
 package com.mehrdad.sample.bank.core.mapper;
 
 import com.mehrdad.sample.bank.api.dto.ClientDto;
-import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
 import org.springframework.stereotype.Component;
 

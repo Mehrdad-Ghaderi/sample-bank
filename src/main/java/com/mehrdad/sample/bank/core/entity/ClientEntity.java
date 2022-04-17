@@ -6,7 +6,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
 
-@Entity // shows there is a table of this element in DB
+@Entity
 public class ClientEntity {
 
     private String id;

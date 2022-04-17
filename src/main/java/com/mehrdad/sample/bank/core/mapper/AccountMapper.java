@@ -16,7 +16,7 @@ public class AccountMapper {
         if (accountEntity == null) {
             return null;
         }
-        AccountDto accountDto = new AccountDto();
+        com.mehrdad.sample.bank.api.dto.AccountDto accountDto = new com.mehrdad.sample.bank.api.dto.AccountDto();
         accountDto.setNumber(accountEntity.getNumber());
         accountDto.setClient(clientDto);
         accountDto.setActive(accountEntity.isActive());
