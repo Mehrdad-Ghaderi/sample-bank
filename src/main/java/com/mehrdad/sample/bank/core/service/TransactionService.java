@@ -1,5 +1,6 @@
 package com.mehrdad.sample.bank.core.service;
 
+import com.mehrdad.sample.bank.api.dto.AccountDto;
 import com.mehrdad.sample.bank.api.dto.MoneyDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.MoneyEntity;
@@ -28,16 +29,16 @@ public class TransactionService {
         this.accountMapper = accountMapper;
     }
 
-    private void saveTransaction(com.mehrdad.sample.bank.api.dto.AccountDto sender, com.mehrdad.sample.bank.api.dto.AccountDto receiver, MoneyDto money) {
+    private void saveTransaction(AccountDto sender, AccountDto receiver, MoneyDto money) {
         createTransaction(sender, receiver, money);
 
     }
 
-    private void createTransaction(com.mehrdad.sample.bank.api.dto.AccountDto sender, com.mehrdad.sample.bank.api.dto.AccountDto receiver, MoneyDto money) {
+    private void createTransaction(AccountDto sender, AccountDto receiver, MoneyDto money) {
 
     }
 
-    public boolean transfer(com.mehrdad.sample.bank.api.dto.AccountDto sender, com.mehrdad.sample.bank.api.dto.AccountDto receiver, MoneyDto money) {
+    public boolean transfer(AccountDto sender, AccountDto receiver, MoneyDto money) {
         if (withdraw(money, false)) {
             changeMoneyIdAndAccount(receiver, money);
             deposit(money, false);
@@ -56,7 +57,7 @@ public class TransactionService {
      * @param receiver
      * @param money
      */
-    private void changeMoneyIdAndAccount(com.mehrdad.sample.bank.api.dto.AccountDto receiver, @NotNull MoneyDto money) {
+    private void changeMoneyIdAndAccount(AccountDto receiver, @NotNull MoneyDto money) {
         money.setAccount(receiver);
         money.setId(receiver.getNumber() + money.getCurrency());
     }
