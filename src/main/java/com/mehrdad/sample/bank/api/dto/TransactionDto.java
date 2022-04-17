@@ -1,8 +1,5 @@
 package com.mehrdad.sample.bank.api.dto;
 
-import com.mehrdad.sample.bank.core.entity.MoneyEntity;
-
-import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -12,10 +9,10 @@ public class TransactionDto {
     private String id;
     private AccountDto sender;
     private AccountDto receiver;
-    private MoneyEntity money;
+    private MoneyDto money;
     private LocalDateTime localDateTime;
 
-    public TransactionDto(AccountDto sender, AccountDto receiver, MoneyEntity money) {
+    public TransactionDto(AccountDto sender, AccountDto receiver, MoneyDto money) {
         this.sender = sender;
         this.receiver = receiver;
         this.money = money;
@@ -25,7 +22,6 @@ public class TransactionDto {
     public TransactionDto() {
     }
 
-    @Id
     @NotNull
     public String getId() {
         return id;
@@ -54,11 +50,11 @@ public class TransactionDto {
     }
 
     @NotNull
-    public MoneyEntity getMoney() {
+    public MoneyDto getMoney() {
         return money;
     }
 
-    public void setMoney(MoneyEntity money) {
+    public void setMoney(MoneyDto money) {
         this.money = money;
     }
 
