@@ -1,19 +1,18 @@
 package com.mehrdad.sample.bank.core.entity;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.util.List;
 
-@Entity // shows there a table of this element in DB
+@Entity
 public class ClientEntity {
 
     private String id;
     private String name;
     private String phoneNumber;
+    private List<AccountEntity> accounts;
     private Boolean active;
 
     protected ClientEntity() {
@@ -27,6 +26,7 @@ public class ClientEntity {
     }
 
     @Id
+    @NotBlank
     @Size(max = 10)
     public String getId() {
         return id;
@@ -36,7 +36,7 @@ public class ClientEntity {
         this.id = id;
     }
 
-    @NotNull
+    @NotBlank
     @Size(max = 45)
     public String getName() {
         return name;
@@ -46,7 +46,7 @@ public class ClientEntity {
         this.name = name;
     }
 
-    @NotNull
+    @NotBlank
     @Size(max = 15)
     public String getPhoneNumber() {
         return phoneNumber;
@@ -54,6 +54,15 @@ public class ClientEntity {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    @OneToMany(mappedBy = "client", fetch = FetchType.EAGER)
+    public List<AccountEntity> getAccounts() {
+        return accounts;
+    }
+
+    public void setAccounts(List<AccountEntity> accounts) {
+        this.accounts = accounts;
     }
 
     @NotNull
@@ -68,8 +77,8 @@ public class ClientEntity {
 
     @Override
     public String toString() {
-        return String.format("Client{id='%s', name='%s', phoneNumber='%s', active=%s}",
-                id, name, phoneNumber, active);
+        return String.format("ClientEntity{id='%s', name='%s', phoneNumber='%s', active=%s, accounts=%s}",
+                id, name, phoneNumber, active, accounts);
     }
 
 }

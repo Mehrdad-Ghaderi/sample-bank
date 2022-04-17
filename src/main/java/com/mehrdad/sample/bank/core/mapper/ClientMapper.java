@@ -7,30 +7,43 @@ import org.springframework.stereotype.Component;
 @Component
 public class ClientMapper {
 
-    public ClientDto toClientDto(ClientEntity entity) {
-        if (entity == null) {
-            return null;
-        }
+    private final AccountMapper accountMapper;
 
-        ClientDto dto = new ClientDto();
-        dto.setId(entity.getId());
-        dto.setName(entity.getName());
-        dto.setPhoneNumber(entity.getPhoneNumber());
-        dto.setActive(entity.isActive());
-        return dto;
+    public ClientMapper(AccountMapper accountMapper) {
+        this.accountMapper = accountMapper;
     }
 
-    public ClientEntity toClientEntity(ClientDto dto) {
-        if (dto == null) {
+    public ClientDto toClientDto(ClientEntity clientEntity) {
+        if (clientEntity == null) {
             return null;
         }
 
-        return new ClientEntity(
-                dto.getId(),
-                dto.getName(),
-                dto.getPhoneNumber(),
-                dto.isActive()
-        );
+        ClientDto clientDto = new ClientDto();
+
+        clientDto.setId(clientEntity.getId());
+        clientDto.setName(clientEntity.getName());
+        clientDto.setPhoneNumber(clientEntity.getPhoneNumber());
+        clientDto.setActive(clientEntity.isActive());
+
+        clientDto.setAccounts(accountMapper.toAccountDtoList(clientEntity.getAccounts(), clientDto));
+
+        return clientDto;
+    }
+
+    public ClientEntity toClientEntity(ClientDto clientDto) {
+        if (clientDto == null) {
+            return null;
+        }
+
+        ClientEntity clientEntity = new ClientEntity(
+                clientDto.getId(),
+                clientDto.getName(),
+                clientDto.getPhoneNumber(),
+                clientDto.isActive());
+
+        clientEntity.setAccounts(accountMapper.toAccountEntityList(clientDto.getAccounts(), clientEntity));
+
+        return clientEntity;
     }
 
 }

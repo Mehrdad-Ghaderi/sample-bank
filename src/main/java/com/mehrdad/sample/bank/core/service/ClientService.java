@@ -34,7 +34,7 @@ public class ClientService {
     }
 
     public void setClientPhoneNumber(String clientId, String phoneNumber) {
-        ClientEntity foundClientEntity = clientRepository.findById(clientId)
+        ClientEntity foundClientEntity = clientRepository. findById(clientId)
                 .orElseThrow(() -> new ClientNotFoundException(clientId));
 
         foundClientEntity.setPhoneNumber(phoneNumber);

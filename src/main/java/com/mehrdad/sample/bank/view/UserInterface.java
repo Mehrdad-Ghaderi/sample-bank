@@ -1,21 +1,54 @@
 package com.mehrdad.sample.bank.view;
 
+import com.mehrdad.sample.bank.api.dto.AccountDto;
 import com.mehrdad.sample.bank.api.dto.ClientDto;
+import com.mehrdad.sample.bank.api.dto.MoneyDto;
+import com.mehrdad.sample.bank.core.service.AccountService;
 import com.mehrdad.sample.bank.core.service.ClientService;
+import com.mehrdad.sample.bank.core.service.TransactionService;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.util.Optional.ofNullable;
 
 @Component
 public class UserInterface {
 
     private final Scanner scanner;
     private final ClientService clientService;
+    private final AccountService accountService;
+    private final TransactionService transactionService;
 
-    public UserInterface(Scanner scanner, ClientService clientService) {
+    public UserInterface(Scanner scanner, ClientService clientService, AccountService accountService, TransactionService transactionService) {
         this.scanner = scanner;
         this.clientService = clientService;
+        this.accountService = accountService;
+        this.transactionService = transactionService;
+    }
+
+    private void printMenu() {
+        System.out.println("************************************************\n" +
+                "Available Options:\n" +
+                "Enter 1 to add a client.\n" +
+                "Enter 2 to update a client's phone number\n" +
+                "Enter 3 to remove a client.\n" +
+                "Enter 4 to view detailed information on a client.\n" +
+                "Enter 5 to view all clients.\n" +
+                "Enter 6 to activate or deactivate a client's membership.\n" +
+                "Enter 7 to create an account\n" +
+                "Enter 8 to view information on an account:\n" +
+                "Enter 9 to view all accounts in the bank:\n" +
+                "Enter 10 to freeze or unfreeze an account:\n" +
+                "Enter 11 to deposit money.\n" +
+                "Enter 12 to withdraw money.\n" +
+                "Enter 13 to transfer money.\n" +
+//                "Enter  to view the transactions of an account.\n" +
+//                "Enter  to view the balance of an account.\n" +
+//                "Enter  to view the balance of the bank.\n" +
+                "Enter 0 to shut down");
     }
 
     public void start(String[] args) {
@@ -38,18 +71,45 @@ public class UserInterface {
                 continue;
             }
             if (userInput == 4) {
-                printAllClients();
+                printClient();
                 continue;
             }
             if (userInput == 5) {
+                printAllClients();
+                continue;
+            }
+            if (userInput == 6) {
                 activateOrDeactivateClient();
                 continue;
             }
+            if (userInput == 7) {
+                createAccount();
+            }
+            if (userInput == 8) {
+                printAccount();
+                continue;
+            }
+            if (userInput == 9) {
+                printAllAccounts();
+                continue;
+            }
+            if (userInput == 10) {
+                freezeOrUnfreezeAccount();
+                continue;
+            }
+            if (userInput == 11) {
+                depositMoney();
+            }
+            if (userInput == 12) {
+                withdrawMoney();
+            }
+            if (userInput == 13) {
+                transferMoney();
+            }
+
             if (userInput == 0) {
                 System.out.println("The system was shut down by the user.");
                 break;
-            } else {
-                System.out.println("The option you chose is not valid.");
             }
         }
     }
@@ -68,7 +128,6 @@ public class UserInterface {
             if (!foundClient.isActive()) {
                 activateOrDeactivateClient(foundClient);
             }
-
             return;
         }
 
@@ -119,7 +178,14 @@ public class UserInterface {
         }
 
         clientService.removeClient(foundClient);
-        System.out.println(foundClient.getName() + "'s membership status has been set to inactive.");
+        System.out.println(foundClient.getName() + "'s membership status has been deactivated.");
+    }
+
+    private void printClient() {
+        System.out.println("Enter the ID of the client you want information on:");
+        String clientId = getUserInputString();
+        Optional<ClientDto> clientById = clientService.getClientById(clientId);
+        clientById.ifPresentOrElse(System.out::println, () -> System.out.println("No client with that ID was found"));
     }
 
     private void printAllClients() {
@@ -148,21 +214,17 @@ public class UserInterface {
         while (true) {
             if (!client.isActive()) {
                 System.out.println(client.getName() + " is inactive");
-                System.out.println("Press A to ACTIVATE the client's membership:");
-                System.out.println("Press Q to go back to main menu.");
-                userChoice = scanner.next().toUpperCase();
+                System.out.println("Press A to ACTIVATE the client's membership, or Q to go back to main menu.");
+                userChoice = getUserInputString();
                 if (userChoice.equals("A")) {
                     clientService.activateClient(client.getId());
                     System.out.println(client.getName() + " has been activated.");
                     return;
                 }
-            }
-
-            if (client.isActive()) {
+            } else {
                 System.out.println(client.getName() + " is active");
-                System.out.println("Press D to DEACTIVATE the client's membership,");
-                System.out.println("Press Q to go back to main menu.");
-                userChoice = scanner.next().toUpperCase();
+                System.out.println("Press D to DEACTIVATE the client's membership, or Q to go back to main menu.");
+                userChoice = getUserInputString();
                 if (userChoice.equals("D")) {
                     clientService.deactivateClient(client.getId());
                     System.out.println(client.getName() + " has been deactivated.");
@@ -178,21 +240,169 @@ public class UserInterface {
         }
     }
 
-    private void printMenu() {
-        System.out.println("************************************************\n" +
-                "Available Options:\n" +
-                "Enter 1 to add a client.\n" +
-                "Enter 2 to update a client's phone number\n" +
-                "Enter 3 to remove a client.\n" +
-                "Enter 4 to view all clients.\n" +
-                "Enter 5 to activate or deactivate a client's membership.\n" +
-//                "Enter 6 to transfer money.\n" +
-//                "Enter 7 to deposit money.\n" +
-//                "Enter 8 to withdraw money.\n" +
-//                "Enter 9 to view the transactions of an account.\n" +
-//                "Enter 10 to view the balance of an account.\n" +
-//                "Enter 11 to view the balance of the bank.\n" +
-                "Enter 0 to shut down");
+    private void createAccount() {
+        System.out.println("Account Setup:\n" +
+                "Enter the ID of the client you want to open an account for:");
+        String clientID = getUserInputString();
+        Optional<ClientDto> foundClient = clientService.getClientById(clientID);
+        if (foundClient.isEmpty()) {
+            System.out.println("No client with the ID, " + clientID + ", was found.");
+            return;
+        }
+        ClientDto client = foundClient.get();
+        List<AccountDto> accounts = ofNullable(client.getAccounts()).orElseGet(Collections::emptyList);
+
+        if (accounts.isEmpty()) {
+            System.out.printf("No account has been previously allocated to %s%n", client.getName());
+        } else {
+            System.out.printf("Here is a list of all available accounts of %s:%s%n", client.getName(), accounts);
+        }
+
+        while (true) {
+            System.out.println("Enter an account number to allocate to the client: accountnumber + .1" +
+                    "example: 111.1 or 111.2");
+            String accountNumber = getUserInputString();
+            if (accounts.stream().anyMatch(account -> account.getNumber().equals(accountNumber))) {
+                System.out.println("Account number " + accountNumber + " has already been allocated to " + client.getName() + ".");
+                continue;
+            }
+
+
+            if (accountService.createAccount(accountNumber, client)) {
+                System.out.println("Account number " + accountNumber + " was allocated to " + client.getName() + " .");
+            }
+            break;
+        }
+    }
+
+    private void printAccount() {
+        System.out.println("Enter the account number you want information on:");
+        String accountNumber = getUserInputString();
+        Optional<AccountDto> account = accountService.getAccountByAccountNumber(accountNumber);
+        account.ifPresentOrElse(System.out::println, () -> System.out.println("No account with that number was found."));
+    }
+
+    private void printAllAccounts() {
+        accountService.getAllAccounts().forEach(System.out::println);
+    }
+
+    private void freezeOrUnfreezeAccount() {
+        System.out.println("Enter the account number you would like to freeze:");
+        Optional<AccountDto> account = getAccount();
+        if (account.isEmpty()) return;
+        freezeOrUnfreezeAccount(account.get());
+    }
+
+    private void freezeOrUnfreezeAccount(AccountDto accountDto) {
+        String userChoice = "";
+
+        while (true) {
+            if (accountDto.isActive()) {
+                System.out.println("Account number, " + accountDto.getNumber() + ", is not frozen.");
+                System.out.println("Press F to freeze it, or Q to go back to main menu");
+                userChoice = getUserInputString();
+                if (userChoice.equals("F")) {
+                    accountService.freezeAccount(accountDto.getNumber());
+                    System.out.println("Account number, " + accountDto.getNumber() + ", is successfully frozen.");
+                    return;
+                }
+            } else {
+                System.out.println("Account number, " + accountDto.getNumber() + ", is frozen.");
+                System.out.println("Press U to freeze it, or Q to go back to main menu");
+                userChoice = getUserInputString();
+                if (userChoice.equals("U")) {
+                    accountService.unfreezeAccount(accountDto.getNumber());
+                    System.out.println("Account number, " + accountDto.getNumber() + ", is successfully unfrozen.");
+                    return;
+                }
+            }
+
+            if (userChoice.equals("Q")) {
+                System.out.println("Operation was canceled.");
+                break;
+            }
+            System.out.println("The input value was NOT valid.\nPlease try again.");
+        }
+    }
+
+    private void depositMoney() {
+        System.out.println("Enter the account number you would like to deposit money into:");
+        Optional<AccountDto> account = getAccount();
+        if (account.isEmpty()) return;
+
+        MoneyDto money = createMoney(account);
+
+        boolean deposit = transactionService.deposit(money, true);
+        transactionLog(account.get(), money, "deposited into ",deposit);
+    }
+
+    private void withdrawMoney() {
+        System.out.println("Enter the account number you would like to withdraw money from:");
+        Optional<AccountDto> account = getAccount();
+        if (account.isEmpty()) return;
+
+        MoneyDto money = createMoney(account);
+
+        boolean withdraw = transactionService.withdraw(money, true);
+        transactionLog(account.get(), money,"withdrawn from", withdraw);
+    }
+
+    private void transferMoney() {
+        System.out.println("Enter the account number you would like to send money from:");
+        Optional<AccountDto> senderAccount = getAccount();
+        if (senderAccount.isEmpty()) return;
+
+        System.out.println("Enter the account number you would like to send money to:");
+        Optional<AccountDto> receiverAccount = getAccount();
+        if (receiverAccount.isEmpty()) return;
+
+        MoneyDto money = createMoney(senderAccount);
+
+        boolean transaction = transactionService.transfer(senderAccount.get(), receiverAccount.get(), money);
+        transactionLog(receiverAccount.get(), money, "transferred from " + senderAccount.get().getNumber() + " to",transaction);
+    }
+
+    private MoneyDto createMoney(Optional<AccountDto> account) {
+        System.out.println("Enter the currency:");
+        String currency = getUserInputString();
+        while (true) {
+            System.out.println("Enter the amount:");
+            BigDecimal amount = getUserBigDecimal();
+            if (amount.compareTo(BigDecimal.ZERO) > 0) {
+                return new MoneyDto(currency, amount, account.get());
+            } else {
+                System.out.println("Negative amounts cannot be deposited");
+            }
+        }
+    }
+
+    private Optional<AccountDto> getAccount() {
+        String accountNumber = getUserInputString();
+        Optional<AccountDto> account = accountService.getAccountByAccountNumber(accountNumber);
+        if (account.isEmpty()) {
+            System.out.println("Account number, " + accountNumber + ", was NOT found.");
+            return Optional.empty();
+        }
+        return account;
+    }
+
+    private void transactionLog(AccountDto account, MoneyDto money, String string, boolean transactionIsDone) {
+        if (transactionIsDone) {
+            System.out.println(money.getAmount() + money.getCurrency() + " was successfully " + string + " account number " + account.getNumber() + ".");
+        } else {
+            System.out.println("Transaction was not successful.");
+        }
+    }
+
+    private BigDecimal getUserBigDecimal() {
+        while (true) {
+            try {
+                return scanner.nextBigDecimal();
+            } catch (InputMismatchException e) {
+                System.out.println("Please enter ONLY numbers.\nTry again:");
+                scanner.nextLine();
+            }
+        }
     }
 
     private String getUserInputString() {

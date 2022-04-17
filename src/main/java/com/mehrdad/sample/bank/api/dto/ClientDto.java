@@ -1,33 +1,28 @@
 package com.mehrdad.sample.bank.api.dto;
 
-import org.springframework.stereotype.Component;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.util.List;
 
-@Component
 public class ClientDto {
 
     private String id;
     private String name;
     private String phoneNumber;
+    private List<AccountDto> accounts;
     private Boolean active;
 
-    public ClientDto(String id, String name, String phoneNumber, boolean status) {
+    public ClientDto(String id, String name, String phoneNumber, Boolean active) {
         this.id = id;
         this.name = name;
         this.phoneNumber = phoneNumber;
-        this.active = status;
+        this.active = active;
     }
 
     public ClientDto() {
-
     }
 
-    @Id
     @Size(max = 10)
     public String getId() {
         return id;
@@ -37,7 +32,7 @@ public class ClientDto {
         this.id = id;
     }
 
-    @NotNull
+    @NotBlank
     @Size(max = 45)
     public String getName() {
         return name;
@@ -47,7 +42,7 @@ public class ClientDto {
         this.name = name;
     }
 
-    @NotNull
+    @NotBlank
     @Size(max = 15)
     public String getPhoneNumber() {
         return phoneNumber;
@@ -66,10 +61,21 @@ public class ClientDto {
         this.active = status;
     }
 
-    @Override
-    public String toString() {
-        return String.format("Client{id='%s', name='%s', phoneNumber='%s', active=%s}",
-                id, name, phoneNumber, active);
+    public List<AccountDto> getAccounts() {
+        return accounts;
     }
 
+    public void setAccounts(List<AccountDto> accounts) {
+        this.accounts = accounts;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Client{id='%s', name='%s', phoneNumber='%s', active=%s, \naccounts=%s}",
+                id, name, phoneNumber, active, accounts);
+    }
+
+    public String concatNameAndId() {
+        return "{" + this.getName() + ", ID: " + this.getId() + "}";
+    }
 }
