@@ -1,5 +1,6 @@
 package com.mehrdad.sample.bank.core.service;
 
+import com.mehrdad.sample.bank.api.dto.AccountDto;
 import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
@@ -40,14 +41,14 @@ public class AccountService {
         return accountEntity.map(AccountEntity::getClient).map(clientMapper::toClientDto).orElse(null);
     }
 
-    public List<com.mehrdad.sample.bank.api.dto.AccountDto> getAllAccounts() {
+    public List<AccountDto> getAllAccounts() {
 
         return clientRepository.findAll().parallelStream()
                 .filter(ClientEntity::isActive)
                 .map(clientMapper::toClientDto)
                 .map(ClientDto::getAccounts)
                 .flatMap(Collection::parallelStream)
-                .filter(com.mehrdad.sample.bank.api.dto.AccountDto::isActive)
+                .filter(AccountDto::isActive)
                 .collect(Collectors.toList());
 
 /*
@@ -111,7 +112,7 @@ public class AccountService {
         freezeOrUnfreezeAccount(accountNumber, true);
     }
 
-    private void freezeOrUnfreezeAccount(String accountNumber, Boolean b) {
+    public void freezeOrUnfreezeAccount(String accountNumber, Boolean b) {
         AccountEntity foundAccount = accountRepository.findById(accountNumber)
                 .orElseThrow(() -> new AccountNotFoundException(accountNumber));
 

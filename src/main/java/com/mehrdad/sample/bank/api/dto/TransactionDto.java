@@ -1,6 +1,7 @@
 package com.mehrdad.sample.bank.api.dto;
 
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -9,14 +10,17 @@ public class TransactionDto {
     private String id;
     private AccountDto sender;
     private AccountDto receiver;
-    private MoneyDto money;
-    private LocalDateTime localDateTime;
+    private BigDecimal amount;
+    private String currency;
+    private LocalDateTime transactionTime;
 
-    public TransactionDto(AccountDto sender, AccountDto receiver, MoneyDto money) {
+    public TransactionDto(AccountDto sender, AccountDto receiver, BigDecimal amount, String currency) {
         this.sender = sender;
         this.receiver = receiver;
-        this.money = money;
-        this.localDateTime = LocalDateTime.now();
+        this.amount = amount;
+        this.currency = currency;
+        this.transactionTime = LocalDateTime.now();
+        this.id = transactionTime.toString();
     }
 
     public TransactionDto() {
@@ -50,21 +54,30 @@ public class TransactionDto {
     }
 
     @NotNull
-    public MoneyDto getMoney() {
-        return money;
+    public BigDecimal getAmount() {
+        return amount;
     }
 
-    public void setMoney(MoneyDto money) {
-        this.money = money;
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
     }
 
     @NotNull
-    public LocalDateTime getLocalDateTime() {
-        return localDateTime;
+    public String getCurrency() {
+        return currency;
     }
 
-    public void setLocalDateTime(LocalDateTime localDateTime) {
-        this.localDateTime = localDateTime;
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    @NotNull
+    public LocalDateTime getTransactionTime() {
+        return transactionTime;
+    }
+
+    public void setTransactionTime(LocalDateTime transactionTime) {
+        this.transactionTime = transactionTime;
     }
 
     @Override
@@ -73,8 +86,8 @@ public class TransactionDto {
                 "id='" + id + '\'' +
                 ", sender=" + sender +
                 ", receiver=" + receiver +
-                ", money=" + money.getAmount() + money.getCurrency() +
-                ", local date time=" + localDateTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss")) +
+                ", money=" + amount + currency +
+                ", local date time=" + transactionTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss")) +
                 '}';
     }
 

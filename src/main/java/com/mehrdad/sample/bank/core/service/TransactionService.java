@@ -2,42 +2,67 @@ package com.mehrdad.sample.bank.core.service;
 
 import com.mehrdad.sample.bank.api.dto.AccountDto;
 import com.mehrdad.sample.bank.api.dto.MoneyDto;
+import com.mehrdad.sample.bank.api.dto.TransactionDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
+import com.mehrdad.sample.bank.core.entity.ClientEntity;
 import com.mehrdad.sample.bank.core.entity.MoneyEntity;
+import com.mehrdad.sample.bank.core.entity.TransactionEntity;
 import com.mehrdad.sample.bank.core.mapper.AccountMapper;
+import com.mehrdad.sample.bank.core.mapper.ClientMapper;
 import com.mehrdad.sample.bank.core.mapper.MoneyMapper;
+import com.mehrdad.sample.bank.core.mapper.TransactionMapper;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
 import com.mehrdad.sample.bank.core.repository.MoneyRepository;
+import com.mehrdad.sample.bank.core.repository.TransactionRepository;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class TransactionService {
 
     private final MoneyRepository moneyRepository;
-    private final AccountRepository accountRepository;
     private final MoneyMapper moneyMapper;
+    private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
+    private final TransactionRepository transactionRepository;
+    private final TransactionMapper transactionMapper;
+    private final ClientMapper clientMapper;
 
-    public TransactionService(MoneyRepository moneyRepository, AccountRepository accountRepository, MoneyMapper moneyMapper, AccountMapper accountMapper) {
+    public TransactionService(MoneyRepository moneyRepository, AccountRepository accountRepository, MoneyMapper moneyMapper, AccountMapper accountMapper, TransactionRepository transactionRepository, TransactionMapper transactionMapper, ClientMapper clientMapper) {
         this.moneyRepository = moneyRepository;
         this.accountRepository = accountRepository;
         this.moneyMapper = moneyMapper;
         this.accountMapper = accountMapper;
+        this.transactionRepository = transactionRepository;
+        this.transactionMapper = transactionMapper;
+        this.clientMapper = clientMapper;
     }
 
     private void saveTransaction(AccountDto sender, AccountDto receiver, MoneyDto money) {
-        createTransaction(sender, receiver, money);
-
+        TransactionEntity transaction = createTransaction(sender, receiver, money);
+        transactionRepository.save(transaction);
     }
 
-    private void createTransaction(AccountDto sender, AccountDto receiver, MoneyDto money) {
+    private TransactionEntity createTransaction(AccountDto sender, AccountDto receiver, MoneyDto money) {
+        ClientEntity senderClientEntity = clientMapper.toClientEntity(sender.getClient());
+        AccountEntity senderAccountEntity = accountMapper.toAccountEntity(sender, senderClientEntity);
 
+        ClientEntity receiverClientEntity = clientMapper.toClientEntity(receiver.getClient());
+        AccountEntity receiverAccountEntity = accountMapper.toAccountEntity(receiver, receiverClientEntity);
+
+        MoneyEntity moneyEntity = moneyMapper.toMoneyEntity(money);
+
+        return new TransactionEntity(senderAccountEntity, receiverAccountEntity, moneyEntity.getAmount(), moneyEntity.getCurrency().toString());
     }
 
+    @Transactional
     public boolean transfer(AccountDto sender, AccountDto receiver, MoneyDto money) {
         if (withdraw(money, false)) {
             changeMoneyIdAndAccount(receiver, money);
@@ -62,8 +87,13 @@ public class TransactionService {
         money.setId(receiver.getNumber() + money.getCurrency());
     }
 
+    @Transactional
     public boolean deposit(MoneyDto moneyDto, boolean subtractFromBank) {
         if (invalidAmount(moneyDto)) return false;
+
+        if (accountInactive(moneyDto.getAccount())) {
+            return false;
+        }
 
         Optional<MoneyEntity> moneyEntity = moneyRepository.findById(moneyDto.getId());
         if (moneyEntity.isEmpty()) {
@@ -79,8 +109,13 @@ public class TransactionService {
         return true;
     }
 
+    @Transactional
     public boolean withdraw(MoneyDto moneyDto, boolean subtractFromBank) {
         if (invalidAmount(moneyDto)) return false;
+
+        if (accountInactive(moneyDto.getAccount())) {
+            return false;
+        }
 
         Optional<MoneyEntity> moneyEntity = moneyRepository.findById(moneyDto.getId());
         if (moneyEntity.isEmpty()) {
@@ -95,6 +130,14 @@ public class TransactionService {
                 }
                 return true;
             }
+        }
+        return false;
+    }
+
+    private boolean accountInactive(@javax.validation.constraints.NotNull AccountDto senderAccount) {
+        if (!senderAccount.isActive()) {
+            System.out.println("Account number " + senderAccount.getNumber() + " is inactive.");
+            return true;
         }
         return false;
     }
@@ -134,18 +177,16 @@ public class TransactionService {
             foundMoney.get().setAmount(foundMoney.get().getAmount().add(moneyDto.getAmount()));
             moneyRepository.save(foundMoney.get());
         }
-
-
     }
 
     private void subtractFromBankAccount(MoneyDto moneyDto) {
-        Optional<MoneyEntity> foundMoney = moneyRepository.findById("111.1" + moneyDto.getCurrency());
+        Optional<MoneyEntity> foundBankMoney = moneyRepository.findById("111.1" + moneyDto.getCurrency());
 
-        if (foundMoney.isEmpty()) {
+        if (foundBankMoney.isEmpty()) {
             Optional<AccountEntity> bankAccount = accountRepository.findById("111.1");
-            MoneyEntity bankMoneyEntity = moneyMapper.toMoneyEntity(moneyDto);
 
             if (bankAccount.isPresent()) {
+                MoneyEntity bankMoneyEntity = moneyMapper.toMoneyEntity(moneyDto);
                 bankMoneyEntity.setAmount(moneyDto.getAmount().negate());
                 bankMoneyEntity.setId("111.1" + moneyDto.getCurrency());
                 bankMoneyEntity.setAccount(bankAccount.get());
@@ -154,9 +195,10 @@ public class TransactionService {
                 System.out.println("The main bank account was not found.");
             }
         } else {
-            foundMoney.get().setAmount(foundMoney.get().getAmount().subtract(moneyDto.getAmount()));
-            moneyRepository.save(foundMoney.get());
+            foundBankMoney.get().setAmount(foundBankMoney.get().getAmount().subtract(moneyDto.getAmount()));
+            moneyRepository.save(foundBankMoney.get());
         }
+
 
     }
 
@@ -168,4 +210,31 @@ public class TransactionService {
         return moneyEntity.getAmount().subtract(moneyDto.getAmount());
     }
 
+    public List<TransactionDto> getLastTransactions(AccountDto account, int numOfLatestTransactions) {
+        List<TransactionEntity> allTransactionInRepository = transactionRepository.findAll();
+
+        if (allTransactionInRepository.isEmpty()) {
+            return null;
+        }
+        List<TransactionEntity> allTransactionOfAccount = new ArrayList<>();
+
+        for (TransactionEntity transaction : allTransactionInRepository) {
+            if (transaction.getReceiver().getNumber() == account.getNumber() || transaction.getSender().getNumber() == account.getNumber()) {
+                allTransactionOfAccount.add(transaction);
+            }
+        }
+        List<TransactionDto> mappedTransactions = allTransactionOfAccount.stream()
+                .map(transactionMapper::toTransactionEntity)
+                .collect(Collectors.toList());
+
+        List<TransactionDto> finalList = new ArrayList<>();
+
+        if (mappedTransactions.size() >= numOfLatestTransactions) {
+            for (int i = mappedTransactions.size(); i > mappedTransactions.size() - numOfLatestTransactions ; i--) {
+                finalList.add(mappedTransactions.get(i));
+            }
+            return finalList;
+        }else
+            return mappedTransactions;
+    }
 }

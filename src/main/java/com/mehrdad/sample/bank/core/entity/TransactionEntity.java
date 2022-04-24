@@ -2,6 +2,7 @@ package com.mehrdad.sample.bank.core.entity;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -11,21 +12,25 @@ public class TransactionEntity {
     private String id;
     private AccountEntity sender;
     private AccountEntity receiver;
-    private MoneyEntity money;
-    private LocalDateTime localDateTime;
+    private BigDecimal amount;
+    private String currency;
+    private LocalDateTime transactionTime;
 
-    public TransactionEntity(AccountEntity sender, AccountEntity receiver, MoneyEntity money) {
+    public TransactionEntity(AccountEntity sender, AccountEntity receiver, BigDecimal amount, String currency) {
         this.sender = sender;
         this.receiver = receiver;
-        this.money = money;
-        this.localDateTime = LocalDateTime.now();
+        this.amount = amount;
+        this.currency = currency;
+        this.transactionTime = LocalDateTime.now();
+        this.id = transactionTime.toString();
     }
 
     public TransactionEntity() {
+
     }
 
     @Id
-    @NotNull
+   // @GeneratedValue(strategy = GenerationType.IDENTITY)
     public String getId() {
         return id;
     }
@@ -57,23 +62,30 @@ public class TransactionEntity {
     }
 
     @NotNull
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "money_id")
-    public MoneyEntity getMoney() {
-        return money;
+    public BigDecimal getAmount() {
+        return amount;
     }
 
-    public void setMoney(MoneyEntity money) {
-        this.money = money;
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
     }
 
     @NotNull
-    public LocalDateTime getLocalDateTime() {
-        return localDateTime;
+    public String getCurrency() {
+        return currency;
     }
 
-    public void setLocalDateTime(LocalDateTime localDateTime) {
-        this.localDateTime = localDateTime;
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    @NotNull
+    public LocalDateTime getTransactionTime() {
+        return transactionTime;
+    }
+
+    public void setTransactionTime(LocalDateTime localDateTime) {
+        this.transactionTime = localDateTime;
     }
 
     @Override
@@ -82,8 +94,8 @@ public class TransactionEntity {
                 "id='" + id + '\'' +
                 ", sender=" + sender +
                 ", receiver=" + receiver +
-                ", money=" + money.getAmount() + money.getCurrency() +
-                ", local date time=" + localDateTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss")) +
+                ", money=" + amount + currency +
+                ", local date time=" + transactionTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss")) +
                 '}';
     }
 }
