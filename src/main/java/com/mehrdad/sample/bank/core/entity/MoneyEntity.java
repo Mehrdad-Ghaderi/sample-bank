@@ -39,7 +39,6 @@ public class MoneyEntity {
     }
 
     @NotNull
-  //  @Converter
     public Currency getCurrency() {
         return currency;
     }
@@ -76,4 +75,5 @@ public class MoneyEntity {
                 ", account=" + account.getNumber() +
                 '}';
     }
+
 }

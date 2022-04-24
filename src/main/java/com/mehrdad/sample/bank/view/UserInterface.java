@@ -8,10 +8,10 @@ import com.mehrdad.sample.bank.core.entity.Currency;
 import com.mehrdad.sample.bank.core.service.AccountService;
 import com.mehrdad.sample.bank.core.service.ClientService;
 import com.mehrdad.sample.bank.core.service.TransactionService;
+
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -105,12 +105,15 @@ public class UserInterface {
             }
             if (userInput == 12) {
                 withdrawMoney();
+                continue;
             }
             if (userInput == 13) {
                 transferMoney();
+                continue;
             }
             if (userInput == 14) {
                 viewTransaction();
+                continue;
             }
             if (userInput == 0) {
                 System.out.println("The system was shut down by the user.");
@@ -209,7 +212,6 @@ public class UserInterface {
             System.out.println("No client with that ID was found.");
             return;
         }
-
         activateOrDeactivateClient(client.get());
     }
 
@@ -254,6 +256,7 @@ public class UserInterface {
             System.out.println("No client with the ID, " + clientID + ", was found.");
             return;
         }
+
         ClientDto client = foundClient.get();
         List<AccountDto> accounts = ofNullable(client.getAccounts()).orElseGet(Collections::emptyList);
 
@@ -271,8 +274,6 @@ public class UserInterface {
                 System.out.println("Account number " + accountNumber + " has already been allocated to " + client.getName() + ".");
                 continue;
             }
-
-
             if (accountService.createAccount(accountNumber, client)) {
                 System.out.println("Account number " + accountNumber + " was allocated to " + client.getName() + " .");
             }
@@ -383,10 +384,11 @@ public class UserInterface {
     }
 
     private void viewTransaction() {
-        System.out.println("Enter the account number you would like to send money to:");
+        System.out.println("Enter the account number:");
         Optional<AccountDto> foundAccount = getAccountByAccountNumber();
         if (foundAccount.isEmpty()) return;
 
+        System.out.println("Enter the number of last transactions you would like to view:");
         int numOfLatestTransactions = getUserInputInt();
 
         List<TransactionDto> lastTransactions = transactionService.getLastTransactions(foundAccount.get(), numOfLatestTransactions);
@@ -434,7 +436,6 @@ public class UserInterface {
             }
             System.out.println("The bank does not support " + currency + " currency. \nTry another currency:");
         }
-
     }
 
     private Optional<AccountDto> getAccountByAccountNumber() {

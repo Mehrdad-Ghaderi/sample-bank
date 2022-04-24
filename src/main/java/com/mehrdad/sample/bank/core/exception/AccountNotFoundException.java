@@ -1,6 +1,6 @@
 package com.mehrdad.sample.bank.core.exception;
 
-public class AccountNotFoundException extends RuntimeException{
+public class AccountNotFoundException extends RuntimeException {
 
     String accountNumber;
 
@@ -8,4 +8,5 @@ public class AccountNotFoundException extends RuntimeException{
         super("Account number " + accountNumber + " was not found.");
         this.accountNumber = accountNumber;
     }
+
 }

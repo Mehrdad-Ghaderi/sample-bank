@@ -1,6 +1,7 @@
 package com.mehrdad.sample.bank.core.service;
 
 import com.mehrdad.sample.bank.api.dto.AccountDto;
+import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.api.dto.MoneyDto;
 import com.mehrdad.sample.bank.api.dto.TransactionDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
@@ -159,47 +160,59 @@ public class TransactionService {
     }
 
     private void addToBankAccount(MoneyDto moneyDto) {
-        Optional<MoneyEntity> foundMoney = moneyRepository.findById("111.1" + moneyDto.getCurrency());
-
-        if (foundMoney.isEmpty()) {
-            Optional<AccountEntity> bankAccount = accountRepository.findById("111.1");
-            MoneyEntity bankMoneyEntity = moneyMapper.toMoneyEntity(moneyDto);
-
-            if (bankAccount.isPresent()) {
-                bankMoneyEntity.setAmount(moneyDto.getAmount());
-                bankMoneyEntity.setId("111.1" + moneyDto.getCurrency());
-                bankMoneyEntity.setAccount(bankAccount.get());
-                moneyRepository.save(bankMoneyEntity);
-            } else {
-                System.out.println("The main bank account was not found.");
-            }
-        } else {
-            foundMoney.get().setAmount(foundMoney.get().getAmount().add(moneyDto.getAmount()));
-            moneyRepository.save(foundMoney.get());
+        Optional<AccountEntity> foundBankAccount = accountRepository.findById("111.1");
+        if (foundBankAccount.isEmpty()) {
+            System.out.println("The main bank account was not found.");
+            return;
         }
-    }
 
-    private void subtractFromBankAccount(MoneyDto moneyDto) {
+        AccountEntity bankAccount = foundBankAccount.get();
+
         Optional<MoneyEntity> foundBankMoney = moneyRepository.findById("111.1" + moneyDto.getCurrency());
 
         if (foundBankMoney.isEmpty()) {
-            Optional<AccountEntity> bankAccount = accountRepository.findById("111.1");
+            MoneyEntity bankMoneyEntity = moneyMapper.toMoneyEntity(moneyDto);
 
-            if (bankAccount.isPresent()) {
-                MoneyEntity bankMoneyEntity = moneyMapper.toMoneyEntity(moneyDto);
-                bankMoneyEntity.setAmount(moneyDto.getAmount().negate());
-                bankMoneyEntity.setId("111.1" + moneyDto.getCurrency());
-                bankMoneyEntity.setAccount(bankAccount.get());
-                moneyRepository.save(bankMoneyEntity);
-            } else {
-                System.out.println("The main bank account was not found.");
-            }
+            bankMoneyEntity.setAmount(moneyDto.getAmount());
+            bankMoneyEntity.setId("111.1" + moneyDto.getCurrency());
+            bankMoneyEntity.setAccount(bankAccount);
+            moneyRepository.save(bankMoneyEntity);
+        } else {
+            foundBankMoney.get().setAmount(foundBankMoney.get().getAmount().add(moneyDto.getAmount()));
+            moneyRepository.save(foundBankMoney.get());
+        }
+
+        ClientDto bank = clientMapper.toClientDto(bankAccount.getClient());
+        AccountDto bankAccountDto = accountMapper.toAccountDto(bankAccount, bank);
+        saveTransaction(moneyDto.getAccount(), bankAccountDto, moneyDto);
+    }
+
+    private void subtractFromBankAccount(MoneyDto moneyDto) {
+        Optional<AccountEntity> foundBankAccount = accountRepository.findById("111.1");
+        if (foundBankAccount.isEmpty()) {
+            System.out.println("The main bank account was not found.");
+            return;
+        }
+
+        AccountEntity bankAccount = foundBankAccount.get();
+
+        Optional<MoneyEntity> foundBankMoney = moneyRepository.findById("111.1" + moneyDto.getCurrency());
+
+        if (foundBankMoney.isEmpty()) {
+            MoneyEntity bankMoneyEntity = moneyMapper.toMoneyEntity(moneyDto);
+            bankMoneyEntity.setAmount(moneyDto.getAmount().negate());
+            bankMoneyEntity.setId("111.1" + moneyDto.getCurrency());
+            bankMoneyEntity.setAccount(bankAccount);
+            moneyRepository.save(bankMoneyEntity);
+
         } else {
             foundBankMoney.get().setAmount(foundBankMoney.get().getAmount().subtract(moneyDto.getAmount()));
             moneyRepository.save(foundBankMoney.get());
         }
 
-
+        ClientDto bank = clientMapper.toClientDto(bankAccount.getClient());
+        AccountDto bankAccountDto = accountMapper.toAccountDto(bankAccount, bank);
+        saveTransaction(bankAccountDto, moneyDto.getAccount(), moneyDto);
     }
 
     private BigDecimal addAmount(MoneyEntity moneyEntity, MoneyDto moneyDto) {
@@ -219,7 +232,7 @@ public class TransactionService {
         List<TransactionEntity> allTransactionOfAccount = new ArrayList<>();
 
         for (TransactionEntity transaction : allTransactionInRepository) {
-            if (transaction.getReceiver().getNumber() == account.getNumber() || transaction.getSender().getNumber() == account.getNumber()) {
+            if (transaction.getReceiver().getNumber().equals(account.getNumber()) || transaction.getSender().getNumber().equals(account.getNumber())) {
                 allTransactionOfAccount.add(transaction);
             }
         }
@@ -230,11 +243,11 @@ public class TransactionService {
         List<TransactionDto> finalList = new ArrayList<>();
 
         if (mappedTransactions.size() >= numOfLatestTransactions) {
-            for (int i = mappedTransactions.size(); i > mappedTransactions.size() - numOfLatestTransactions ; i--) {
+            for (int i = mappedTransactions.size(); i > mappedTransactions.size() - numOfLatestTransactions; i--) {
                 finalList.add(mappedTransactions.get(i));
             }
             return finalList;
-        }else
+        } else
             return mappedTransactions;
     }
 }

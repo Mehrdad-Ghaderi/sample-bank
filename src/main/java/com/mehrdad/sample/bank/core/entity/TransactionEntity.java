@@ -30,7 +30,6 @@ public class TransactionEntity {
     }
 
     @Id
-   // @GeneratedValue(strategy = GenerationType.IDENTITY)
     public String getId() {
         return id;
     }
@@ -91,11 +90,11 @@ public class TransactionEntity {
     @Override
     public String toString() {
         return "TransactionEntity{" +
-                "id='" + id + '\'' +
                 ", sender=" + sender +
                 ", receiver=" + receiver +
                 ", money=" + amount + currency +
-                ", local date time=" + transactionTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss")) +
+                ", transaction time=" + transactionTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss")) +
                 '}';
     }
+
 }

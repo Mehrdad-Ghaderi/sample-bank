@@ -37,7 +37,7 @@ public class ClientService {
     }
 
     public void setClientPhoneNumber(String clientId, String phoneNumber) {
-        ClientEntity foundClientEntity = clientRepository. findById(clientId)
+        ClientEntity foundClientEntity = clientRepository.findById(clientId)
                 .orElseThrow(() -> new ClientNotFoundException(clientId));
 
         foundClientEntity.setPhoneNumber(phoneNumber);
@@ -50,7 +50,6 @@ public class ClientService {
 
     public void activateClient(String clientId) {
         activateOrDeactivateClient(clientId, true);
-
     }
 
     public void deactivateClient(String clientId) {
@@ -62,8 +61,8 @@ public class ClientService {
                 .orElseThrow(() -> new ClientNotFoundException(clientId));
 
         foundClientEntity.setActive(status);
-        for (AccountEntity accountEntity :  foundClientEntity.getAccounts()) {
-         accountService.freezeOrUnfreezeAccount(accountEntity.getNumber(), status);
+        for (AccountEntity accountEntity : foundClientEntity.getAccounts()) {
+            accountService.freezeOrUnfreezeAccount(accountEntity.getNumber(), status);
         }
         clientRepository.save(foundClientEntity);
     }

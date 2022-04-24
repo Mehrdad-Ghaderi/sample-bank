@@ -42,4 +42,5 @@ public class MoneyMapper {
         AccountDto accountDto = accountMapper.toAccountDto(moneyEntity.getAccount(), clientDto);
         return moneyDto;
     }
+
 }

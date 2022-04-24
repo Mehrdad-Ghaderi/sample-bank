@@ -83,11 +83,10 @@ public class TransactionDto {
     @Override
     public String toString() {
         return "TransactionDto{" +
-                "id='" + id + '\'' +
                 ", sender=" + sender +
                 ", receiver=" + receiver +
                 ", money=" + amount + currency +
-                ", local date time=" + transactionTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss")) +
+                ", transaction time=" + transactionTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss")) +
                 '}';
     }
 

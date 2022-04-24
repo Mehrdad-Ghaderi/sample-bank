@@ -11,7 +11,6 @@ public class TransactionMapper {
     private final AccountMapper accountMapper;
     private final ClientMapper clientMapper;
 
-
     public TransactionMapper(AccountMapper accountMapper, ClientMapper clientMapper) {
 
         this.accountMapper = accountMapper;
@@ -36,4 +35,5 @@ public class TransactionMapper {
 
         return transactionDto;
     }
+
 }
