@@ -62,8 +62,6 @@ public class AccountService {
                 .collect(Collectors.toList());
 */
 
-
-
 /*
         //Solution 4
         return accountEntities.parallelStream()
