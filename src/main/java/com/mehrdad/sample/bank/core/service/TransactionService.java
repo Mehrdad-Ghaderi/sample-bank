@@ -16,17 +16,20 @@ import com.mehrdad.sample.bank.core.repository.AccountRepository;
 import com.mehrdad.sample.bank.core.repository.MoneyRepository;
 import com.mehrdad.sample.bank.core.repository.TransactionRepository;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
 public class TransactionService {
+
+    private static final String BANK_ACCOUNT_NUMBER = "111.1";
 
     private final MoneyRepository moneyRepository;
     private final MoneyMapper moneyMapper;
@@ -160,7 +163,7 @@ public class TransactionService {
     }
 
     private void addToBankAccount(MoneyDto moneyDto) {
-        Optional<AccountEntity> foundBankAccount = accountRepository.findById("111.1");
+        Optional<AccountEntity> foundBankAccount = accountRepository.findById(BANK_ACCOUNT_NUMBER);
         if (foundBankAccount.isEmpty()) {
             System.out.println("The main bank account was not found.");
             return;
@@ -168,13 +171,13 @@ public class TransactionService {
 
         AccountEntity bankAccount = foundBankAccount.get();
 
-        Optional<MoneyEntity> foundBankMoney = moneyRepository.findById("111.1" + moneyDto.getCurrency());
+        Optional<MoneyEntity> foundBankMoney = moneyRepository.findById(BANK_ACCOUNT_NUMBER + moneyDto.getCurrency());
 
         if (foundBankMoney.isEmpty()) {
             MoneyEntity bankMoneyEntity = moneyMapper.toMoneyEntity(moneyDto);
 
             bankMoneyEntity.setAmount(moneyDto.getAmount());
-            bankMoneyEntity.setId("111.1" + moneyDto.getCurrency());
+            bankMoneyEntity.setId(BANK_ACCOUNT_NUMBER + moneyDto.getCurrency());
             bankMoneyEntity.setAccount(bankAccount);
             moneyRepository.save(bankMoneyEntity);
         } else {
@@ -188,7 +191,7 @@ public class TransactionService {
     }
 
     private void subtractFromBankAccount(MoneyDto moneyDto) {
-        Optional<AccountEntity> foundBankAccount = accountRepository.findById("111.1");
+        Optional<AccountEntity> foundBankAccount = accountRepository.findById(BANK_ACCOUNT_NUMBER);
         if (foundBankAccount.isEmpty()) {
             System.out.println("The main bank account was not found.");
             return;
@@ -196,12 +199,12 @@ public class TransactionService {
 
         AccountEntity bankAccount = foundBankAccount.get();
 
-        Optional<MoneyEntity> foundBankMoney = moneyRepository.findById("111.1" + moneyDto.getCurrency());
+        Optional<MoneyEntity> foundBankMoney = moneyRepository.findById(BANK_ACCOUNT_NUMBER + moneyDto.getCurrency());
 
         if (foundBankMoney.isEmpty()) {
             MoneyEntity bankMoneyEntity = moneyMapper.toMoneyEntity(moneyDto);
             bankMoneyEntity.setAmount(moneyDto.getAmount().negate());
-            bankMoneyEntity.setId("111.1" + moneyDto.getCurrency());
+            bankMoneyEntity.setId(BANK_ACCOUNT_NUMBER + moneyDto.getCurrency());
             bankMoneyEntity.setAccount(bankAccount);
             moneyRepository.save(bankMoneyEntity);
 
@@ -223,31 +226,20 @@ public class TransactionService {
         return moneyEntity.getAmount().subtract(moneyDto.getAmount());
     }
 
+
     public List<TransactionDto> getLastTransactions(AccountDto account, int numOfLatestTransactions) {
-        List<TransactionEntity> allTransactionInRepository = transactionRepository.findAll();
-
-        if (allTransactionInRepository.isEmpty()) {
-            return null;
-        }
-        List<TransactionEntity> allTransactionOfAccount = new ArrayList<>();
-
-        for (TransactionEntity transaction : allTransactionInRepository) {
-            if (transaction.getReceiver().getNumber().equals(account.getNumber()) || transaction.getSender().getNumber().equals(account.getNumber())) {
-                allTransactionOfAccount.add(transaction);
-            }
-        }
-        List<TransactionDto> mappedTransactions = allTransactionOfAccount.stream()
+        return transactionRepository.findLastTransactions(account.getNumber(), numOfLatestTransactions)
+                .parallelStream()
                 .map(transactionMapper::toTransactionEntity)
                 .collect(Collectors.toList());
-
-        List<TransactionDto> finalList = new ArrayList<>();
-
-        if (mappedTransactions.size() >= numOfLatestTransactions) {
-            for (int i = mappedTransactions.size(); i > mappedTransactions.size() - numOfLatestTransactions; i--) {
-                finalList.add(mappedTransactions.get(i));
-            }
-            return finalList;
-        } else
-            return mappedTransactions;
     }
+
+    private Predicate<TransactionEntity> isSender(AccountDto account) {
+        return transaction -> transaction.getSender().getNumber().equals(account.getNumber());
+    }
+
+    private Predicate<TransactionEntity> isReceiver(AccountDto account) {
+        return transaction -> transaction.getReceiver().getNumber().equals(account.getNumber());
+    }
+
 }

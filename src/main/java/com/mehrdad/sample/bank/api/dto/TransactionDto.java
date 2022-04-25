@@ -7,7 +7,7 @@ import java.time.format.DateTimeFormatter;
 
 public class TransactionDto {
 
-    private String id;
+    private Long id;
     private AccountDto sender;
     private AccountDto receiver;
     private BigDecimal amount;
@@ -20,18 +20,16 @@ public class TransactionDto {
         this.amount = amount;
         this.currency = currency;
         this.transactionTime = LocalDateTime.now();
-        this.id = transactionTime.toString();
     }
 
     public TransactionDto() {
     }
 
-    @NotNull
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -82,11 +80,11 @@ public class TransactionDto {
 
     @Override
     public String toString() {
-        return "TransactionDto{" +
-                ", sender=" + sender +
-                ", receiver=" + receiver +
-                ", money=" + amount + currency +
-                ", transaction time=" + transactionTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss")) +
+        return "Transaction{" +
+                ", Sender=" + sender.getClient().getName() + " " + sender.getNumber() +
+                ", Receiver=" + receiver.getClient().getName() + " " + receiver.getNumber() +
+                ", Amount=" + amount + currency +
+                ", Time=" + transactionTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss")) +
                 '}';
     }
 

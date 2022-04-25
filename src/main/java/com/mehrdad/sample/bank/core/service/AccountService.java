@@ -62,29 +62,13 @@ public class AccountService {
                 .collect(Collectors.toList());
 */
 
-/*
-                    ClientDto clientDto = clientMap.get(clientId);
-                    if (clientDto == null) {
-                         clientDto = clientMapper.toClientDto(accountEntity.getClient());
-                         clientMap.put(clientId, clientDto);
-                    }
-                    ClientDto clientDto = clientMap.computeIfAbsent(clientId, clientID -> clientMapper.toClientDto(accountEntity.getClient())
-*/
+
 
 /*
         //Solution 4
         return accountEntities.parallelStream()
                 .map(accountEntity -> accountMapper.toAccountDto(accountEntity, clientMapper.toClientDto(accountEntity.getClient())))
                 .collect(Collectors.toList());
-*/
-
-
-/*
-        // Solution 1
-        return accountRepository.findAll().parallelStream()
-                .map(accountEntity -> clientMapper.toClientDto(accountEntity.getClient()))
-                .flatMap(clientDto -> clientDto.getAccounts().parallelStream())
-                .distinct().collect(Collectors.toList());
 */
     }
 

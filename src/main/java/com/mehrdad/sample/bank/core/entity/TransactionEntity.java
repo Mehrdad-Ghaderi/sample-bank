@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter;
 @Entity
 public class TransactionEntity {
 
-    private String id;
+    private Long id;
     private AccountEntity sender;
     private AccountEntity receiver;
     private BigDecimal amount;
@@ -22,7 +22,6 @@ public class TransactionEntity {
         this.amount = amount;
         this.currency = currency;
         this.transactionTime = LocalDateTime.now();
-        this.id = transactionTime.toString();
     }
 
     public TransactionEntity() {
@@ -30,11 +29,12 @@ public class TransactionEntity {
     }
 
     @Id
-    public String getId() {
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

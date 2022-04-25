@@ -293,7 +293,7 @@ public class UserInterface {
     }
 
     private void freezeOrUnfreezeAccount() {
-        System.out.println("Enter the account number you would like to freeze:");
+        System.out.println("Enter the account number you would like to freeze or unfreeze:");
         Optional<AccountDto> account = getAccountByAccountNumber();
         if (account.isEmpty()) return;
         freezeOrUnfreezeAccount(account.get());
@@ -314,7 +314,7 @@ public class UserInterface {
                 }
             } else {
                 System.out.println("Account number, " + accountDto.getNumber() + ", is frozen.");
-                System.out.println("Press U to freeze it, or Q to go back to main menu");
+                System.out.println("Press U to unfreeze it, or Q to go back to main menu");
                 userChoice = getUserInputString();
                 if (userChoice.equals("U")) {
                     accountService.unfreezeAccount(accountDto.getNumber());
