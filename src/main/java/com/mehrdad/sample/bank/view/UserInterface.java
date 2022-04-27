@@ -50,13 +50,12 @@ public class UserInterface {
                 "Enter 13 to transfer money.\n" +
                 "Enter 14 to view the transactions of an account.\n" +
                 "Enter 15 to view the balance of an account.\n" +
-//                "Enter  to view the balance of the bank.\n" +
+                "Enter 16 to view the balance of the bank.\n" +
                 "Enter 0 to shut down");
     }
 
     public void start(String[] args) {
 
-        //This needs a go back option at all time, which is not written yet.
         while (true) {
             printMenu();
             int userInput = getUserInputInt();
@@ -116,7 +115,11 @@ public class UserInterface {
                 continue;
             }
             if (userInput == 15) {
-                viewBalance();
+                viewAccountBalance();
+                continue;
+            }
+            if (userInput == 16) {
+                viewBankAccountBalance();
                 continue;
             }
             if (userInput == 0) {
@@ -357,10 +360,10 @@ public class UserInterface {
 
     private void withdrawMoney() {
         System.out.println("Enter the account number you would like to withdraw money from:");
-        Optional<AccountDto> account = getAccountByAccountNumber();
-        if (account.isEmpty()) return;
+        Optional<AccountDto> foundAccount = getAccountByAccountNumber();
+        if (foundAccount.isEmpty()) return;
 
-        AccountDto accountDto = account.get();
+        AccountDto accountDto = foundAccount.get();
         if (accountInactive(accountDto)) {
             return;
         }
@@ -387,18 +390,18 @@ public class UserInterface {
         }
 
         System.out.println("Enter the account number you would like to send money to:");
-        Optional<AccountDto> receiverAccount = getAccountByAccountNumber();
-        if (receiverAccount.isEmpty()) return;
+        Optional<AccountDto> foundReceiverAccount = getAccountByAccountNumber();
+        if (foundReceiverAccount.isEmpty()) return;
 
         MoneyDto money = createMoney(senderAccount);
 
         boolean transaction = false;
         try {
-            transaction = transactionService.transfer(senderAccount, receiverAccount.get(), money);
+            transaction = transactionService.transfer(senderAccount, foundReceiverAccount.get(), money);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        printTransactionLog(receiverAccount.get(), money, "transferred from " + senderAccount.getNumber() + " to", transaction);
+        printTransactionLog(foundReceiverAccount.get(), money, "transferred from " + senderAccount.getNumber() + " to", transaction);
     }
 
     private void viewTransaction() {
@@ -417,13 +420,30 @@ public class UserInterface {
         }
     }
 
-    private void viewBalance() {
-        System.out.println("Enter the account number:");
+    private void viewAccountBalance() {
+        System.out.println("BALANCE:"+
+                "Enter the account number:");
         Optional<AccountDto> foundAccount = getAccountByAccountNumber();
         if (foundAccount.isEmpty()) return;
 
+        System.out.println("Enter the currency:");
+        Currency currency = getCurrency();
+
         List<MoneyDto> moneys = foundAccount.get().getMoneys();
-        moneys.forEach(System.out::println);
+        moneys.stream().filter(moneyDto -> moneyDto.getCurrency().equals(currency)).forEach(System.out::println);
+    }
+
+    private void viewBankAccountBalance() {
+        AccountDto bankAccount = accountService.getAccountByAccountNumber("111.1");
+        if (bankAccount == null) {
+            System.out.println("Bank account was not found.");
+            return;
+        }
+
+        System.out.println("Here is the list of all the currencies available in the bank:");
+        bankAccount.getMoneys().stream()
+                .map(moneyDto -> moneyDto.getAmount().negate())
+                .forEach(System.out::println);
     }
 
     private boolean accountInactive(AccountDto account) {
