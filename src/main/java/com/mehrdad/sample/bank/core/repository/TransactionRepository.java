@@ -10,10 +10,10 @@ import java.util.List;
 public interface TransactionRepository extends JpaRepository<TransactionEntity, String> {
 
     @Query(value = "select tr.* from transaction_entity tr " +
-            "where tr.receiver_id = :account_id or tr.sender_id = :account_id\n" +
+            "where tr.receiver_id = :accountNumber or tr.sender_id = :accountNumber\n" +
             "order by tr.transaction_time desc\n" +
             "limit :numberOfTransactions",
             nativeQuery = true)
-    List<TransactionEntity> findLastTransactions(@Param("account_id")String accountNumber, @Param("numberOfTransactions")int numberOfTransactions);
+    List<TransactionEntity> findLastTransactions(String accountNumber, int numberOfTransactions);
 
 }

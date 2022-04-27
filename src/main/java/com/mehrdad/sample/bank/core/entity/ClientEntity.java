@@ -15,7 +15,7 @@ public class ClientEntity {
     private List<AccountEntity> accounts;
     private Boolean active;
 
-    protected ClientEntity() {
+    public ClientEntity() {
     }
 
     public ClientEntity(String id, String name, String phoneNumber, Boolean status) {

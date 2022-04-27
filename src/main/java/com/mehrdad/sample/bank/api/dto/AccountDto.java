@@ -38,6 +38,7 @@ public class AccountDto {
         this.client = client;
     }
 
+    @NotNull
     public List<MoneyDto> getMoneys() {
         return moneys;
     }

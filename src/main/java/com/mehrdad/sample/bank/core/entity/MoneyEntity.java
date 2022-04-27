@@ -19,9 +19,9 @@ public class MoneyEntity {
 
     public MoneyEntity(Currency currency, BigDecimal amount, AccountEntity account) {
         this.id = account.getNumber() + currency;
+        this.account = account;
         this.currency = currency;
         this.amount = amount;
-        this.account = account;
     }
 
     public MoneyEntity() {

@@ -31,9 +31,12 @@ public class AccountService {
         this.clientMapper = clientMapper;
     }
 
-    public Optional<com.mehrdad.sample.bank.api.dto.AccountDto> getAccountByAccountNumber(String accountNumber) {
+    public AccountDto getAccountByAccountNumber(String accountNumber){
         ClientDto clientDto = getClientByAccountNumber(accountNumber);
-        return accountRepository.findById(accountNumber).map(accountEntity -> accountMapper.toAccountDto(accountEntity, clientDto));
+
+        return accountRepository.findById(accountNumber)
+                .map(accountEntity -> accountMapper.toAccountDto(accountEntity, clientDto))
+                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
     }
 
     private ClientDto getClientByAccountNumber(String accountNumber) {
@@ -50,24 +53,6 @@ public class AccountService {
                 .flatMap(Collection::parallelStream)
                 .filter(AccountDto::isActive)
                 .collect(Collectors.toList());
-
-/*
-        // Solution 2
-        Set<String> processedClients = new HashSet<>();
-        return accountRepository.findAll().stream()
-                .filter(accountEntity -> !processedClients.contains(accountEntity.getClient().getId()))
-                .peek(accountEntity -> processedClients.add(accountEntity.getClient().getId()))
-                .map(accountEntity -> clientMapper.toClientDto(accountEntity.getClient()))
-                .flatMap(clientDto -> clientDto.getAccounts().parallelStream())
-                .collect(Collectors.toList());
-*/
-
-/*
-        //Solution 4
-        return accountEntities.parallelStream()
-                .map(accountEntity -> accountMapper.toAccountDto(accountEntity, clientMapper.toClientDto(accountEntity.getClient())))
-                .collect(Collectors.toList());
-*/
     }
 
     public void save(com.mehrdad.sample.bank.api.dto.AccountDto account, ClientDto clientDto) {
@@ -76,7 +61,7 @@ public class AccountService {
     }
 
     public boolean createAccount(String accountNumber, ClientDto client) {
-        com.mehrdad.sample.bank.api.dto.AccountDto account = new com.mehrdad.sample.bank.api.dto.AccountDto(accountNumber, client, true);
+        AccountDto account = new AccountDto(accountNumber, client, true);
         try {
             save(account, client);
             return true;

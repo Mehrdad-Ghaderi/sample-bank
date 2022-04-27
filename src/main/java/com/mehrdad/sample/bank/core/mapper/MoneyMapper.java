@@ -1,46 +1,63 @@
 package com.mehrdad.sample.bank.core.mapper;
 
 import com.mehrdad.sample.bank.api.dto.AccountDto;
-import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.api.dto.MoneyDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
-import com.mehrdad.sample.bank.core.entity.ClientEntity;
 import com.mehrdad.sample.bank.core.entity.MoneyEntity;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class MoneyMapper {
 
-    private final AccountMapper accountMapper;
-    private final ClientMapper clientMapper;
-
-    public MoneyMapper(AccountMapper accountMapper, ClientMapper clientMapper) {
-        this.accountMapper = accountMapper;
-        this.clientMapper = clientMapper;
+    public MoneyMapper() {
     }
 
-    public MoneyEntity toMoneyEntity(MoneyDto moneyDto) {
+    public MoneyEntity toMoneyEntity(MoneyDto moneyDto, AccountEntity accountEntity) {
+        if (moneyDto == null) {
+            return null;
+        }
+
         MoneyEntity moneyEntity = new MoneyEntity();
         moneyEntity.setId(moneyDto.getId());
         moneyEntity.setCurrency(moneyDto.getCurrency());
         moneyEntity.setAmount(moneyDto.getAmount());
-
-        ClientEntity clientEntity = clientMapper.toClientEntity(moneyDto.getAccount().getClient());
-        AccountEntity accountEntity = accountMapper.toAccountEntity(moneyDto.getAccount(), clientEntity);
-
         moneyEntity.setAccount(accountEntity);
+
         return moneyEntity;
     }
 
-    public MoneyDto toMonetDto(MoneyEntity moneyEntity) {
+    public MoneyDto toMoneyDto(MoneyEntity moneyEntity, AccountDto accountDto) {
+        if (moneyEntity == null) {
+            return null;
+        }
+
         MoneyDto moneyDto = new MoneyDto();
         moneyDto.setId(moneyEntity.getId());
         moneyDto.setCurrency(moneyEntity.getCurrency());
         moneyDto.setAmount(moneyEntity.getAmount());
+        moneyDto.setAccount(accountDto);
 
-        ClientDto clientDto = clientMapper.toClientDto(moneyEntity.getAccount().getClient());
-        AccountDto accountDto = accountMapper.toAccountDto(moneyEntity.getAccount(), clientDto);
         return moneyDto;
     }
 
+    public List<MoneyDto> toMoneyDtoList(List<MoneyEntity> moneyEntities, AccountDto accountDto) {
+        if (moneyEntities == null) {
+            return null;
+        }
+        return moneyEntities.parallelStream()
+                .map(moneyEnt -> toMoneyDto(moneyEnt, accountDto))
+                .collect(Collectors.toList());
+    }
+
+    public List<MoneyEntity> toMoneyEntityList(List<MoneyDto> moneyDtos, AccountEntity accountEntity) {
+        if (moneyDtos == null) {
+            return null;
+        }
+        return moneyDtos.parallelStream()
+                .map(moneyDto -> toMoneyEntity(moneyDto, accountEntity))
+                .collect(Collectors.toList());
+    }
 }
