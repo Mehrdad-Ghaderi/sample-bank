@@ -55,7 +55,7 @@ public class AccountService {
                 .collect(Collectors.toList());
     }
 
-    public void save(com.mehrdad.sample.bank.api.dto.AccountDto account, ClientDto clientDto) {
+    public void save(AccountDto account, ClientDto clientDto) {
         ClientEntity clientEntity = clientMapper.toClientEntity(clientDto);
         accountRepository.save(accountMapper.toAccountEntity(account, clientEntity));
     }

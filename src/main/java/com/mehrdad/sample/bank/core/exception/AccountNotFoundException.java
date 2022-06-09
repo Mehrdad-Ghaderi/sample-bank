@@ -9,4 +9,7 @@ public class AccountNotFoundException extends RuntimeException {
         this.accountNumber = accountNumber;
     }
 
+    public String getAccountNumber() {
+        return accountNumber;
+    }
 }

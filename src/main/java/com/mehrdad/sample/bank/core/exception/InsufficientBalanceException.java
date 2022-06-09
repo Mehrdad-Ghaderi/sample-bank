@@ -10,4 +10,8 @@ public class InsufficientBalanceException extends RuntimeException {
         super("There is not "+ moneyEntity.getAmount()+" " + moneyEntity.getCurrency() + " available in account number: " + moneyEntity.getAccount() + ".");
         this.moneyEntity = moneyEntity;
     }
+
+    public MoneyEntity getMoneyEntity() {
+        return moneyEntity;
+    }
 }
