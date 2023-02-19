@@ -16,11 +16,10 @@ import com.mehrdad.sample.bank.core.mapper.TransactionMapper;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
 import com.mehrdad.sample.bank.core.repository.MoneyRepository;
 import com.mehrdad.sample.bank.core.repository.TransactionRepository;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -181,7 +180,6 @@ public class TransactionService {
         saveTransaction(bankAccountDto, moneyDto.getAccount(), moneyDto);
     }
 
-    @Nullable
     private AccountEntity getBankAccount() {
         return accountRepository.findById(BANK_ACCOUNT_NUMBER)
                 .orElseThrow(() -> new AccountNotFoundException(BANK_ACCOUNT_NUMBER));
