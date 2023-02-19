@@ -8,9 +8,9 @@ import com.mehrdad.sample.bank.core.mapper.AccountMapper;
 import com.mehrdad.sample.bank.core.mapper.MoneyMapper;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
 import com.mehrdad.sample.bank.core.repository.MoneyRepository;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Optional;
 
