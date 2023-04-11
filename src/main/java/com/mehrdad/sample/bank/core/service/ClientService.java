@@ -1,6 +1,7 @@
 package com.mehrdad.sample.bank.core.service;
 
 import com.mehrdad.sample.bank.api.dto.ClientDto;
+import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
 import com.mehrdad.sample.bank.core.exception.ClientNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.ClientMapper;
@@ -15,10 +16,12 @@ public class ClientService {
 
     private final ClientRepository clientRepository;
     private final ClientMapper clientMapper;
+    private final AccountService accountService;
 
-    public ClientService(ClientRepository clientRepository, ClientMapper clientMapper) {
+    public ClientService(ClientRepository clientRepository, ClientMapper clientMapper, AccountService accountService) {
         this.clientRepository = clientRepository;
         this.clientMapper = clientMapper;
+        this.accountService = accountService;
     }
 
     public Optional<ClientDto> getClientById(String clientId) {
@@ -34,7 +37,7 @@ public class ClientService {
     }
 
     public void setClientPhoneNumber(String clientId, String phoneNumber) {
-        ClientEntity foundClientEntity = clientRepository. findById(clientId)
+        ClientEntity foundClientEntity = clientRepository.findById(clientId)
                 .orElseThrow(() -> new ClientNotFoundException(clientId));
 
         foundClientEntity.setPhoneNumber(phoneNumber);
@@ -47,7 +50,6 @@ public class ClientService {
 
     public void activateClient(String clientId) {
         activateOrDeactivateClient(clientId, true);
-
     }
 
     public void deactivateClient(String clientId) {
@@ -59,6 +61,9 @@ public class ClientService {
                 .orElseThrow(() -> new ClientNotFoundException(clientId));
 
         foundClientEntity.setActive(status);
+        for (AccountEntity accountEntity : foundClientEntity.getAccounts()) {
+            accountService.freezeOrUnfreezeAccount(accountEntity.getNumber(), status);
+        }
         clientRepository.save(foundClientEntity);
     }
 

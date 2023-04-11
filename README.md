@@ -94,7 +94,7 @@ If you have run out of energy or time for your project, put a note at the top of
 ## Requirements
 this application must be able to:
 - add a new client
-- support different currencies on only account number
+- support different currencies on only one account number
 - update a client's phone number
 - deposit, withdraw, and transfer money
 - show the balance of an account in each currency

@@ -1,16 +1,18 @@
 package com.mehrdad.sample.bank.api.dto;
 
+import com.mehrdad.sample.bank.core.entity.Currency;
+
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 public class MoneyDto {
 
     private String id;
-    private String currency;
+    private Currency currency;
     private BigDecimal amount;
     private AccountDto account;
 
-    public MoneyDto(String currency, BigDecimal amount, AccountDto account) {
+    public MoneyDto(Currency currency, BigDecimal amount, AccountDto account) {
         this.id = account.getNumber() + currency;
         this.currency = currency;
         this.amount = amount;
@@ -30,11 +32,11 @@ public class MoneyDto {
     }
 
     @NotNull
-    public String getCurrency() {
+    public Currency getCurrency() {
         return currency;
     }
 
-    public void setCurrency(String currency) {
+    public void setCurrency(Currency currency) {
         this.currency = currency;
     }
 

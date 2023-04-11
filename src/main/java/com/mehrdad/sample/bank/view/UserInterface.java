@@ -3,9 +3,12 @@ package com.mehrdad.sample.bank.view;
 import com.mehrdad.sample.bank.api.dto.AccountDto;
 import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.api.dto.MoneyDto;
+import com.mehrdad.sample.bank.api.dto.TransactionDto;
+import com.mehrdad.sample.bank.core.entity.Currency;
 import com.mehrdad.sample.bank.core.service.AccountService;
 import com.mehrdad.sample.bank.core.service.ClientService;
 import com.mehrdad.sample.bank.core.service.TransactionService;
+
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -45,15 +48,14 @@ public class UserInterface {
                 "Enter 11 to deposit money.\n" +
                 "Enter 12 to withdraw money.\n" +
                 "Enter 13 to transfer money.\n" +
-//                "Enter  to view the transactions of an account.\n" +
-//                "Enter  to view the balance of an account.\n" +
-//                "Enter  to view the balance of the bank.\n" +
+                "Enter 14 to view the transactions of an account.\n" +
+                "Enter 15 to view the balance of an account.\n" +
+                "Enter 16 to view the balance of the bank.\n" +
                 "Enter 0 to shut down");
     }
 
     public void start(String[] args) {
 
-        //This needs a go back option at all time, which is not written yet.
         while (true) {
             printMenu();
             int userInput = getUserInputInt();
@@ -102,11 +104,24 @@ public class UserInterface {
             }
             if (userInput == 12) {
                 withdrawMoney();
+                continue;
             }
             if (userInput == 13) {
                 transferMoney();
+                continue;
             }
-
+            if (userInput == 14) {
+                viewTransaction();
+                continue;
+            }
+            if (userInput == 15) {
+                viewAccountBalance();
+                continue;
+            }
+            if (userInput == 16) {
+                viewBankAccountBalance();
+                continue;
+            }
             if (userInput == 0) {
                 System.out.println("The system was shut down by the user.");
                 break;
@@ -204,7 +219,6 @@ public class UserInterface {
             System.out.println("No client with that ID was found.");
             return;
         }
-
         activateOrDeactivateClient(client.get());
     }
 
@@ -249,6 +263,7 @@ public class UserInterface {
             System.out.println("No client with the ID, " + clientID + ", was found.");
             return;
         }
+
         ClientDto client = foundClient.get();
         List<AccountDto> accounts = ofNullable(client.getAccounts()).orElseGet(Collections::emptyList);
 
@@ -266,8 +281,6 @@ public class UserInterface {
                 System.out.println("Account number " + accountNumber + " has already been allocated to " + client.getName() + ".");
                 continue;
             }
-
-
             if (accountService.createAccount(accountNumber, client)) {
                 System.out.println("Account number " + accountNumber + " was allocated to " + client.getName() + " .");
             }
@@ -277,8 +290,7 @@ public class UserInterface {
 
     private void printAccount() {
         System.out.println("Enter the account number you want information on:");
-        String accountNumber = getUserInputString();
-        Optional<AccountDto> account = accountService.getAccountByAccountNumber(accountNumber);
+        Optional<AccountDto> account = getAccountByAccountNumber();
         account.ifPresentOrElse(System.out::println, () -> System.out.println("No account with that number was found."));
     }
 
@@ -287,8 +299,8 @@ public class UserInterface {
     }
 
     private void freezeOrUnfreezeAccount() {
-        System.out.println("Enter the account number you would like to freeze:");
-        Optional<AccountDto> account = getAccount();
+        System.out.println("Enter the account number you would like to freeze or unfreeze:");
+        Optional<AccountDto> account = getAccountByAccountNumber();
         if (account.isEmpty()) return;
         freezeOrUnfreezeAccount(account.get());
     }
@@ -308,7 +320,7 @@ public class UserInterface {
                 }
             } else {
                 System.out.println("Account number, " + accountDto.getNumber() + ", is frozen.");
-                System.out.println("Press U to freeze it, or Q to go back to main menu");
+                System.out.println("Press U to unfreeze it, or Q to go back to main menu");
                 userChoice = getUserInputString();
                 if (userChoice.equals("U")) {
                     accountService.unfreezeAccount(accountDto.getNumber());
@@ -327,68 +339,170 @@ public class UserInterface {
 
     private void depositMoney() {
         System.out.println("Enter the account number you would like to deposit money into:");
-        Optional<AccountDto> account = getAccount();
-        if (account.isEmpty()) return;
+        Optional<AccountDto> foundAccount = getAccountByAccountNumber();
+        if (foundAccount.isEmpty()) return;
 
-        MoneyDto money = createMoney(account);
+        AccountDto accountDto = foundAccount.get();
+        if (accountInactive(accountDto)) {
+            return;
+        }
 
-        boolean deposit = transactionService.deposit(money, true);
-        transactionLog(account.get(), money, "deposited into ",deposit);
+        MoneyDto money = createMoney(accountDto);
+
+        boolean deposit = false;
+        try {
+            deposit = transactionService.deposit(money, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        printTransactionLog(accountDto, money, "deposited into ", deposit);
     }
 
     private void withdrawMoney() {
         System.out.println("Enter the account number you would like to withdraw money from:");
-        Optional<AccountDto> account = getAccount();
-        if (account.isEmpty()) return;
+        Optional<AccountDto> foundAccount = getAccountByAccountNumber();
+        if (foundAccount.isEmpty()) return;
 
-        MoneyDto money = createMoney(account);
+        AccountDto accountDto = foundAccount.get();
+        if (accountInactive(accountDto)) {
+            return;
+        }
 
-        boolean withdraw = transactionService.withdraw(money, true);
-        transactionLog(account.get(), money,"withdrawn from", withdraw);
+        MoneyDto money = createMoney(accountDto);
+
+        boolean withdraw = false;
+        try {
+            withdraw = transactionService.withdraw(money, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        printTransactionLog(accountDto, money, "withdrawn from", withdraw);
     }
 
     private void transferMoney() {
         System.out.println("Enter the account number you would like to send money from:");
-        Optional<AccountDto> senderAccount = getAccount();
-        if (senderAccount.isEmpty()) return;
+        Optional<AccountDto> foundSenderAccount = getAccountByAccountNumber();
+        if (foundSenderAccount.isEmpty()) return;
+
+        AccountDto senderAccount = foundSenderAccount.get();
+        if (accountInactive(senderAccount)) {
+            return;
+        }
 
         System.out.println("Enter the account number you would like to send money to:");
-        Optional<AccountDto> receiverAccount = getAccount();
-        if (receiverAccount.isEmpty()) return;
+        Optional<AccountDto> foundReceiverAccount = getAccountByAccountNumber();
+        if (foundReceiverAccount.isEmpty()) return;
 
         MoneyDto money = createMoney(senderAccount);
 
-        boolean transaction = transactionService.transfer(senderAccount.get(), receiverAccount.get(), money);
-        transactionLog(receiverAccount.get(), money, "transferred from " + senderAccount.get().getNumber() + " to",transaction);
+        boolean transaction = false;
+        try {
+            transaction = transactionService.transfer(senderAccount, foundReceiverAccount.get(), money);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        printTransactionLog(foundReceiverAccount.get(), money, "transferred from " + senderAccount.getNumber() + " to", transaction);
     }
 
-    private MoneyDto createMoney(Optional<AccountDto> account) {
+    private void viewTransaction() {
+        System.out.println("Enter the account number:");
+        Optional<AccountDto> foundAccount = getAccountByAccountNumber();
+        if (foundAccount.isEmpty()) return;
+
+        System.out.println("Enter the number of last transactions you would like to view:");
+        int numOfLatestTransactions = getUserInputInt();
+
+        List<TransactionDto> lastTransactions = transactionService.getLastTransactions(foundAccount.get(), numOfLatestTransactions);
+        if (lastTransactions == null) {
+            System.out.println("Account " + foundAccount + " has no transactions");
+        } else {
+            lastTransactions.forEach(System.out::println);
+        }
+    }
+
+    private void viewAccountBalance() {
+        System.out.println("BALANCE:"+
+                "Enter the account number:");
+        Optional<AccountDto> foundAccount = getAccountByAccountNumber();
+        if (foundAccount.isEmpty()) return;
+
         System.out.println("Enter the currency:");
-        String currency = getUserInputString();
+        Currency currency = getCurrency();
+
+        List<MoneyDto> moneys = foundAccount.get().getMoneys();
+        moneys.stream().filter(moneyDto -> moneyDto.getCurrency().equals(currency)).forEach(System.out::println);
+    }
+
+    private void viewBankAccountBalance() {
+        AccountDto bankAccount = accountService.getAccountByAccountNumber("111.1");
+        if (bankAccount == null) {
+            System.out.println("Bank account was not found.");
+            return;
+        }
+
+        System.out.println("Here is the list of all the currencies available in the bank:");
+        bankAccount.getMoneys().stream()
+                .map(moneyDto -> moneyDto.getAmount().negate())
+                .forEach(System.out::println);
+    }
+
+    private boolean accountInactive(AccountDto account) {
+        if (!account.isActive()) {
+            System.out.println("Account number " + account.getNumber() + " is inactive.");
+            return true;
+        }
+        return false;
+    }
+
+    private MoneyDto createMoney(AccountDto account) {
+        System.out.println("Enter the currency:");
+        Currency currency = getCurrency();
         while (true) {
             System.out.println("Enter the amount:");
             BigDecimal amount = getUserBigDecimal();
             if (amount.compareTo(BigDecimal.ZERO) > 0) {
-                return new MoneyDto(currency, amount, account.get());
+                return new MoneyDto(currency, amount, account);
             } else {
                 System.out.println("Negative amounts cannot be deposited");
             }
         }
     }
 
-    private Optional<AccountDto> getAccount() {
+    private Currency getCurrency() {
+        while (true) {
+            String currency = getUserInputString();
+            switch (currency) {
+                case "USD":
+                    return Currency.USD;
+                case "CAD":
+                    return Currency.CAD;
+                case "EURO":
+                    return Currency.EURO;
+                case "RIAL":
+                    return Currency.RIAL;
+            }
+            System.out.println("The bank does not support " + currency + " currency. \nTry another currency:");
+        }
+    }
+
+    private Optional<AccountDto> getAccountByAccountNumber() {
         String accountNumber = getUserInputString();
-        Optional<AccountDto> account = accountService.getAccountByAccountNumber(accountNumber);
-        if (account.isEmpty()) {
+        AccountDto account = null;
+        try {
+            account = accountService.getAccountByAccountNumber(accountNumber);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (account == null) {
             System.out.println("Account number, " + accountNumber + ", was NOT found.");
             return Optional.empty();
         }
-        return account;
+        return Optional.of(account);
     }
 
-    private void transactionLog(AccountDto account, MoneyDto money, String string, boolean transactionIsDone) {
+    private void printTransactionLog(AccountDto account, MoneyDto money, String string, boolean transactionIsDone) {
         if (transactionIsDone) {
-            System.out.println(money.getAmount() + money.getCurrency() + " was successfully " + string + " account number " + account.getNumber() + ".");
+            System.out.println(money.getAmount() + money.getCurrency().toString() + " was successfully " + string + " account number " + account.getNumber() + ".");
         } else {
             System.out.println("Transaction was not successful.");
         }
@@ -421,7 +535,7 @@ public class UserInterface {
             try {
                 return scanner.nextInt();
             } catch (InputMismatchException e) {
-                System.out.println("Please enter ONLY numbers.\nTry again:");
+                System.out.println("Please enter ONLY digits.\nTry again:");
                 scanner.nextLine();
             }
         }

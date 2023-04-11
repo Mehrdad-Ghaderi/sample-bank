@@ -17,14 +17,11 @@ public class ClientMapper {
         if (clientEntity == null) {
             return null;
         }
-
         ClientDto clientDto = new ClientDto();
-
         clientDto.setId(clientEntity.getId());
         clientDto.setName(clientEntity.getName());
         clientDto.setPhoneNumber(clientEntity.getPhoneNumber());
         clientDto.setActive(clientEntity.isActive());
-
         clientDto.setAccounts(accountMapper.toAccountDtoList(clientEntity.getAccounts(), clientDto));
 
         return clientDto;
@@ -34,13 +31,11 @@ public class ClientMapper {
         if (clientDto == null) {
             return null;
         }
-
-        ClientEntity clientEntity = new ClientEntity(
-                clientDto.getId(),
-                clientDto.getName(),
-                clientDto.getPhoneNumber(),
-                clientDto.isActive());
-
+        ClientEntity clientEntity = new ClientEntity();
+        clientEntity.setId(clientDto.getId());
+        clientEntity.setName(clientDto.getName());
+        clientEntity.setPhoneNumber(clientDto.getPhoneNumber());
+        clientEntity.setActive(clientDto.isActive());
         clientEntity.setAccounts(accountMapper.toAccountEntityList(clientDto.getAccounts(), clientEntity));
 
         return clientEntity;

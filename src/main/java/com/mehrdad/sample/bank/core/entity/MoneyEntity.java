@@ -13,15 +13,15 @@ import java.math.BigDecimal;
 public class MoneyEntity {
 
     private String id;
-    private String currency;
+    private Currency currency;
     private BigDecimal amount;
     private AccountEntity account;
 
-    public MoneyEntity(String currency, BigDecimal amount, AccountEntity account) {
+    public MoneyEntity(Currency currency, BigDecimal amount, AccountEntity account) {
         this.id = account.getNumber() + currency;
+        this.account = account;
         this.currency = currency;
         this.amount = amount;
-        this.account = account;
     }
 
     public MoneyEntity() {
@@ -39,11 +39,11 @@ public class MoneyEntity {
     }
 
     @NotNull
-    public String getCurrency() {
+    public Currency getCurrency() {
         return currency;
     }
 
-    public void setCurrency(String currency) {
+    public void setCurrency(Currency currency) {
         this.currency = currency;
     }
 
@@ -75,4 +75,5 @@ public class MoneyEntity {
                 ", account=" + account.getNumber() +
                 '}';
     }
+
 }

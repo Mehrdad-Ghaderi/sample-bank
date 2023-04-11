@@ -15,13 +15,13 @@ public class ClientEntity {
     private List<AccountEntity> accounts;
     private Boolean active;
 
-    protected ClientEntity() {
+    public ClientEntity() {
     }
 
     public ClientEntity(String id, String name, String phoneNumber, Boolean status) {
-        this.id = id;
+        this.id = id; //has to be validated for uniqueness
         this.name = name;
-        this.phoneNumber = phoneNumber;
+        this.phoneNumber = phoneNumber; // has to be validated for uniqueness
         this.active = status;
     }
 

@@ -1,5 +1,6 @@
 package com.mehrdad.sample.bank.core.service;
 
+import com.mehrdad.sample.bank.api.dto.AccountDto;
 import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
@@ -30,9 +31,12 @@ public class AccountService {
         this.clientMapper = clientMapper;
     }
 
-    public Optional<com.mehrdad.sample.bank.api.dto.AccountDto> getAccountByAccountNumber(String accountNumber) {
+    public AccountDto getAccountByAccountNumber(String accountNumber){
         ClientDto clientDto = getClientByAccountNumber(accountNumber);
-        return accountRepository.findById(accountNumber).map(accountEntity -> accountMapper.toAccountDto(accountEntity, clientDto));
+
+        return accountRepository.findById(accountNumber)
+                .map(accountEntity -> accountMapper.toAccountDto(accountEntity, clientDto))
+                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
     }
 
     private ClientDto getClientByAccountNumber(String accountNumber) {
@@ -40,60 +44,24 @@ public class AccountService {
         return accountEntity.map(AccountEntity::getClient).map(clientMapper::toClientDto).orElse(null);
     }
 
-    public List<com.mehrdad.sample.bank.api.dto.AccountDto> getAllAccounts() {
+    public List<AccountDto> getAllAccounts() {
 
         return clientRepository.findAll().parallelStream()
                 .filter(ClientEntity::isActive)
                 .map(clientMapper::toClientDto)
                 .map(ClientDto::getAccounts)
                 .flatMap(Collection::parallelStream)
-                .filter(com.mehrdad.sample.bank.api.dto.AccountDto::isActive)
+                .filter(AccountDto::isActive)
                 .collect(Collectors.toList());
-
-/*
-        // Solution 2
-        Set<String> processedClients = new HashSet<>();
-        return accountRepository.findAll().stream()
-                .filter(accountEntity -> !processedClients.contains(accountEntity.getClient().getId()))
-                .peek(accountEntity -> processedClients.add(accountEntity.getClient().getId()))
-                .map(accountEntity -> clientMapper.toClientDto(accountEntity.getClient()))
-                .flatMap(clientDto -> clientDto.getAccounts().parallelStream())
-                .collect(Collectors.toList());
-*/
-
-/*
-                    ClientDto clientDto = clientMap.get(clientId);
-                    if (clientDto == null) {
-                         clientDto = clientMapper.toClientDto(accountEntity.getClient());
-                         clientMap.put(clientId, clientDto);
-                    }
-                    ClientDto clientDto = clientMap.computeIfAbsent(clientId, clientID -> clientMapper.toClientDto(accountEntity.getClient())
-*/
-
-/*
-        //Solution 4
-        return accountEntities.parallelStream()
-                .map(accountEntity -> accountMapper.toAccountDto(accountEntity, clientMapper.toClientDto(accountEntity.getClient())))
-                .collect(Collectors.toList());
-*/
-
-
-/*
-        // Solution 1
-        return accountRepository.findAll().parallelStream()
-                .map(accountEntity -> clientMapper.toClientDto(accountEntity.getClient()))
-                .flatMap(clientDto -> clientDto.getAccounts().parallelStream())
-                .distinct().collect(Collectors.toList());
-*/
     }
 
-    public void save(com.mehrdad.sample.bank.api.dto.AccountDto account, ClientDto clientDto) {
+    public void save(AccountDto account, ClientDto clientDto) {
         ClientEntity clientEntity = clientMapper.toClientEntity(clientDto);
         accountRepository.save(accountMapper.toAccountEntity(account, clientEntity));
     }
 
     public boolean createAccount(String accountNumber, ClientDto client) {
-        com.mehrdad.sample.bank.api.dto.AccountDto account = new com.mehrdad.sample.bank.api.dto.AccountDto(accountNumber, client, true);
+        AccountDto account = new AccountDto(accountNumber, client, true);
         try {
             save(account, client);
             return true;
@@ -111,7 +79,7 @@ public class AccountService {
         freezeOrUnfreezeAccount(accountNumber, true);
     }
 
-    private void freezeOrUnfreezeAccount(String accountNumber, Boolean b) {
+    public void freezeOrUnfreezeAccount(String accountNumber, Boolean b) {
         AccountEntity foundAccount = accountRepository.findById(accountNumber)
                 .orElseThrow(() -> new AccountNotFoundException(accountNumber));
 

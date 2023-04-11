@@ -12,14 +12,22 @@ import java.util.stream.Collectors;
 @Component
 public class AccountMapper {
 
+    private final MoneyMapper moneyMapper;
+
+    public AccountMapper(MoneyMapper moneyMapper) {
+        this.moneyMapper = moneyMapper;
+    }
+
     public AccountDto toAccountDto(AccountEntity accountEntity, ClientDto clientDto) {
         if (accountEntity == null) {
             return null;
         }
-        com.mehrdad.sample.bank.api.dto.AccountDto accountDto = new com.mehrdad.sample.bank.api.dto.AccountDto();
+        AccountDto accountDto = new AccountDto();
         accountDto.setNumber(accountEntity.getNumber());
         accountDto.setClient(clientDto);
         accountDto.setActive(accountEntity.isActive());
+        accountDto.setMoneys(moneyMapper.toMoneyDtoList(accountEntity.getMoneys(), accountDto));
+
         return accountDto;
     }
 
@@ -33,14 +41,15 @@ public class AccountMapper {
     }
 
     public AccountEntity toAccountEntity(AccountDto accountDto, ClientEntity clientEntity) {
-        if (clientEntity == null) {
+        if (accountDto == null) {
             return null;
         }
         AccountEntity accountEntity = new AccountEntity();
-
         accountEntity.setNumber(accountDto.getNumber());
         accountEntity.setClient(clientEntity);
         accountEntity.setActive(accountDto.isActive());
+        accountEntity.setMoneys(moneyMapper.toMoneyEntityList(accountDto.getMoneys(), accountEntity));
+
         return accountEntity;
     }
 
