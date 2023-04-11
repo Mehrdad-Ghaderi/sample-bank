@@ -535,7 +535,7 @@ public class UserInterface {
             try {
                 return scanner.nextInt();
             } catch (InputMismatchException e) {
-                System.out.println("Please enter ONLY numbers.\nTry again:");
+                System.out.println("Please enter ONLY digits.\nTry again:");
                 scanner.nextLine();
             }
         }
