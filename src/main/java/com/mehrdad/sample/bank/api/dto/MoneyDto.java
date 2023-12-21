@@ -1,5 +1,6 @@
 package com.mehrdad.sample.bank.api.dto;
 
+import com.mehrdad.sample.bank.api.dto.accountdecorator.AccountDto;
 import com.mehrdad.sample.bank.core.entity.Currency;
 
 import javax.validation.constraints.NotNull;

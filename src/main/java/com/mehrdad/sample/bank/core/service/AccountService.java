@@ -1,6 +1,6 @@
 package com.mehrdad.sample.bank.core.service;
 
-import com.mehrdad.sample.bank.api.dto.AccountDto;
+import com.mehrdad.sample.bank.api.dto.accountdecorator.AccountDto;
 import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
@@ -60,9 +60,10 @@ public class AccountService {
         accountRepository.save(accountMapper.toAccountEntity(account, clientEntity));
     }
 
-    public boolean createAccount(String accountNumber, ClientDto client) {
-        AccountDto account = new AccountDto(accountNumber, client, true);
+    public boolean createAccount(AccountDto account, ClientDto client) {
+
         try {
+            account.setActive(true);
             save(account, client);
             return true;
         } catch (Exception e) {

@@ -1,7 +1,9 @@
 package com.mehrdad.sample.bank.core.mapper;
 
-import com.mehrdad.sample.bank.api.dto.AccountDto;
+import com.mehrdad.sample.bank.api.dto.NormalAccountDto;
+import com.mehrdad.sample.bank.api.dto.accountdecorator.AccountDto;
 import com.mehrdad.sample.bank.api.dto.ClientDto;
+import com.mehrdad.sample.bank.api.dto.accountsecurity.NormalAccountNumber;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
 import org.springframework.stereotype.Component;
@@ -22,8 +24,9 @@ public class AccountMapper {
         if (accountEntity == null) {
             return null;
         }
-        AccountDto accountDto = new AccountDto();
-        accountDto.setNumber(accountEntity.getNumber());
+        AccountDto accountDto = new NormalAccountDto();
+        //accountDto.setNumber(accountEntity.getNumber());
+        accountDto.setNumber(new NormalAccountNumber(accountEntity.getNumber()));
         accountDto.setClient(clientDto);
         accountDto.setActive(accountEntity.isActive());
         accountDto.setMoneys(moneyMapper.toMoneyDtoList(accountEntity.getMoneys(), accountDto));

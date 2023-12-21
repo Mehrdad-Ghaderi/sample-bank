@@ -1,11 +1,19 @@
 package com.mehrdad.sample.bank.api.dto;
 
+import com.mehrdad.sample.bank.api.dto.accountdecorator.AccountDto;
+import com.mehrdad.sample.bank.api.dto.textservice.Event;
+import com.mehrdad.sample.bank.api.dto.textservice.EventListener;
+import com.mehrdad.sample.bank.api.dto.textservice.Publisher;
+
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-public class TransactionDto {
+public class TransactionDto implements Publisher {
 
     private Long id;
     private AccountDto sender;
@@ -14,12 +22,17 @@ public class TransactionDto {
     private String currency;
     private LocalDateTime transactionTime;
 
+    private List<EventListener> listeners;
+
     public TransactionDto(AccountDto sender, AccountDto receiver, BigDecimal amount, String currency) {
         this.sender = sender;
         this.receiver = receiver;
         this.amount = amount;
         this.currency = currency;
         this.transactionTime = LocalDateTime.now();
+        listeners = new ArrayList<>(Arrays.asList(sender, receiver));
+
+        notifyListeners();
     }
 
     public TransactionDto() {
@@ -88,4 +101,27 @@ public class TransactionDto {
                 '}';
     }
 
+    @Override
+    public void registerListener(EventListener eventListener) {
+        if (!listeners.contains(eventListener)) {
+            listeners.add(eventListener);
+        }
+    }
+
+    @Override
+    public void removeListener(EventListener eventListener) {
+        if (listeners.contains(eventListener)) {
+            listeners.remove(eventListener);
+        } else {
+            System.out.println();
+        }
+    }
+
+    @Override
+    public void notifyListeners() {
+        var event = new Event(toString());
+        for (EventListener e : listeners) {
+            e.onEvent(event);
+        }
+    }
 }

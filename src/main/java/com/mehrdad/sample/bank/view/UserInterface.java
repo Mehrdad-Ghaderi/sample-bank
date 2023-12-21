@@ -1,9 +1,11 @@
 package com.mehrdad.sample.bank.view;
 
-import com.mehrdad.sample.bank.api.dto.AccountDto;
-import com.mehrdad.sample.bank.api.dto.ClientDto;
-import com.mehrdad.sample.bank.api.dto.MoneyDto;
-import com.mehrdad.sample.bank.api.dto.TransactionDto;
+import com.mehrdad.sample.bank.api.dto.*;
+import com.mehrdad.sample.bank.api.dto.accountdecorator.AccountDto;
+import com.mehrdad.sample.bank.api.dto.accountdecorator.VIPAccountDecoratorDto;
+import com.mehrdad.sample.bank.api.dto.accountsecurity.HalfMaskedNumber;
+import com.mehrdad.sample.bank.api.dto.accountsecurity.NormalAccountNumber;
+import com.mehrdad.sample.bank.api.dto.accountsecurity.FullyMaskedNumber;
 import com.mehrdad.sample.bank.core.entity.Currency;
 import com.mehrdad.sample.bank.core.service.AccountService;
 import com.mehrdad.sample.bank.core.service.ClientService;
@@ -38,7 +40,7 @@ public class UserInterface {
                 "Enter 1 to add a client.\n" +
                 "Enter 2 to update a client's phone number\n" +
                 "Enter 3 to remove a client.\n" +
-                "Enter 4 to view detailed information on a client.\n" +
+                "Enter 4 to view a client's details.\n" +
                 "Enter 5 to view all clients.\n" +
                 "Enter 6 to activate or deactivate a client's membership.\n" +
                 "Enter 7 to create an account\n" +
@@ -154,6 +156,75 @@ public class UserInterface {
         ClientDto newClient = new ClientDto(id, name, phoneNumber, true);
         clientService.saveClient(newClient);
         System.out.println(newClient.getName() + " was added to the repository.");
+
+        createAccountFor(newClient);
+    }
+
+    private void createAccount() {
+        System.out.println("Account Setup:\n" +
+                "Enter the ID of the client for whom you would like to open an account:");
+        String clientID = getUserInputString();
+        Optional<ClientDto> foundClient = clientService.getClientById(clientID);
+        if (foundClient.isEmpty()) {
+            System.out.println("No client with the ID, " + clientID + ", was found.");
+            return;
+        }
+
+        createAccountFor(foundClient.get());
+    }
+
+    private void createAccountFor(ClientDto client) {
+
+        List<AccountDto> accounts = ofNullable(client.getAccounts()).orElseGet(Collections::emptyList);
+
+        if (accounts.isEmpty()) {
+            System.out.printf("No account has been previously allocated to %s%n", client.getName());
+        } else {
+            System.out.printf("Here is a list of all available accounts of %s:%s%n", client.getName(), accounts);
+        }
+
+        var accountDto = setAccountType();
+
+        while (true) {
+            System.out.println("Enter an account number to allocate to the client: account number + .1" +
+                    "example: 111.1 or 111.2");
+            String accountNumber = getUserInputString();
+            if (accounts.stream().anyMatch(account -> account.getNumber().equals(accountNumber))) {
+                System.out.println("Account number " + accountNumber + " has already been allocated to " + client.getName() + ".");
+                continue;
+            }
+
+            setAccountSecurityType(accountDto, accountNumber);
+
+            if (accountService.createAccount(accountDto, client)) {
+                System.out.println("Account number " + accountNumber + " was allocated to " + client.getName() + " .");
+            }
+            break;
+        }
+    }
+
+    private void setAccountSecurityType(AccountDto accountDto, String number) {
+        System.out.println("Set the security level of account number\n 1-> normal\n 2-> half masked\n 3-> completely masked");
+
+        var input = getUserInputInt();
+        if (input == 1) {
+            accountDto.setNumber(new NormalAccountNumber(number));
+        } else if (input == 2) {
+            accountDto.setNumber(new HalfMaskedNumber(number));
+        } else if (input == 3) {
+            accountDto.setNumber(new FullyMaskedNumber(number));
+        }
+    }
+
+    private AccountDto setAccountType() {
+        System.out.println("Type 1 for a normal account\nType 2 for a VIP account");
+        int type = getUserInputInt();
+        var accountDto = new NormalAccountDto();
+        if (type == 1) {
+            return accountDto;
+        } else {
+            return new VIPAccountDecoratorDto(accountDto);
+        }
     }
 
     private void updatePhoneNumber() {
@@ -251,40 +322,6 @@ public class UserInterface {
                 break;
             }
             System.out.println("The input value was NOT valid.\nPlease try again.");
-        }
-    }
-
-    private void createAccount() {
-        System.out.println("Account Setup:\n" +
-                "Enter the ID of the client you want to open an account for:");
-        String clientID = getUserInputString();
-        Optional<ClientDto> foundClient = clientService.getClientById(clientID);
-        if (foundClient.isEmpty()) {
-            System.out.println("No client with the ID, " + clientID + ", was found.");
-            return;
-        }
-
-        ClientDto client = foundClient.get();
-        List<AccountDto> accounts = ofNullable(client.getAccounts()).orElseGet(Collections::emptyList);
-
-        if (accounts.isEmpty()) {
-            System.out.printf("No account has been previously allocated to %s%n", client.getName());
-        } else {
-            System.out.printf("Here is a list of all available accounts of %s:%s%n", client.getName(), accounts);
-        }
-
-        while (true) {
-            System.out.println("Enter an account number to allocate to the client: accountnumber + .1" +
-                    "example: 111.1 or 111.2");
-            String accountNumber = getUserInputString();
-            if (accounts.stream().anyMatch(account -> account.getNumber().equals(accountNumber))) {
-                System.out.println("Account number " + accountNumber + " has already been allocated to " + client.getName() + ".");
-                continue;
-            }
-            if (accountService.createAccount(accountNumber, client)) {
-                System.out.println("Account number " + accountNumber + " was allocated to " + client.getName() + " .");
-            }
-            break;
         }
     }
 
@@ -421,7 +458,7 @@ public class UserInterface {
     }
 
     private void viewAccountBalance() {
-        System.out.println("BALANCE:"+
+        System.out.println("BALANCE:" +
                 "Enter the account number:");
         Optional<AccountDto> foundAccount = getAccountByAccountNumber();
         if (foundAccount.isEmpty()) return;

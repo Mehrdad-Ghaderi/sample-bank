@@ -23,6 +23,7 @@ public class AccountEntity {
         this.active = status;
     }
 
+
     @Id
     @NotBlank
     @Size(max = 10)

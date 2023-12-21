@@ -1,6 +1,6 @@
 package com.mehrdad.sample.bank.core.service;
 
-import com.mehrdad.sample.bank.api.dto.AccountDto;
+import com.mehrdad.sample.bank.api.dto.accountdecorator.AccountDto;
 import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.api.dto.MoneyDto;
 import com.mehrdad.sample.bank.api.dto.TransactionDto;
