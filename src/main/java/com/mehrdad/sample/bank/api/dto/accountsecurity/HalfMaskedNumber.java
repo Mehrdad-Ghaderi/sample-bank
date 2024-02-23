@@ -14,6 +14,7 @@ public class HalfMaskedNumber implements AccountNumber {
         return halves[0] + halves[1];
     }
 
+    @Override
     public void setNumber(String number) {
         this.number = number;
     }

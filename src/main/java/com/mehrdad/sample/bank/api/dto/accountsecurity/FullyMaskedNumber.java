@@ -12,8 +12,10 @@ public class FullyMaskedNumber implements AccountNumber {
     @Override
     public String getNumber() {
         char[] chars = number.toCharArray();
-        Arrays.fill(chars, '*');
-        return Arrays.toString(chars);
+        StringBuilder s = new StringBuilder();
+
+        s.append("*".repeat(chars.length));
+        return s.toString();
     }
 
     @Override

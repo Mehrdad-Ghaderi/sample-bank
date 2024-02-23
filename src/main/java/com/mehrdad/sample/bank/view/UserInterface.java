@@ -204,7 +204,7 @@ public class UserInterface {
     }
 
     private void setAccountSecurityType(AccountDto accountDto, String number) {
-        System.out.println("Set the security level of account number\n 1-> normal\n 2-> half masked\n 3-> completely masked");
+        System.out.println("Set the security level of account number\n 1-> normal\n 2-> half masked\n 3-> fully masked");
 
         var input = getUserInputInt();
         if (input == 1) {
