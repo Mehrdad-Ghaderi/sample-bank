@@ -10,7 +10,7 @@
 <div class="container">
     <h4>Current clients</h4>
 
-    <!--<a th:href="@{/clients/new}" class="btn btn-primary btn-sm mb-3">join as a new Client</a>-->
+    <a th:href="@{/clients/new}" class="btn btn-primary btn-sm mb-3">Join as a new client</a>
 
     <table class="table table-bordered table-striped">
         <thead class="thead-dark">
@@ -25,7 +25,7 @@
         <tr th:each="client : ${allClients}">
             <td th:text="${client.id}">
             <td th:text="${client.name}">
-            <td th:text="${client.id}">
+            <td th:text="${client.phoneNumber}">
             </td>
         </tr>
         </tbody>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{layouts :: header}">
+
+  <title>Customer Sign up page</title>
+</head>
+<body>
+
+<nav th:replace="~{layouts :: navbar}"></nav>
+
+<div data-role="page">
+  <div data-role="header">
+    <h1>Sign Up</h1>
+  </div>
+
+  <div data-role="main" class="ui-content">
+    <form action="/clients/save" method="POST" th:object="${client}">
+      <fieldset data-role="controlgroup">
+        <legend>Client Information:</legend>
+
+        <label for="firstName"></label>
+        ID: <input type="text" id="firstName" th:field="${client.id}"> <br>
+        <br>
+        <label for="lastName"></label>
+        Name: <input type="text" id="lastName" th:field="${client.name}"> <br>
+        <br>
+        <label for="email"></label>
+        Phone Number: <input type="text" id="email" th:field="${client.phoneNumber}"> <br>
+        <br>
+      </fieldset>
+
+
+      <button type="submit">Create client</button>
+      <input type="reset" data-inline="true" value="Reset">
+    </form>
+  </div>
+</div>
+
+</body>
+</html>
