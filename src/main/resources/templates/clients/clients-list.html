@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="layouts :: header">
+    <meta charset="UTF-8">
+    <title>Clients</title>
+<body>
+
+<nav th:replace="~{layouts :: navbar}"></nav>
+
+<div class="container">
+    <h4>Current clients</h4>
+
+    <!--<a th:href="@{/clients/new}" class="btn btn-primary btn-sm mb-3">join as a new Client</a>-->
+
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Phone Number</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="client : ${allClients}">
+            <td th:text="${client.id}">
+            <td th:text="${client.name}">
+            <td th:text="${client.id}">
+            </td>
+        </tr>
+        </tbody>
+
+    </table>
+</div>
+
+</body>
+</html>
