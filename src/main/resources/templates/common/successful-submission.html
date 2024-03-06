@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="layouts :: header">
+  <meta charset="UTF-8">
+  <title>Successful Submission</title>
+</head>
+
+<body>
+<nav th:replace="~{layouts :: navbar}"></nav>
+
+<div class="container">
+  <div class="popup" id="popup">
+    <p>The client was successfully created!</p>
+    <a th:href="@{/clients/list}" class="btn btn-primary btn-sm mb-3">Ok</a>
+  </div>
+</div>
+</body>
+</html>

@@ -34,8 +34,23 @@ public class ClientController {
 
     @PostMapping("/save")
     public String createClient(ClientDto clientDto, Model model) {
+        var clientById = clientService.getClientById(clientDto.getId());
+        if (clientById.isPresent()) {
+
+            return "redirect:/clients/failed-submission";
+        }
         clientDto.setActive(true);
         clientService.saveClient(clientDto);
-        return "redirect:/clients/list";
+        return "/common/successful-submission";
+    }
+
+    @GetMapping("/failed-submission")
+    public String failedSubmission(Model model) {
+        return "/common/failed-submission";
+    }
+
+    @GetMapping("successful-submission")
+    public String successfulSubmission(Model model) {
+        return "/common/successful-submission";
     }
 }

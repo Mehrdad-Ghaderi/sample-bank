@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="layouts :: header">
+  <meta charset="UTF-8">
+  <title>Accounts</title>
+</head>
+<body>
+
+<nav th:replace="~{layouts :: navbar}"></nav>
+
+<div class="container">
+  <h4>Current Accounts</h4>
+
+  <table class="table table-bordered table-striped">
+    <thead class="thead-dark">
+    <tr>
+      <th>Owner</th>
+      <th>Account Number</th>
+      <th>Currency</th>
+      <th>Status</th>
+
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr th:each="account : ${allAccounts}">
+      <td th:text="${account.client.name}">
+      <td th:text="${account.number}">
+      <td th:text="${account.currency}">
+      <td th:text="${account.active}">
+      </td>
+    </tr>
+    </tbody>
+
+  </table>
+</div>
+
+</body>
+</html>

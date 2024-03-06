@@ -132,7 +132,7 @@ public class UserInterface {
     }
 
     private void addNewClient() {
-        System.out.println("CLIENT ADDITION:");
+        System.out.println("New Client:");
         System.out.println("Enter the ID: ");
         String id = getUserInputString();
 
