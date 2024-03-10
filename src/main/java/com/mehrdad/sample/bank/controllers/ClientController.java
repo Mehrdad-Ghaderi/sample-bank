@@ -49,7 +49,7 @@ public class ClientController {
         return "/common/failed-submission";
     }
 
-    @GetMapping("successful-submission")
+    @GetMapping("/successful-submission")
     public String successfulSubmission(Model model) {
         return "/common/successful-submission";
     }
