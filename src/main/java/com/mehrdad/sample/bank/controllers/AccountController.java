@@ -16,7 +16,7 @@ public class AccountController {
     @Autowired
     AccountService accountService;
 
-    @GetMapping("list")
+    @GetMapping("/list")
     public String displayAccounts(Model model) {
         var allAccounts = accountService.getAllAccounts();
         model.addAttribute("allAccounts", allAccounts);
