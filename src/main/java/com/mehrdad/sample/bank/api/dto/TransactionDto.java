@@ -1,19 +1,13 @@
 package com.mehrdad.sample.bank.api.dto;
 
 import com.mehrdad.sample.bank.api.dto.accountdecorator.AccountDto;
-import com.mehrdad.sample.bank.api.dto.textservice.Event;
-import com.mehrdad.sample.bank.api.dto.textservice.EventListener;
-import com.mehrdad.sample.bank.api.dto.textservice.Publisher;
 
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
-public class TransactionDto implements Publisher {
+public class TransactionDto {
 
     private Long id;
     private AccountDto sender;
@@ -22,17 +16,21 @@ public class TransactionDto implements Publisher {
     private String currency;
     private LocalDateTime transactionTime;
 
-    private List<EventListener> listeners;
-
     public TransactionDto(AccountDto sender, AccountDto receiver, BigDecimal amount, String currency) {
         this.sender = sender;
         this.receiver = receiver;
         this.amount = amount;
         this.currency = currency;
         this.transactionTime = LocalDateTime.now();
-        listeners = new ArrayList<>(Arrays.asList(sender, receiver));
+    }
 
-        notifyListeners();
+    public TransactionDto(Builder builder) {
+        this.id = builder.id;
+        this.sender = builder.sender;
+        this.receiver = builder.receiver;
+        this.amount = builder.amount;
+        this.currency = builder.currency;
+        this.transactionTime = builder.transactionTime;
     }
 
     public TransactionDto() {
@@ -101,27 +99,48 @@ public class TransactionDto implements Publisher {
                 '}';
     }
 
-    @Override
-    public void registerListener(EventListener eventListener) {
-        if (!listeners.contains(eventListener)) {
-            listeners.add(eventListener);
-        }
-    }
+    public static class Builder{
+        private Long id;
+        private AccountDto sender;
+        private AccountDto receiver;
+        private BigDecimal amount;
+        private String currency;
+        private LocalDateTime transactionTime;
 
-    @Override
-    public void removeListener(EventListener eventListener) {
-        if (listeners.contains(eventListener)) {
-            listeners.remove(eventListener);
-        } else {
-            System.out.println();
+        public Builder() {
         }
-    }
 
-    @Override
-    public void notifyListeners() {
-        var event = new Event(toString());
-        for (EventListener e : listeners) {
-            e.onEvent(event);
+        public Builder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder sender(AccountDto sender) {
+            this.sender = sender;
+            return this;
+        }
+        public Builder receiver(AccountDto receiver) {
+            this.receiver = receiver;
+            return this;
+        }
+
+        public Builder amount(BigDecimal amount) {
+            this.amount = amount;
+            return this;
+        }
+
+        public Builder currency(String currency) {
+            this.currency = currency;
+            return this;
+        }
+
+        public Builder transactionTie(LocalDateTime transactionTime) {
+            this.transactionTime = transactionTime;
+            return this;
+        }
+
+        public TransactionDto build() {
+            return new TransactionDto(this);
         }
     }
 }

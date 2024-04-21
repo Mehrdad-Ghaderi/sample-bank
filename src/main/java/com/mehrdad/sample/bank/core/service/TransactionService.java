@@ -48,9 +48,16 @@ public class TransactionService {
         this.clientMapper = clientMapper;
     }
 
-    private void saveTransaction(AccountDto sender, AccountDto receiver, MoneyDto money) {
-        TransactionEntity transaction = createTransaction(sender, receiver, money);
-        transactionRepository.save(transaction);
+    @Transactional
+    public boolean transfer(AccountDto sender, AccountDto receiver, MoneyDto money) throws Exception {
+        if (withdraw(money, false)) {
+            changeMoneyIdAndAccount(receiver, money);
+            deposit(money, false);
+            saveTransaction(sender, receiver, money);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private TransactionEntity createTransaction(AccountDto sender, AccountDto receiver, MoneyDto money) {
@@ -63,16 +70,10 @@ public class TransactionService {
         return new TransactionEntity(senderAccountEntity, receiverAccountEntity, money.getAmount(), money.getCurrency().toString());
     }
 
-    @Transactional
-    public boolean transfer(AccountDto sender, AccountDto receiver, MoneyDto money) throws Exception {
-        if (withdraw(money, false)) {
-            changeMoneyIdAndAccount(receiver, money);
-            deposit(money, false);
-            saveTransaction(sender, receiver, money);
-            return true;
-        } else {
-            return false;
-        }
+    private void saveTransaction(AccountDto sender, AccountDto receiver, MoneyDto money) {
+        TransactionEntity transaction = createTransaction(sender, receiver, money);
+        transactionRepository.save(transaction);
+        notifyMembers(transaction);
     }
 
     /**
@@ -109,11 +110,6 @@ public class TransactionService {
         return true;
     }
 
-    private AccountEntity getAccountEntity(AccountDto accountDto) {
-        return accountRepository.findById(accountDto.getNumber())
-                .orElseThrow(() -> new AccountNotFoundException(accountDto.getNumber()));
-    }
-
     @Transactional
     public boolean withdraw(MoneyDto moneyDto, boolean addToBank) {
         AccountEntity foundAccountEntity = getAccountEntity(moneyDto.getAccount());
@@ -134,6 +130,18 @@ public class TransactionService {
             }
         }
         return true;
+    }
+
+    public List<TransactionDto> getLastTransactions(AccountDto account, int numOfLatestTransactions) {
+        return transactionRepository.findLastTransactions(account.getNumber(), numOfLatestTransactions)
+                .parallelStream()
+                .map(transactionMapper::toTransactionEntity)
+                .collect(Collectors.toList());
+    }
+
+    private AccountEntity getAccountEntity(AccountDto accountDto) {
+        return accountRepository.findById(accountDto.getNumber())
+                .orElseThrow(() -> new AccountNotFoundException(accountDto.getNumber()));
     }
 
     private void addToBankAccount(MoneyDto moneyDto) {
@@ -194,13 +202,6 @@ public class TransactionService {
     }
 
 
-    public List<TransactionDto> getLastTransactions(AccountDto account, int numOfLatestTransactions) {
-        return transactionRepository.findLastTransactions(account.getNumber(), numOfLatestTransactions)
-                .parallelStream()
-                .map(transactionMapper::toTransactionEntity)
-                .collect(Collectors.toList());
-    }
-
     private void assertAccountActiveStatus(AccountEntity account) {
         if (!account.isActive()) {
             System.out.println("Account number " + account.getNumber() + " is inactive.");
@@ -218,6 +219,15 @@ public class TransactionService {
         if (moneyDto.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             System.out.println("Negative or zero amounts cannot be deposited.");
             throw new InvalidAmountException(moneyDto.getAmount());
+        }
+    }
+
+    private void notifyMembers(TransactionEntity transaction) {
+        if (transaction.getSender().isActive()) {
+            System.out.println(transaction.toString());
+        }
+        if (transaction.getReceiver().isActive()) {
+            System.out.println(transaction.toString());
         }
     }
 

@@ -6,6 +6,8 @@ import com.mehrdad.sample.bank.api.dto.accountdecorator.VIPAccountDecoratorDto;
 import com.mehrdad.sample.bank.api.dto.accountsecurity.HalfMaskedNumber;
 import com.mehrdad.sample.bank.api.dto.accountsecurity.NormalAccountNumber;
 import com.mehrdad.sample.bank.api.dto.accountsecurity.FullyMaskedNumber;
+import com.mehrdad.sample.bank.api.dto.textservice.Event;
+import com.mehrdad.sample.bank.api.dto.visitor.BalanceVisitor;
 import com.mehrdad.sample.bank.core.entity.Currency;
 import com.mehrdad.sample.bank.core.service.AccountService;
 import com.mehrdad.sample.bank.core.service.ClientService;
@@ -21,17 +23,32 @@ import static java.util.Optional.ofNullable;
 
 @Component
 public class UserInterface {
+    HomePage homePage;
 
-    private final Scanner scanner;
+    public UserInterface(HomePage homePage) {
+        this.homePage = homePage;
+    }
+
+    public void start(String[] args) {
+        homePage.getHomeMenu();
+        homePage.run();
+    }
+
+
+
+
+/*    private final Scanner scanner;
     private final ClientService clientService;
     private final AccountService accountService;
     private final TransactionService transactionService;
+    private final BalanceVisitor balanceVisitor;
 
-    public UserInterface(Scanner scanner, ClientService clientService, AccountService accountService, TransactionService transactionService) {
+    public UserInterface(Scanner scanner, ClientService clientService, AccountService accountService, TransactionService transactionService, BalanceVisitor balanceVisitor) {
         this.scanner = scanner;
         this.clientService = clientService;
         this.accountService = accountService;
         this.transactionService = transactionService;
+        this.balanceVisitor = balanceVisitor;
     }
 
     private void printMenu() {
@@ -53,6 +70,9 @@ public class UserInterface {
                 "Enter 14 to view the transactions of an account.\n" +
                 "Enter 15 to view the balance of an account.\n" +
                 "Enter 16 to view the balance of the bank.\n" +
+                "Enter 17 to send active members the newsletter\n" +
+                "Enter 18 to subscribe to our newsletter\n" +
+                "Enter 19 to see all the clients who have more than 10 dollars in their account\n" +
                 "Enter 0 to shut down");
     }
 
@@ -124,11 +144,51 @@ public class UserInterface {
                 viewBankAccountBalance();
                 continue;
             }
+            if (userInput == 17) {
+                sendNewsletter();
+                continue;
+            }
+            if (userInput == 18) {
+                becomeSubscriber();
+                continue;
+            }
+            if (userInput == 19) {
+                showClientsWithMoreThan10Dollars();
+                continue;
+            }
             if (userInput == 0) {
                 System.out.println("The system was shut down by the user.");
                 break;
             }
         }
+    }
+
+
+    private void showClientsWithMoreThan10Dollars() {
+        var clients = clientService.accept(balanceVisitor);
+        if (clients.isEmpty()) {
+            System.out.println("No client has more than 10 dollars in the bank");
+        } else {
+            System.out.println(clients);
+        }
+    }
+
+    private void becomeSubscriber() {
+        System.out.println("Enter a Client ID:");
+        String id = getUserInputString();
+
+        Optional<ClientDto> client = clientService.getClientById(id);
+
+        if (client.isPresent()) {
+            ClientDto foundClient = client.get();
+            clientService.registerListener(foundClient);
+        } else System.out.println("Client ID '" + id + "' was not found");
+    }
+
+    private void sendNewsletter() {
+        System.out.println("Type the message");
+        String message = getUserInputString();
+        clientService.notifyListeners(new Event(message));
     }
 
     private void addNewClient() {
@@ -152,8 +212,13 @@ public class UserInterface {
         String name = getUserInputString();
         System.out.println("Enter the phone number:");
         String phoneNumber = getUserInputString();
-
-        ClientDto newClient = new ClientDto(id, name, phoneNumber, true);
+        ClientDto newClient = new ClientDto.Builder()
+                .id(id)
+                .name(name)
+                .phoneNumber(phoneNumber)
+                .active(true)
+                .build();
+        //ClientDto newClient = new ClientDto(id, name, phoneNumber, true);
         clientService.saveClient(newClient);
         System.out.println(newClient.getName() + " was added to the repository.");
 
@@ -576,6 +641,6 @@ public class UserInterface {
                 scanner.nextLine();
             }
         }
-    }
+    }*/
 
 }

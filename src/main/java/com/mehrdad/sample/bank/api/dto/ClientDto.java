@@ -1,13 +1,19 @@
 package com.mehrdad.sample.bank.api.dto;
 
 import com.mehrdad.sample.bank.api.dto.accountdecorator.AccountDto;
+import com.mehrdad.sample.bank.api.dto.iterator.ListIterator;
+import com.mehrdad.sample.bank.api.dto.iterator.Iterator;
+import com.mehrdad.sample.bank.api.dto.textservice.Event;
+import com.mehrdad.sample.bank.api.dto.textservice.Listener;
+import com.mehrdad.sample.bank.api.dto.visitor.Visitable;
+import com.mehrdad.sample.bank.api.dto.visitor.Visitor;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
 
-public class ClientDto {
+public class ClientDto implements Listener {
 
     private String id;
     private String name;
@@ -20,6 +26,14 @@ public class ClientDto {
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.active = active;
+    }
+
+    public ClientDto(Builder builder) {
+        this.id = builder.id;
+        this.name = builder.name;
+        this.phoneNumber = builder.phoneNumber;
+        this.active = builder.active;
+        this.accounts = builder.accounts;
     }
 
     public ClientDto() {
@@ -79,5 +93,54 @@ public class ClientDto {
 
     public String concatNameAndId() {
         return "{" + this.getName() + ", ID: " + this.getId() + "}";
+    }
+
+    @Override
+    public void onEvent(Event event) {
+        System.out.println("Dear " + this.getName() + ": \n" + event.getMessage());
+    }
+
+    public Iterator<AccountDto> createListIterator(List<AccountDto> accounts) {
+        return new ListIterator(accounts);
+    }
+
+    public static class Builder {
+        private String id;
+        private String name;
+        private String phoneNumber;
+        private List<AccountDto> accounts;
+        private Boolean active;
+
+        public Builder() {
+        }
+
+        public Builder id(String id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder phoneNumber(String phoneNumber) {
+            this.phoneNumber = phoneNumber;
+            return this;
+        }
+
+        public Builder accounts(List<AccountDto> accountDtos) {
+            this.accounts = accountDtos;
+            return this;
+        }
+
+        public Builder active(Boolean active) {
+            this.active = active;
+            return this;
+        }
+
+        public ClientDto build() {
+            return new ClientDto(this);
+        }
     }
 }

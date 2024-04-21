@@ -1,18 +1,14 @@
 package com.mehrdad.sample.bank.api.dto.textservice;
 
 public class Event {
-    private String text;
+    private String message;
 
-    public Event(String text) {
-        this.text = text;
+    public Event(String message) {
+        this.message = message;
     }
 
-    public String getText() {
-        return text;
-    }
-
-    public void setText(String text) {
-        this.text = text;
+    public String getMessage() {
+        return message;
     }
 }
 

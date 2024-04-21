@@ -20,6 +20,13 @@ public class MoneyDto {
         this.account = account;
     }
 
+    public MoneyDto(Builder builder) {
+        this.id = builder.id;
+        this.currency = builder.currency;
+        this.amount = builder.amount;
+        this.account = builder.account;
+    }
+
     public MoneyDto() {
 
     }
@@ -67,5 +74,40 @@ public class MoneyDto {
                 ", account=" + account.getNumber() +
                 '}';
     }
+
+    public static class Builder {
+        private String id;
+        private Currency currency;
+        private BigDecimal amount;
+        private AccountDto account;
+
+        public Builder() {
+        }
+
+        public Builder id(String id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder currency(Currency currency) {
+            this.currency = currency;
+            return this;
+        }
+
+        public Builder amount(BigDecimal amount) {
+            this.amount = amount;
+            return this;
+        }
+
+        public Builder account(AccountDto account) {
+            this.account = account;
+            return this;
+        }
+
+        public MoneyDto build() {
+            return new MoneyDto(this);
+        }
+    }
+
 }
 

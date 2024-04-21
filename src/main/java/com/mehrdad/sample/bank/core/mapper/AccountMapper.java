@@ -25,7 +25,6 @@ public class AccountMapper {
             return null;
         }
         AccountDto accountDto = new NormalAccountDto();
-        //accountDto.setNumber(accountEntity.getNumber());
         accountDto.setNumber(new NormalAccountNumber(accountEntity.getNumber()));
         accountDto.setClient(clientDto);
         accountDto.setActive(accountEntity.isActive());

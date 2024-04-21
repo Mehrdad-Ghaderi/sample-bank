@@ -3,11 +3,11 @@ package com.mehrdad.sample.bank.api.dto.accountdecorator;
 import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.api.dto.MoneyDto;
 import com.mehrdad.sample.bank.api.dto.accountsecurity.AccountNumber;
-import com.mehrdad.sample.bank.api.dto.textservice.EventListener;
+import com.mehrdad.sample.bank.api.dto.textservice.Listener;
 
 import java.util.List;
 
-public interface AccountDto extends EventListener {
+public interface AccountDto extends Listener {
 
     String getNumber();
 
