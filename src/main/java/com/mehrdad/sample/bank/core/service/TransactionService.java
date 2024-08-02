@@ -50,7 +50,7 @@ public class TransactionService {
 
     @Transactional
     public boolean transfer(AccountDto sender, AccountDto receiver, MoneyDto money) throws Exception {
-        if (withdraw(money, false)) {
+        if (withdraw(money, false)) {//first withdrawal is done, if true, then
             changeMoneyIdAndAccount(receiver, money);
             deposit(money, false);
             saveTransaction(sender, receiver, money);
@@ -78,7 +78,7 @@ public class TransactionService {
 
     /**
      * changes the account of MoneyDto after withdrawal from the sender account
-     * in order for the same object to be used for deposit method, which needs a MoneyDto,
+     * in order for the same Money object to be used for deposit method, which needs a MoneyDto,
      * but with a different Id and Account.
      *
      * @param receiver
@@ -86,7 +86,7 @@ public class TransactionService {
      */
     private void changeMoneyIdAndAccount(AccountDto receiver, @NotNull MoneyDto money) {
         money.setAccount(receiver);
-        money.setId(receiver.getNumber() + money.getCurrency());
+        money.setId(receiver.getNumber() + money.getCurrency()); //this is how the Money id is implemented
     }
 
     @Transactional

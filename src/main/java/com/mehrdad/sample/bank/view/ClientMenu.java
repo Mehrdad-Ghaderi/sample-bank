@@ -5,6 +5,7 @@ import com.mehrdad.sample.bank.api.dto.visitor.BalanceVisitor;
 import com.mehrdad.sample.bank.core.service.AccountService;
 import com.mehrdad.sample.bank.core.service.ClientService;
 import com.mehrdad.sample.bank.core.service.TransactionService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -13,15 +14,13 @@ import java.util.Scanner;
 import java.util.stream.Collectors;
 
 @Component
-public class ClientMenu extends Menu {
-//figure out what to do with the last line on addNewClient()
+@RequiredArgsConstructor
 
-    public ClientMenu(Scanner scanner, ClientService clientService, AccountService accountService, TransactionService transactionService, BalanceVisitor balanceVisitor) {
-        super(scanner, clientService, accountService, transactionService, balanceVisitor);
-    }
+public class ClientMenu implements UIState {
 
+    private final Utility utility;
+    private final ClientService clientService;
 
-    @Override
     public void printMenu() {
         System.out.println("Client Menu:\n" +
                 "************************************************\n" +
@@ -31,58 +30,43 @@ public class ClientMenu extends Menu {
                 "Enter 3 to remove a client.\n" +
                 "Enter 4 to view a client's details.\n" +
                 "Enter 5 to view all clients.\n" +
-                "Enter 6 to activate or deactivate a client's membership.\n"+
-                "Enter 0 to Go Back"
+                "Enter 6 to activate or deactivate a client's membership.\n" +
+                "Any key to Go Back"
         );
     }
 
     @Override
-    public void run() {
+    public UIState run(UIState previousState) {
         int userInput;
-        while (true) {
-            printMenu();
-            userInput = getUserInputInt();
-            if (userInput == 1) {
-                addNewClient();
-                continue;
-            }
-            if (userInput == 2) {
-                updatePhoneNumber();
-                continue;
-            }
-            if (userInput == 3) {
-                removeClient();
-                continue;
-            }
-            if (userInput == 4) {
-                printClient();
-                continue;
-            }
-            if (userInput == 5) {
-                printAllClients();
-                continue;
-            }
-            if (userInput == 6) {
-                activateOrDeactivateClient();
-                continue;
-            }
-            if (userInput == 0) {
-                homePage.setHomeMenu(homePage.getHomeMenu());
-                homePage.run();
-                break;
-            }
+        printMenu();
+        userInput = utility.getUserInputInt();
+        if (userInput == 1) {
+            addNewClient();
         }
+        if (userInput == 2) {
+            updatePhoneNumber();
+        }
+        if (userInput == 3) {
+            removeClient();
+        }
+        if (userInput == 4) {
+            printClient();
+        }
+        if (userInput == 5) {
+            printAllClients();
+        }
+        if (userInput == 6) {
+            activateOrDeactivateClient();
+        }
+        System.out.println("Back to Main Menu:");
+        return previousState;
     }
 
-    @Override
-    public void runHomeMenu() {
-        run();
-    }
 
     protected void addNewClient() {
         System.out.println("New Client:");
         System.out.println("Enter the ID: ");
-        String id = getUserInputString();
+        String id = utility.getUserInputString();
 
         Optional<ClientDto> client = clientService.getClientById(id);
 
@@ -97,9 +81,9 @@ public class ClientMenu extends Menu {
         }
 
         System.out.println("Enter the name:");
-        String name = getUserInputString();
+        String name = utility.getUserInputString();
         System.out.println("Enter the phone number:");
-        String phoneNumber = getUserInputString();
+        String phoneNumber = utility.getUserInputString();
         ClientDto newClient = new ClientDto.Builder()
                 .id(id)
                 .name(name)
@@ -117,7 +101,7 @@ public class ClientMenu extends Menu {
     protected void updatePhoneNumber() {
         System.out.println("CLIENT UPDATE:");
         System.out.println("Enter the ID of the client whose phone number you would like to update:");
-        String id = getUserInputString();
+        String id = utility.getUserInputString();
 
         Optional<ClientDto> client = clientService.getClientById(id);
         if (client.isEmpty()) {
@@ -127,7 +111,7 @@ public class ClientMenu extends Menu {
 
         ClientDto foundClient = client.get();
         System.out.println("Enter " + foundClient.getName() + "'s new phone number :");
-        String newPhoneNumber = getUserInputString();
+        String newPhoneNumber = utility.getUserInputString();
         System.out.println(foundClient.getName() + "'s old phone number, " + foundClient.getPhoneNumber() + ", was removed.");
         clientService.setClientPhoneNumber(id, newPhoneNumber);
         System.out.println("The new number has been set to " + newPhoneNumber + ".");
@@ -136,7 +120,7 @@ public class ClientMenu extends Menu {
     protected void removeClient() {
         System.out.println("CLIENT REMOVAL:");
         System.out.println("Enter the ID: ");
-        String id = getUserInputString();
+        String id = utility.getUserInputString();
 
         Optional<ClientDto> client = clientService.getClientById(id);
         if (client.isEmpty()) {
@@ -156,7 +140,7 @@ public class ClientMenu extends Menu {
 
     protected void printClient() {
         System.out.println("Enter the ID of the client you want information on:");
-        String clientId = getUserInputString();
+        String clientId = utility.getUserInputString();
         Optional<ClientDto> clientById = clientService.getClientById(clientId);
         clientById.ifPresentOrElse(System.out::println, () -> System.out.println("No client with that ID was found"));
     }
@@ -171,7 +155,7 @@ public class ClientMenu extends Menu {
 
     protected void activateOrDeactivateClient() {
         System.out.println("Enter the client ID:");
-        String id = getUserInputString();
+        String id = utility.getUserInputString();
         Optional<ClientDto> client = clientService.getClientById(id);
         if (client.isEmpty()) {
             System.out.println("No client with that ID was found.");
@@ -187,7 +171,7 @@ public class ClientMenu extends Menu {
             if (!client.isActive()) {
                 System.out.println(client.getName() + " is inactive");
                 System.out.println("Press A to ACTIVATE the client's membership, or Q to go back to main menu.");
-                userChoice = getUserInputString();
+                userChoice = utility.getUserInputString();
                 if (userChoice.equals("A")) {
                     clientService.activateClient(client.getId());
                     System.out.println(client.getName() + " has been activated.");
@@ -196,7 +180,7 @@ public class ClientMenu extends Menu {
             } else {
                 System.out.println(client.getName() + " is active");
                 System.out.println("Press D to DEACTIVATE the client's membership, or Q to go back to main menu.");
-                userChoice = getUserInputString();
+                userChoice = utility.getUserInputString();
                 if (userChoice.equals("D")) {
                     clientService.deactivateClient(client.getId());
                     System.out.println(client.getName() + " has been deactivated.");

@@ -80,5 +80,4 @@ public class ClientEntity {
         return String.format("ClientEntity{id='%s', name='%s', phoneNumber='%s', active=%s, accounts=%s}",
                 id, name, phoneNumber, active, accounts);
     }
-
 }

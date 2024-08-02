@@ -9,29 +9,34 @@ import com.mehrdad.sample.bank.api.dto.accountdecorator.VIPAccountDecoratorDto;
 import com.mehrdad.sample.bank.api.dto.accountsecurity.FullyMaskedNumber;
 import com.mehrdad.sample.bank.api.dto.accountsecurity.HalfMaskedNumber;
 import com.mehrdad.sample.bank.api.dto.accountsecurity.NormalAccountNumber;
+import com.mehrdad.sample.bank.api.dto.textservice.Event;
 import com.mehrdad.sample.bank.api.dto.visitor.BalanceVisitor;
 import com.mehrdad.sample.bank.core.entity.Currency;
+import com.mehrdad.sample.bank.core.exception.AccountNotFoundException;
 import com.mehrdad.sample.bank.core.service.AccountService;
 import com.mehrdad.sample.bank.core.service.ClientService;
 import com.mehrdad.sample.bank.core.service.TransactionService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Scanner;
 
 import static java.util.Optional.ofNullable;
 
 @Component
-public class AccountMenu extends Menu {
+@RequiredArgsConstructor
+public class AccountMenu implements UIState {
 
-    public AccountMenu(Scanner scanner, ClientService clientService, AccountService accountService, TransactionService transactionService, BalanceVisitor balanceVisitor) {
-        super(scanner, clientService, accountService, transactionService, balanceVisitor);
-    }
 
-    @Override
+    private final Utility utility;
+    private final AccountService accountService;
+    private final ClientService clientService;
+    private final TransactionService transactionService;
+    private final BalanceVisitor balanceVisitor;
+
     public void printMenu() {
         System.out.println("Account Menu:\n" +
                 "************************************************\n" +
@@ -44,67 +49,65 @@ public class AccountMenu extends Menu {
                 "Enter 7 to transfer money.\n" +
                 "Enter 8 to view the transactions of an account.\n" +
                 "Enter 9 to view the balance of an account.\n" +
-                "Enter 0 to GO Back.\n"
+                "Enter 10 to view the balance of the bank.\n" +
+                "Enter 11 to send active members the newsletter\n" +
+                "Enter 12 to subscribe to our newsletter\n" +
+                "Enter 13 to see all the clients who have more than 10 dollars in their account\n" +
+                "Any key to GO Back.\n"
         );
     }
     @Override
-    public void run() {
+    public UIState run(UIState previousState) {
 
-        while (true) {
-            printMenu();
-            int userInput = getUserInputInt();
+        printMenu();
+        int userInput = utility.getUserInputInt();
 
-            if (userInput == 1) {
-                createAccount();
-            }
-            if (userInput == 2) {
-                printAccount();
-                continue;
-            }
-            if (userInput == 3) {
-                printAllAccounts();
-                continue;
-            }
-            if (userInput == 4) {
-                freezeOrUnfreezeAccount();
-                continue;
-            }
-            if (userInput == 5) {
-                depositMoney();
-            }
-            if (userInput == 6) {
-                withdrawMoney();
-                continue;
-            }
-            if (userInput == 7) {
-                transferMoney();
-                continue;
-            }
-            if (userInput == 8) {
-                viewTransaction();
-                continue;
-            }
-            if (userInput == 9) {
-                viewAccountBalance();
-                continue;
-            }
-            if (userInput == 0) {
-                homePage.setHomeMenu(homePage.getHomeMenu());
-                homePage.run();
-                break;
-            }
+        if (userInput == 1) {
+            createAccount();
         }
-    }
-
-    @Override
-    public void runHomeMenu() {
-        run();
+        if (userInput == 2) {
+            printAccount();
+        }
+        if (userInput == 3) {
+            printAllAccounts();
+        }
+        if (userInput == 4) {
+            freezeOrUnfreezeAccount();
+        }
+        if (userInput == 5) {
+            depositMoney();
+        }
+        if (userInput == 6) {
+            withdrawMoney();
+        }
+        if (userInput == 7) {
+            transferMoney();
+        }
+        if (userInput == 8) {
+            viewTransaction();
+        }
+        if (userInput == 9) {
+            viewAccountBalance();
+        }
+        if (userInput == 10) {
+            viewBankAccountBalance();
+        }
+        if (userInput == 11) {
+            sendNewsletter();
+        }
+        if (userInput == 12) {
+            becomeSubscriber();
+        }
+        if (userInput == 13) {
+            showClientsWithMoreThan10Dollars();
+        }
+        return previousState;
     }
 
     private void createAccount() {
         System.out.println("Account Setup:\n" +
                 "Enter the ID of the client for whom you would like to open an account:");
-        String clientID = getUserInputString();
+        String clientID = utility.getUserInputString();
         Optional<ClientDto> foundClient = clientService.getClientById(clientID);
         if (foundClient.isEmpty()) {
             System.out.println("No client with the ID, " + clientID + ", was found.");
@@ -129,7 +132,7 @@ public class AccountMenu extends Menu {
         while (true) {
             System.out.println("Enter an account number to allocate to the client: account number + .1" +
                     "example: 111.1 or 111.2");
-            String accountNumber = getUserInputString();
+            String accountNumber = utility.getUserInputString();
             if (accounts.stream().anyMatch(account -> account.getNumber().equals(accountNumber))) {
                 System.out.println("Account number " + accountNumber + " has already been allocated to " + client.getName() + ".");
                 continue;
@@ -147,7 +150,7 @@ public class AccountMenu extends Menu {
     protected void setAccountSecurityType(AccountDto accountDto, String number) {
         System.out.println("Set the security level of account number\n 1-> normal\n 2-> half masked\n 3-> fully masked");
 
-        var input = getUserInputInt();
+        var input = utility.getUserInputInt();
         if (input == 1) {
             accountDto.setNumber(new NormalAccountNumber(number));
         } else if (input == 2) {
@@ -159,7 +162,7 @@ public class AccountMenu extends Menu {
 
     protected AccountDto setAccountType() {
         System.out.println("Type 1 for a normal account\nType 2 for a VIP account");
-        int type = getUserInputInt();
+        int type = utility.getUserInputInt();
         var accountDto = new NormalAccountDto();
         if (type == 1) {
             return accountDto;
@@ -192,7 +195,7 @@ public class AccountMenu extends Menu {
             if (accountDto.isActive()) {
                 System.out.println("Account number, " + accountDto.getNumber() + ", is not frozen.");
                 System.out.println("Press F to freeze it, or Q to go back to main menu");
-                userChoice = getUserInputString();
+                userChoice = utility.getUserInputString();
                 if (userChoice.equals("F")) {
                     accountService.freezeAccount(accountDto.getNumber());
                     System.out.println("Account number, " + accountDto.getNumber() + ", is successfully frozen.");
@@ -201,7 +204,7 @@ public class AccountMenu extends Menu {
             } else {
                 System.out.println("Account number, " + accountDto.getNumber() + ", is frozen.");
                 System.out.println("Press U to unfreeze it, or Q to go back to main menu");
-                userChoice = getUserInputString();
+                userChoice = utility.getUserInputString();
                 if (userChoice.equals("U")) {
                     accountService.unfreezeAccount(accountDto.getNumber());
                     System.out.println("Account number, " + accountDto.getNumber() + ", is successfully unfrozen.");
@@ -290,7 +293,7 @@ public class AccountMenu extends Menu {
         if (foundAccount.isEmpty()) return;
 
         System.out.println("Enter the number of last transactions you would like to view:");
-        int numOfLatestTransactions = getUserInputInt();
+        int numOfLatestTransactions = utility.getUserInputInt();
 
         List<TransactionDto> lastTransactions = transactionService.getLastTransactions(foundAccount.get(), numOfLatestTransactions);
         if (lastTransactions == null) {
@@ -327,7 +330,7 @@ public class AccountMenu extends Menu {
         Currency currency = getCurrency();
         while (true) {
             System.out.println("Enter the amount:");
-            BigDecimal amount = getUserBigDecimal();
+            BigDecimal amount = utility.getUserBigDecimal();
             if (amount.compareTo(BigDecimal.ZERO) > 0) {
                 return new MoneyDto(currency, amount, account);
             } else {
@@ -338,7 +341,7 @@ public class AccountMenu extends Menu {
 
     protected Currency getCurrency() {
         while (true) {
-            String currency = getUserInputString();
+            String currency = utility.getUserInputString();
             switch (currency) {
                 case "USD":
                     return Currency.USD;
@@ -354,12 +357,12 @@ public class AccountMenu extends Menu {
     }
 
     protected Optional<AccountDto> getAccountByAccountNumber() {
-        String accountNumber = getUserInputString();
+        String accountNumber = utility.getUserInputString();
         AccountDto account = null;
         try {
             account = accountService.getAccountByAccountNumber(accountNumber);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new AccountNotFoundException(accountNumber);
         }
         if (account == null) {
             System.out.println("Account number, " + accountNumber + ", was NOT found.");
@@ -375,4 +378,44 @@ public class AccountMenu extends Menu {
             System.out.println("Transaction was not successful.");
         }
     }
+
+    private void viewBankAccountBalance() {
+        AccountDto bankAccount = accountService.getAccountByAccountNumber("111.1");
+        if (bankAccount == null) {
+            System.out.println("Bank account was not found.");
+            return;
+        }
+
+        System.out.println("Here is the list of all the currencies available in the bank:");
+        bankAccount.getMoneys().stream()
+                .map(moneyDto -> moneyDto.getAmount().negate())
+                .forEach(System.out::println);
+    }
+    private void sendNewsletter() {
+        System.out.println("Type the message");
+        String message = utility.getUserInputString();
+        clientService.notifyListeners(new Event(message));
+    }
+
+    private void becomeSubscriber() {
+        System.out.println("Enter a Client ID:");
+        String id = utility.getUserInputString();
+
+        Optional<ClientDto> client = clientService.getClientById(id);
+
+        if (client.isPresent()) {
+            ClientDto foundClient = client.get();
+            clientService.registerListener(foundClient);
+        } else System.out.println("Client ID '" + id + "' was not found");
+    }
+
+    private void showClientsWithMoreThan10Dollars() {
+        var clients = clientService.accept(balanceVisitor);
+        if (clients.isEmpty()) {
+            System.out.println("No client has more than 10 dollars in the bank");
+        } else {
+            System.out.println(clients);
+        }
+    }
+
 }

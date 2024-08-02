@@ -1,38 +1,17 @@
 package com.mehrdad.sample.bank.view;
 
-import com.mehrdad.sample.bank.api.dto.*;
-import com.mehrdad.sample.bank.api.dto.accountdecorator.AccountDto;
-import com.mehrdad.sample.bank.api.dto.accountdecorator.VIPAccountDecoratorDto;
-import com.mehrdad.sample.bank.api.dto.accountsecurity.HalfMaskedNumber;
-import com.mehrdad.sample.bank.api.dto.accountsecurity.NormalAccountNumber;
-import com.mehrdad.sample.bank.api.dto.accountsecurity.FullyMaskedNumber;
-import com.mehrdad.sample.bank.api.dto.textservice.Event;
-import com.mehrdad.sample.bank.api.dto.visitor.BalanceVisitor;
-import com.mehrdad.sample.bank.core.entity.Currency;
-import com.mehrdad.sample.bank.core.service.AccountService;
-import com.mehrdad.sample.bank.core.service.ClientService;
-import com.mehrdad.sample.bank.core.service.TransactionService;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static java.util.Optional.ofNullable;
-
 @Component
+@RequiredArgsConstructor
 public class UserInterface {
-    HomePage homePage;
-
-    public UserInterface(HomePage homePage) {
-        this.homePage = homePage;
-    }
+    private final HomePage homePage;
 
     public void start(String[] args) {
-        homePage.getHomeMenu();
         homePage.run();
     }
+}
 
 
 
@@ -643,4 +622,4 @@ public class UserInterface {
         }
     }*/
 
-}
+

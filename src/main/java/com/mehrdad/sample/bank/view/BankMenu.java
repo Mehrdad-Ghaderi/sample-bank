@@ -4,23 +4,20 @@ import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.api.dto.accountdecorator.AccountDto;
 import com.mehrdad.sample.bank.api.dto.textservice.Event;
 import com.mehrdad.sample.bank.api.dto.visitor.BalanceVisitor;
-import com.mehrdad.sample.bank.core.service.AccountService;
 import com.mehrdad.sample.bank.core.service.ClientService;
-import com.mehrdad.sample.bank.core.service.TransactionService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
-import java.util.Scanner;
 
 @Component
-public class BankMenu extends Menu {
+@RequiredArgsConstructor
+public class BankMenu implements UIState {
 
-    public BankMenu(Scanner scanner, ClientService clientService, AccountService accountService, TransactionService transactionService, BalanceVisitor balanceVisitor) {
-        super(scanner, clientService, accountService, transactionService, balanceVisitor);
-    }
+    private final Utility utility;
+    private final ClientService clientService;
+    private final BalanceVisitor balanceVisitor;
 
-
-    @Override
     public void printMenu() {
         System.out.println("Bank Menu:\n" +
                 "************************************************\n" +
@@ -28,47 +25,40 @@ public class BankMenu extends Menu {
                 "Enter 2 to send active members the newsletter\n" +
                 "Enter 3 to subscribe to the bank's newsletter\n" +
                 "Enter 4 to see all the clients who have more than 10 dollars in their account\n" +
-                "Enter 0 to Go Back.\n");
+                "Any key to Go Back.\n");
 
     }
 
     @Override
-    public void run() {
+    public UIState run(UIState previousState) {
         int userInput;
         while (true) {
             printMenu();
-            userInput = getUserInputInt();
+            userInput = utility.getUserInputInt();
             if (userInput == 1) {
                 viewBankAccountBalance();
-                continue;
+                
             }
             if (userInput == 2) {
                 sendNewsletter();
-                continue;
+                
             }
             if (userInput == 3) {
                 becomeSubscriber();
-                continue;
+                
             }
             if (userInput == 4) {
                 showClientsWithMoreThan10Dollars();
-                continue;
+                
             }
-            if (userInput == 0) {
-                homePage.setHomeMenu(homePage.getHomeMenu());
-                homePage.run();
-                break;
-            }
+            System.out.println("Back to Manin Menu:");
+            return previousState;
         }
     }
-
-    @Override
-    public void runHomeMenu() {
-        run();
-    }
+    
 
     protected void viewBankAccountBalance() {
-        AccountDto bankAccount = accountService.getAccountByAccountNumber("111.1");
+        AccountDto bankAccount = utility.accountService.getAccountByAccountNumber("111.1");
         if (bankAccount == null) {
             System.out.println("Bank account was not found.");
             return;
@@ -82,13 +72,13 @@ public class BankMenu extends Menu {
 
     protected void sendNewsletter() {
         System.out.println("Type the message");
-        String message = getUserInputString();
+        String message = utility.getUserInputString();
         clientService.notifyListeners(new Event(message));
     }
 
     protected void becomeSubscriber() {
         System.out.println("Enter a Client ID:");
-        String id = getUserInputString();
+        String id = utility.getUserInputString();
 
         Optional<ClientDto> client = clientService.getClientById(id);
 
