@@ -5,8 +5,6 @@ import com.mehrdad.sample.bank.api.dto.iterator.ListIterator;
 import com.mehrdad.sample.bank.api.dto.iterator.Iterator;
 import com.mehrdad.sample.bank.api.dto.textservice.Event;
 import com.mehrdad.sample.bank.api.dto.textservice.Listener;
-import com.mehrdad.sample.bank.api.dto.visitor.Visitable;
-import com.mehrdad.sample.bank.api.dto.visitor.Visitor;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
