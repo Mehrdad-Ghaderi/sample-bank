@@ -16,7 +16,6 @@
     <tr>
       <th>Owner</th>
       <th>Account Number</th>
-      <th>Currency</th>
       <th>Status</th>
 
     </tr>
@@ -26,7 +25,6 @@
     <tr th:each="account : ${allAccounts}">
       <td th:text="${account.client.name}">
       <td th:text="${account.number}">
-      <td th:text="${account.currency}">
       <td th:text="${account.active}">
       </td>
     </tr>
