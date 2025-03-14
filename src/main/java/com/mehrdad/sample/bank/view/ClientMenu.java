@@ -29,7 +29,7 @@ public class ClientMenu implements UIState {
                 "Enter 4 to view a client's details.\n" +
                 "Enter 5 to view all clients.\n" +
                 "Enter 6 to activate or deactivate a client's membership.\n" +
-                "Any key to Go Back"
+                "Any other number to Go Back"
         );
     }
 

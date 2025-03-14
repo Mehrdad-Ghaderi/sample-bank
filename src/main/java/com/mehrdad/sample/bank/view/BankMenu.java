@@ -22,7 +22,7 @@ public class BankMenu implements UIState {
                 "Enter 2 to send active members the newsletter\n" +
                 "Enter 3 to subscribe to the bank's newsletter\n" +
                 "Enter 4 to see all the clients who have more than 10 dollars in their account\n" +
-                "Any key to Go Back.\n");
+                "Any other number to Go Back.\n");
 
     }
 

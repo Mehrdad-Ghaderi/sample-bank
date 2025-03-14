@@ -45,7 +45,7 @@ public class AccountMenu implements UIState {
                 "Enter 8 to view the transactions of an account.\n" +
                 "Enter 9 to view the balance of an account.\n" +
                 "Enter 10 to view the balance of the bank.\n" +
-                "Any key to GO Back.\n"
+                "Any other numbers to GO Back.\n"
         );
     }
     @Override
