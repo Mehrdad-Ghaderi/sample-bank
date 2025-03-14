@@ -2,6 +2,9 @@ package com.mehrdad.sample.bank.core.exception;
 
 import java.math.BigDecimal;
 
+/**
+ * Created by Mehrdad Ghaderi
+ */
 public class InvalidAmountException extends RuntimeException {
 
     private final BigDecimal amount;

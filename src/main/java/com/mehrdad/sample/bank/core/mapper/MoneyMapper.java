@@ -1,6 +1,6 @@
 package com.mehrdad.sample.bank.core.mapper;
 
-import com.mehrdad.sample.bank.api.dto.accountdecorator.AccountDto;
+import com.mehrdad.sample.bank.api.dto.AccountDto;
 import com.mehrdad.sample.bank.api.dto.MoneyDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.MoneyEntity;
@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Created by Mehrdad Ghaderi
+ */
 @Component
 public class MoneyMapper {
 

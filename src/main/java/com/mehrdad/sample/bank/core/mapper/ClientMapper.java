@@ -4,6 +4,9 @@ import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
 import org.springframework.stereotype.Component;
 
+/**
+ * Created by Mehrdad Ghaderi
+ */
 @Component
 public class ClientMapper {
 

@@ -1,22 +1,19 @@
 package com.mehrdad.sample.bank.view;
 
-import com.mehrdad.sample.bank.api.dto.ClientDto;
-import com.mehrdad.sample.bank.api.dto.accountdecorator.AccountDto;
-import com.mehrdad.sample.bank.api.dto.textservice.Event;
-import com.mehrdad.sample.bank.api.dto.visitor.BalanceVisitor;
+import com.mehrdad.sample.bank.api.dto.AccountDto;
 import com.mehrdad.sample.bank.core.service.ClientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
-
+/**
+ * Created by Mehrdad Ghaderi
+ */
 @Component
 @RequiredArgsConstructor
 public class BankMenu implements UIState {
 
     private final Utility utility;
     private final ClientService clientService;
-    private final BalanceVisitor balanceVisitor;
 
     public void printMenu() {
         System.out.println("Bank Menu:\n" +
@@ -37,20 +34,8 @@ public class BankMenu implements UIState {
             userInput = utility.getUserInputInt();
             if (userInput == 1) {
                 viewBankAccountBalance();
-                
             }
-            if (userInput == 2) {
-                sendNewsletter();
-                
-            }
-            if (userInput == 3) {
-                becomeSubscriber();
-                
-            }
-            if (userInput == 4) {
-                showClientsWithMoreThan10Dollars();
-                
-            }
+
             System.out.println("Back to Manin Menu:");
             return previousState;
         }
@@ -68,32 +53,5 @@ public class BankMenu implements UIState {
         bankAccount.getMoneys().stream()
                 .map(moneyDto -> moneyDto.getAmount().negate())
                 .forEach(System.out::println);
-    }
-
-    protected void sendNewsletter() {
-        System.out.println("Type the message");
-        String message = utility.getUserInputString();
-        clientService.notifyListeners(new Event(message));
-    }
-
-    protected void becomeSubscriber() {
-        System.out.println("Enter a Client ID:");
-        String id = utility.getUserInputString();
-
-        Optional<ClientDto> client = clientService.getClientById(id);
-
-        if (client.isPresent()) {
-            ClientDto foundClient = client.get();
-            clientService.registerListener(foundClient);
-        } else System.out.println("Client ID '" + id + "' was not found");
-    }
-
-    protected void showClientsWithMoreThan10Dollars() {
-        var clients = clientService.accept(balanceVisitor);
-        if (clients.isEmpty()) {
-            System.out.println("No client has more than 10 dollars in the bank");
-        } else {
-            System.out.println(clients);
-        }
     }
 }

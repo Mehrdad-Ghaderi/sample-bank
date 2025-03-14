@@ -1,16 +1,9 @@
 package com.mehrdad.sample.bank.view;
 
+import com.mehrdad.sample.bank.api.dto.AccountDto;
 import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.api.dto.MoneyDto;
-import com.mehrdad.sample.bank.api.dto.NormalAccountDto;
 import com.mehrdad.sample.bank.api.dto.TransactionDto;
-import com.mehrdad.sample.bank.api.dto.accountdecorator.AccountDto;
-import com.mehrdad.sample.bank.api.dto.accountdecorator.VIPAccountDecoratorDto;
-import com.mehrdad.sample.bank.api.dto.accountsecurity.FullyMaskedNumber;
-import com.mehrdad.sample.bank.api.dto.accountsecurity.HalfMaskedNumber;
-import com.mehrdad.sample.bank.api.dto.accountsecurity.NormalAccountNumber;
-import com.mehrdad.sample.bank.api.dto.textservice.Event;
-import com.mehrdad.sample.bank.api.dto.visitor.BalanceVisitor;
 import com.mehrdad.sample.bank.core.entity.Currency;
 import com.mehrdad.sample.bank.core.exception.AccountNotFoundException;
 import com.mehrdad.sample.bank.core.service.AccountService;
@@ -26,6 +19,9 @@ import java.util.Optional;
 
 import static java.util.Optional.ofNullable;
 
+/**
+ * Created by Mehrdad Ghaderi
+ */
 @Component
 @RequiredArgsConstructor
 public class AccountMenu implements UIState {
@@ -35,7 +31,6 @@ public class AccountMenu implements UIState {
     private final AccountService accountService;
     private final ClientService clientService;
     private final TransactionService transactionService;
-    private final BalanceVisitor balanceVisitor;
 
     public void printMenu() {
         System.out.println("Account Menu:\n" +
@@ -50,9 +45,6 @@ public class AccountMenu implements UIState {
                 "Enter 8 to view the transactions of an account.\n" +
                 "Enter 9 to view the balance of an account.\n" +
                 "Enter 10 to view the balance of the bank.\n" +
-                "Enter 11 to send active members the newsletter\n" +
-                "Enter 12 to subscribe to our newsletter\n" +
-                "Enter 13 to see all the clients who have more than 10 dollars in their account\n" +
                 "Any key to GO Back.\n"
         );
     }
@@ -92,15 +84,6 @@ public class AccountMenu implements UIState {
         if (userInput == 10) {
             viewBankAccountBalance();
         }
-        if (userInput == 11) {
-            sendNewsletter();
-        }
-        if (userInput == 12) {
-            becomeSubscriber();
-        }
-        if (userInput == 13) {
-            showClientsWithMoreThan10Dollars();
-        }
         return previousState;
     }
 
@@ -127,7 +110,7 @@ public class AccountMenu implements UIState {
             System.out.printf("Here is a list of all available accounts of %s:%s%n", client.getName(), accounts);
         }
 
-        var accountDto = setAccountType();
+        var accountDto = new AccountDto();
 
         while (true) {
             System.out.println("Enter an account number to allocate to the client: account number + .1" +
@@ -138,36 +121,10 @@ public class AccountMenu implements UIState {
                 continue;
             }
 
-            setAccountSecurityType(accountDto, accountNumber);
-
             if (accountService.createAccount(accountDto, client)) {
                 System.out.println("Account number " + accountNumber + " was allocated to " + client.getName() + " .");
             }
             break;
-        }
-    }
-
-    protected void setAccountSecurityType(AccountDto accountDto, String number) {
-        System.out.println("Set the security level of account number\n 1-> normal\n 2-> half masked\n 3-> fully masked");
-
-        var input = utility.getUserInputInt();
-        if (input == 1) {
-            accountDto.setNumber(new NormalAccountNumber(number));
-        } else if (input == 2) {
-            accountDto.setNumber(new HalfMaskedNumber(number));
-        } else if (input == 3) {
-            accountDto.setNumber(new FullyMaskedNumber(number));
-        }
-    }
-
-    protected AccountDto setAccountType() {
-        System.out.println("Type 1 for a normal account\nType 2 for a VIP account");
-        int type = utility.getUserInputInt();
-        var accountDto = new NormalAccountDto();
-        if (type == 1) {
-            return accountDto;
-        } else {
-            return new VIPAccountDecoratorDto(accountDto);
         }
     }
 
@@ -391,31 +348,4 @@ public class AccountMenu implements UIState {
                 .map(moneyDto -> moneyDto.getAmount().negate())
                 .forEach(System.out::println);
     }
-    private void sendNewsletter() {
-        System.out.println("Type the message");
-        String message = utility.getUserInputString();
-        clientService.notifyListeners(new Event(message));
-    }
-
-    private void becomeSubscriber() {
-        System.out.println("Enter a Client ID:");
-        String id = utility.getUserInputString();
-
-        Optional<ClientDto> client = clientService.getClientById(id);
-
-        if (client.isPresent()) {
-            ClientDto foundClient = client.get();
-            clientService.registerListener(foundClient);
-        } else System.out.println("Client ID '" + id + "' was not found");
-    }
-
-    private void showClientsWithMoreThan10Dollars() {
-        var clients = clientService.accept(balanceVisitor);
-        if (clients.isEmpty()) {
-            System.out.println("No client has more than 10 dollars in the bank");
-        } else {
-            System.out.println(clients);
-        }
-    }
-
 }

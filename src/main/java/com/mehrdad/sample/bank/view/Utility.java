@@ -1,6 +1,5 @@
 package com.mehrdad.sample.bank.view;
 
-import com.mehrdad.sample.bank.api.dto.visitor.BalanceVisitor;
 import com.mehrdad.sample.bank.core.service.AccountService;
 import com.mehrdad.sample.bank.core.service.ClientService;
 import com.mehrdad.sample.bank.core.service.TransactionService;
@@ -12,6 +11,9 @@ import java.util.InputMismatchException;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
+/**
+ * Created by Mehrdad Ghaderi
+ */
 @Service
 @RequiredArgsConstructor
 public class Utility {
@@ -19,8 +21,6 @@ public class Utility {
     protected final ClientService clientService;
     protected final AccountService accountService;
     protected final TransactionService transactionService;
-    protected final BalanceVisitor balanceVisitor;
-
 
     protected BigDecimal getUserBigDecimal() {
         while (true) {

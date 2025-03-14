@@ -7,6 +7,9 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
+/**
+ * Created by Mehrdad Ghaderi
+ */
 public interface TransactionRepository extends JpaRepository<TransactionEntity, String> {
 
     @Query(value = "select tr.* from transaction_entity tr " +

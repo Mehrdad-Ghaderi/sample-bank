@@ -6,6 +6,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Created by Mehrdad Ghaderi
+ */
 @Entity
 public class TransactionEntity {
 

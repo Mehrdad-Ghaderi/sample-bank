@@ -3,7 +3,7 @@ package com.mehrdad.sample.bank.core.util;
 import java.util.Collection;
 
 /**
- * @author Ali Asghar Momeni Vesalian (momeni.vesalian@gmail.com)
+ * Created by Mehrdad Ghaderi
  */
 public final class CollectionUtil {
 

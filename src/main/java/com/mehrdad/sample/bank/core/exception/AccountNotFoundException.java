@@ -1,5 +1,8 @@
 package com.mehrdad.sample.bank.core.exception;
 
+/**
+ * Created by Mehrdad Ghaderi
+ */
 public class AccountNotFoundException extends RuntimeException {
 
     String accountNumber;

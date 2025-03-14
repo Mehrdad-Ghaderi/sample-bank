@@ -2,6 +2,9 @@ package com.mehrdad.sample.bank.view;
 
 import org.springframework.stereotype.Component;
 
+/**
+ * Created by Mehrdad Ghaderi
+ */
 @Component
 public class HomePage {
 

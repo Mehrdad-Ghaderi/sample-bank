@@ -2,6 +2,9 @@ package com.mehrdad.sample.bank.core.exception;
 
 import com.mehrdad.sample.bank.core.entity.MoneyEntity;
 
+/**
+ * Created by Mehrdad Ghaderi
+ */
 public class MoneyNotFoundException extends RuntimeException {
 
     private final MoneyEntity moneyEntity;

@@ -1,9 +1,7 @@
 package com.mehrdad.sample.bank.core.service;
 
-import com.mehrdad.sample.bank.api.dto.accountdecorator.AccountDto;
+import com.mehrdad.sample.bank.api.dto.AccountDto;
 import com.mehrdad.sample.bank.api.dto.ClientDto;
-import com.mehrdad.sample.bank.api.dto.visitor.Visitable;
-import com.mehrdad.sample.bank.api.dto.visitor.Visitor;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
 import com.mehrdad.sample.bank.core.exception.AccountNotFoundException;
@@ -16,6 +14,9 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Created by Mehrdad Ghaderi
+ */
 @Service
 public class AccountService {
 

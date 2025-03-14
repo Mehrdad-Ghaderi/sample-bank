@@ -6,6 +6,9 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toMap;
 
+/**
+ * Created by Mehrdad Ghaderi
+ */
 public enum Currency {
 
     USD("$"), CAD("C$"), EURO("€"), RIAL("R");

@@ -5,6 +5,9 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.Scanner;
 
+/**
+ * Created by Mehrdad Ghaderi
+ */
 @Configuration
 public class BankConfiguration {
 

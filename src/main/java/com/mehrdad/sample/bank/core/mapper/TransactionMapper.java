@@ -5,6 +5,9 @@ import com.mehrdad.sample.bank.api.dto.TransactionDto;
 import com.mehrdad.sample.bank.core.entity.TransactionEntity;
 import org.springframework.stereotype.Component;
 
+/**
+ * Created by Mehrdad Ghaderi
+ */
 @Component
 public class TransactionMapper {
 

@@ -1,17 +1,15 @@
 package com.mehrdad.sample.bank.api.dto;
 
-import com.mehrdad.sample.bank.api.dto.accountdecorator.AccountDto;
-import com.mehrdad.sample.bank.api.dto.iterator.ListIterator;
-import com.mehrdad.sample.bank.api.dto.iterator.Iterator;
-import com.mehrdad.sample.bank.api.dto.textservice.Event;
-import com.mehrdad.sample.bank.api.dto.textservice.Listener;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
 
-public class ClientDto implements Listener {
+/**
+ * Created by Mehrdad Ghaderi
+ */
+public class ClientDto {
 
     private String id;
     private String name;
@@ -93,14 +91,7 @@ public class ClientDto implements Listener {
         return "{" + this.getName() + ", ID: " + this.getId() + "}";
     }
 
-    @Override
-    public void onEvent(Event event) {
-        System.out.println("Dear " + this.getName() + ": \n" + event.getMessage());
-    }
 
-    public Iterator<AccountDto> createListIterator(List<AccountDto> accounts) {
-        return new ListIterator(accounts);
-    }
 
     public static class Builder {
         private String id;

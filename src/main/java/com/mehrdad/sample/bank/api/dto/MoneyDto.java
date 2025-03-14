@@ -1,11 +1,13 @@
 package com.mehrdad.sample.bank.api.dto;
 
-import com.mehrdad.sample.bank.api.dto.accountdecorator.AccountDto;
 import com.mehrdad.sample.bank.core.entity.Currency;
 
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
+/**
+ * Created by Mehrdad Ghaderi
+ */
 public class MoneyDto {
 
     private String id;

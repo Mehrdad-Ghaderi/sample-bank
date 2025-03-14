@@ -1,51 +1,16 @@
-/*
 package com.mehrdad.sample.bank.view;
 
-import com.mehrdad.sample.bank.api.dto.visitor.BalanceVisitor;
-import com.mehrdad.sample.bank.core.service.AccountService;
-import com.mehrdad.sample.bank.core.service.ClientService;
-import com.mehrdad.sample.bank.core.service.TransactionService;
-
-import java.util.Scanner;
-
-public abstract class Menu {
-    protected final Scanner scanner;
-    protected final ClientService clientService;
-    protected final AccountService accountService;
-    protected final TransactionService transactionService;
-
-    protected final BalanceVisitor balanceVisitor;
-
-    public Menu(Scanner scanner, ClientService clientService, AccountService accountService, TransactionService transactionService, BalanceVisitor balanceVisitor) {
-        this.scanner = scanner;
-        this.clientService = clientService;
-        this.accountService = accountService;
-        this.transactionService = transactionService;
-        this.balanceVisitor = balanceVisitor;
-    }
-
-    public abstract void printMenu();
-
-}
-*/
-package com.mehrdad.sample.bank.view;
-
-import com.mehrdad.sample.bank.api.dto.visitor.BalanceVisitor;
-import com.mehrdad.sample.bank.core.service.AccountService;
-import com.mehrdad.sample.bank.core.service.ClientService;
-import com.mehrdad.sample.bank.core.service.TransactionService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-import java.util.*;
-
+/**
+ * Created by Mehrdad Ghaderi
+ */
 @Component
 @RequiredArgsConstructor
 public class MainMenu implements UIState {
 
-    protected final BalanceVisitor balanceVisitor;
 
     protected HomePage homePage;
 

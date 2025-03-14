@@ -1,21 +1,19 @@
 package com.mehrdad.sample.bank.view;
 
 import com.mehrdad.sample.bank.api.dto.ClientDto;
-import com.mehrdad.sample.bank.api.dto.visitor.BalanceVisitor;
-import com.mehrdad.sample.bank.core.service.AccountService;
 import com.mehrdad.sample.bank.core.service.ClientService;
-import com.mehrdad.sample.bank.core.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Scanner;
 import java.util.stream.Collectors;
 
+/**
+ * Created by Mehrdad Ghaderi
+ */
 @Component
 @RequiredArgsConstructor
-
 public class ClientMenu implements UIState {
 
     private final Utility utility;

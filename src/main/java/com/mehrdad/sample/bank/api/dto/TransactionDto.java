@@ -1,12 +1,14 @@
 package com.mehrdad.sample.bank.api.dto;
 
-import com.mehrdad.sample.bank.api.dto.accountdecorator.AccountDto;
 
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Created by Mehrdad Ghaderi
+ */
 public class TransactionDto {
 
     private Long id;
