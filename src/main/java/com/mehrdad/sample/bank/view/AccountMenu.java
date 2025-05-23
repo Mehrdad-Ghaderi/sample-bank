@@ -63,25 +63,25 @@ public class AccountMenu implements UIState {
         if (userInput == 9) {
             printAllAccounts();
         }
-        if (userInput == 4) {
+        if (userInput == 10) {
             freezeOrUnfreezeAccount();
         }
-        if (userInput == 5) {
+        if (userInput == 11) {
             depositMoney();
         }
-        if (userInput == 6) {
+        if (userInput == 12) {
             withdrawMoney();
         }
-        if (userInput == 7) {
+        if (userInput == 13) {
             transferMoney();
         }
-        if (userInput == 8) {
+        if (userInput == 14) {
             viewTransaction();
         }
-        if (userInput == 9) {
+        if (userInput == 15) {
             viewAccountBalance();
         }
-        if (userInput == 10) {
+        if (userInput == 16) {
             viewBankAccountBalance();
         }
         return previousState;
