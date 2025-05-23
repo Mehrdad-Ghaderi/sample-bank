@@ -72,57 +72,73 @@ public class UserInterface {
             userInput = utility.getUserInputInt();
             if (userInput == 1) {
                 addNewClient();
+                continue;
             }
             if (userInput == 2) {
                 updatePhoneNumber();
+                continue;
             }
             if (userInput == 3) {
                 removeClient();
+                continue;
             }
             if (userInput == 4) {
                 printClient();
+                continue;
             }
             if (userInput == 5) {
                 printAllClients();
+                continue;
             }
             if (userInput == 6) {
                 activateOrDeactivateClient();
+                continue;
             }
             if (userInput == 7) {
                 createAccount();
+                continue;
             }
             if (userInput == 8) {
                 printAccount();
+                continue;
             }
             if (userInput == 9) {
                 printAllAccounts();
+                continue;
             }
             if (userInput == 10) {
                 freezeOrUnfreezeAccount();
+                continue;
             }
             if (userInput == 11) {
                 depositMoney();
+                continue;
             }
             if (userInput == 12) {
                 withdrawMoney();
+                continue;
             }
             if (userInput == 13) {
                 transferMoney();
+                continue;
             }
             if (userInput == 14) {
                 viewTransaction();
+                continue;
             }
             if (userInput == 15) {
                 viewAccountBalance();
+                continue;
             }
             if (userInput == 16) {
                 viewBankAccountBalance();
+                continue;
             }
-            else {
+            if (userInput == 0) {
+                System.out.println("The application was shut down by the user!");
                 break;
             }
         }
-
     }
 
     protected void addNewClient() {
