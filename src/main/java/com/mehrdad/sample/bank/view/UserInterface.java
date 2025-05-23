@@ -229,8 +229,8 @@ public class UserInterface {
                 .toList();
 
         String clients = (allClients.size() > 2) ? "s were" : " was";
-        System.out.println(allClients.size()-1 + " client" +
-                 clients
+        System.out.println(allClients.size() - 1 + " client" +
+                clients
                 + "found!");
     }
 
@@ -508,14 +508,12 @@ public class UserInterface {
         AccountDto account = null;
         try {
             account = accountService.getAccountByAccountNumber(accountNumber);
-        } catch (Exception e) {
-            throw new AccountNotFoundException(accountNumber);
-        }
-        if (account == null) {
-            System.out.println("Account number, " + accountNumber + ", was NOT found.");
+            return Optional.of(account);
+        } catch (AccountNotFoundException e) {
+            System.out.println("Account number " + accountNumber + " was NOT found.");
             return Optional.empty();
         }
-        return Optional.of(account);
+
     }
 
     protected void printTransactionLog(AccountDto account, MoneyDto money, String string, boolean transactionIsDone) {
