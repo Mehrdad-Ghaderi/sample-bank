@@ -438,7 +438,7 @@ public class UserInterface {
         try {
             transaction = transactionService.transfer(senderAccount, foundReceiverAccount.get(), money);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         }
         printTransactionLog(foundReceiverAccount.get(), money, "transferred from " + senderAccount.getNumber() + " to", transaction);
     }
@@ -452,8 +452,8 @@ public class UserInterface {
         int numOfLatestTransactions = utility.getUserInputInt();
 
         List<TransactionDto> lastTransactions = transactionService.getLastTransactions(foundAccount.get(), numOfLatestTransactions);
-        if (lastTransactions == null) {
-            System.out.println("Account " + foundAccount + " has no transactions");
+        if (lastTransactions.isEmpty()) {
+            System.err.println("Account " + foundAccount.get().getNumber() + " has no transactions");
         } else {
             lastTransactions.forEach(System.out::println);
         }
