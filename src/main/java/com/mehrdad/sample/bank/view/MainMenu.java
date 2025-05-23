@@ -20,6 +20,7 @@ public class MainMenu implements UIState {
     private final Utility utility;
 
 
+
     public void setHomePage(HomePage homePage) {
         this.homePage = homePage;
     }

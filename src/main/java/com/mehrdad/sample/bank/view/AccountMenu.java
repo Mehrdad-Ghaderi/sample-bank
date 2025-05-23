@@ -54,13 +54,13 @@ public class AccountMenu implements UIState {
         printMenu();
         int userInput = utility.getUserInputInt();
 
-        if (userInput == 1) {
+        if (userInput == 7) {
             createAccount();
         }
-        if (userInput == 2) {
+        if (userInput == 8) {
             printAccount();
         }
-        if (userInput == 3) {
+        if (userInput == 9) {
             printAllAccounts();
         }
         if (userInput == 4) {
