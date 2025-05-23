@@ -1,6 +1,7 @@
 package com.mehrdad.sample.bank.core.service;
 
 import com.mehrdad.sample.bank.api.dto.ClientDto;
+import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
 import com.mehrdad.sample.bank.core.exception.ClientNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.ClientMapper;
@@ -15,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -36,23 +38,6 @@ class ClientServiceTest {
 
     @InjectMocks
     private ClientService clientService;
-
-   /* private ClientRepository clientRepository;     // Mocked repository for DB access
-    private ClientMapper clientMapper;             // Mocked mapper to convert entity to DTO
-    private AccountService accountService;         // Mocked service, unused in this test but required in constructor
-    private ClientService clientService; */          // System under test
-
-
-    /**
-     * Initializes mocks and the service before each test.
-     */
-    /*@BeforeEach
-    void setUp() {
-        clientRepository = mock(ClientRepository.class);
-        clientMapper = mock(ClientMapper.class);
-        accountService = mock(AccountService.class); // Not directly used but required
-        clientService = new ClientService(clientRepository, clientMapper, accountService);
-    }*/
 
     /**
      * Tests that {@code getClientById} returns a ClientDto when a client is found.
@@ -190,12 +175,55 @@ class ClientServiceTest {
 
 
     @Test
-    void testRemoveClient() {
+    void removeClient_shouldDeactivateClient() {
+        // Arrange
+        String clientId = "123";
+        ClientDto clientDto = new ClientDto();
+        clientDto.setId(clientId);
+
+        ClientEntity mockEntity = new ClientEntity();
+        mockEntity.setId(clientId);
+        mockEntity.setActive(true);
+        mockEntity.setAccounts(new ArrayList<>());
+
+        when(clientRepository.findById(clientId)).thenReturn(Optional.of(mockEntity));
+
+        // Act
+        clientService.removeClient(clientDto);
+
+        // Assert
+        assertFalse(mockEntity.isActive()); // check if status is deactivated
+        verify(clientRepository).save(mockEntity); // ensure save is called
     }
 
     @Test
-    void testActivateClient() {
+    void activateClient_shouldActivateClientAndUnfreezeAccounts() {
+        // Given
+        String clientId = "321";
+        ClientEntity mockClientEntity = new ClientEntity();
+        mockClientEntity.setId(clientId);
+        mockClientEntity.setActive(false);
+
+        // Mock a list of accounts
+        AccountEntity account1 = new AccountEntity();
+        account1.setNumber("ACC1");
+        AccountEntity account2 = new AccountEntity();
+        account2.setNumber("ACC2");
+        mockClientEntity.setAccounts(List.of(account1, account2));
+
+        when(clientRepository.findById(clientId)).thenReturn(Optional.of(mockClientEntity));
+
+        // When
+        clientService.activateClient(clientId);
+
+        // Then
+        assertTrue(mockClientEntity.isActive()); // Assert client is now active
+
+        verify(accountService).freezeOrUnfreezeAccount("ACC1", true);
+        verify(accountService).freezeOrUnfreezeAccount("ACC2", true);
+        verify(clientRepository).save(mockClientEntity); // Ensure client is saved
     }
+
 
     @Test
     void testDeactivateClient() {
