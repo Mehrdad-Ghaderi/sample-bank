@@ -10,7 +10,9 @@ import org.junit.jupiter.api.Test;
 
 import org.mockito.Mockito;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -69,8 +71,40 @@ class ClientServiceTest {
         assertFalse(result.isPresent());
     }
 
+    /**
+     * Test that {@code getAllClients()} returns a stream of correctly mapped ClientDto objects.
+     */
     @Test
-    void testGetAllClients() {
+    void testGetAllClients_returnsMappedDtos() {
+        // Arrange
+        ClientEntity client1 = new ClientEntity();
+        client1.setId("1");
+        ClientEntity client2 = new ClientEntity();
+        client2.setId("2");
+
+        ClientDto dto1 = new ClientDto();
+        dto1.setId("1");
+        ClientDto dto2 = new ClientDto();
+        dto2.setId("2");
+
+        List<ClientEntity> clientEntities = List.of(client1, client2);
+
+        when(clientRepository.findAll()).thenReturn(clientEntities);
+        when(clientMapper.toClientDto(client1)).thenReturn(dto1);
+        when(clientMapper.toClientDto(client2)).thenReturn(dto2);
+
+        // Act
+        List<ClientDto> result = clientService.getAllClients().collect(Collectors.toList());
+
+        // Assert
+        assertEquals(2, result.size(), "Should return 2 clients");
+        assertTrue(result.contains(dto1), "Should contain dto1");
+        assertTrue(result.contains(dto2), "Should contain dto2");
+
+        // Verify interaction
+        verify(clientRepository).findAll();
+        verify(clientMapper).toClientDto(client1);
+        verify(clientMapper).toClientDto(client2);
     }
 
     @Test
