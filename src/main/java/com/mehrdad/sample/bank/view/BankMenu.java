@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
 /**
  * Created by Mehrdad Ghaderi
  */
-@Component
-@RequiredArgsConstructor
-public class BankMenu implements UIState {
+/*@Component
+@RequiredArgsConstructor*/
+public class BankMenu{}/* implements UIState {
 
     private final Utility utility;
     private final ClientService clientService;
@@ -54,3 +54,4 @@ public class BankMenu implements UIState {
                 .forEach(System.out::println);
     }
 }
+*/

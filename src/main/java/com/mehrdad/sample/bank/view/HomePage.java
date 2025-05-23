@@ -5,8 +5,8 @@ import org.springframework.stereotype.Component;
 /**
  * Created by Mehrdad Ghaderi
  */
-@Component
-public class HomePage {
+/*@Component*/
+public class HomePage{} /*{
 
     private UIState menu;
 
@@ -21,4 +21,4 @@ public class HomePage {
             this.menu = menu.run(previousMenu); // first is null cuz there is no previous state
         }
     }
-}
+}*/

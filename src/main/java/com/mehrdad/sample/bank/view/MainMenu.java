@@ -7,9 +7,9 @@ import org.springframework.stereotype.Component;
 /**
  * Created by Mehrdad Ghaderi
  */
-@Component
-@RequiredArgsConstructor
-public class MainMenu implements UIState {
+/*@Component
+@RequiredArgsConstructor*/
+public class MainMenu{} /*implements UIState {
 
 
     protected HomePage homePage;
@@ -53,3 +53,4 @@ public class MainMenu implements UIState {
     }
 
 }
+*/

@@ -17,10 +17,7 @@ import java.util.Scanner;
 @Service
 @RequiredArgsConstructor
 public class Utility {
-    protected final Scanner scanner;
-    protected final ClientService clientService;
-    protected final AccountService accountService;
-    protected final TransactionService transactionService;
+    private final Scanner scanner;
 
     protected BigDecimal getUserBigDecimal() {
         while (true) {

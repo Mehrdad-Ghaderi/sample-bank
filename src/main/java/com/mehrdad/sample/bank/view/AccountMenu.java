@@ -22,9 +22,9 @@ import static java.util.Optional.ofNullable;
 /**
  * Created by Mehrdad Ghaderi
  */
-@Component
-@RequiredArgsConstructor
-public class AccountMenu implements UIState {
+/*@Component
+@RequiredArgsConstructor*/
+public class AccountMenu{}/* implements UIState {
 
 
     private final Utility utility;
@@ -349,3 +349,8 @@ public class AccountMenu implements UIState {
                 .forEach(System.out::println);
     }
 }
+
+
+
+
+*/

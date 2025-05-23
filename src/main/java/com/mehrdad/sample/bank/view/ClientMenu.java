@@ -12,9 +12,9 @@ import java.util.stream.Collectors;
 /**
  * Created by Mehrdad Ghaderi
  */
-@Component
-@RequiredArgsConstructor
-public class ClientMenu implements UIState {
+/*@Component
+@RequiredArgsConstructor*/
+public class ClientMenu {}/*implements UIState {
 
     private final Utility utility;
     private final ClientService clientService;
@@ -195,3 +195,4 @@ public class ClientMenu implements UIState {
     }
 
 }
+*/
