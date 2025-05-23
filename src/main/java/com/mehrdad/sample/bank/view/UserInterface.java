@@ -55,9 +55,6 @@ public class UserInterface {
                 "Enter 14 to view the transactions of an account.\n" +
                 "Enter 15 to view the balance of an account.\n" +
                 "Enter 16 to view the balance of the bank.\n" +
-                /*"Enter 1 to view the balance of the bank.\n" +
-                "Enter 2 to send active members the newsletter\n" +
-                "Enter 3 to subscribe to the bank's newsletter\n" +*/
                 "Enter 4000 to see all the clients who have more than 10 dollars in their account\n" +
                 "Any other number to Go Back");
     }
@@ -311,6 +308,7 @@ public class UserInterface {
                 continue;
             }
 
+            accountDto.setNumber(accountNumber);
             if (accountService.createAccount(accountDto, client)) {
                 System.out.println("Account number " + accountNumber + " was allocated to " + client.getName() + " .");
             }
@@ -407,6 +405,17 @@ public class UserInterface {
             e.printStackTrace();
         }
         printTransactionLog(accountDto, money, "withdrawn from", withdraw);
+    }
+
+    private Optional<MoneyDto> prepareMoneyForTransaction() {
+        Optional<AccountDto> foundAccount = getAccountByAccountNumber();
+        if (foundAccount.isEmpty()) return Optional.empty();
+
+        AccountDto accountDto = foundAccount.get();
+        if (accountInactive(accountDto)) return Optional.empty();
+
+        MoneyDto money = createMoney(accountDto);
+        return Optional.of(money);
     }
 
     protected void transferMoney() {
