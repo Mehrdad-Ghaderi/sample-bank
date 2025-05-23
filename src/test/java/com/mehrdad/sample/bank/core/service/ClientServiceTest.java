@@ -2,6 +2,7 @@ package com.mehrdad.sample.bank.core.service;
 
 import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
+import com.mehrdad.sample.bank.core.exception.ClientNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.ClientMapper;
 import com.mehrdad.sample.bank.core.repository.ClientRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -126,10 +127,49 @@ class ClientServiceTest {
         verify(clientRepository).save(clientEntity);
     }
 
+    /**
+     * Updates the phone number of a client identified by the given client ID.
+     *
+     * @param clientId    The ID of the client whose phone number is to be updated.
+     * @param phoneNumber The new phone number to set.
+     * @throws ClientNotFoundException if no client is found with the provided ID.
+     */
+    @Test
+    void setClientPhoneNumber_shouldUpdatePhoneNumberWhenClientExists() {
+        // Arrange
+        String clientId = "123";
+        String newPhone = "555-4321";
+
+        ClientEntity clientEntity = new ClientEntity();
+        clientEntity.setId(clientId);
+        clientEntity.setPhoneNumber("000-0000");
+
+        when(clientRepository.findById(clientId)).thenReturn(Optional.of(clientEntity));
+
+        // Act
+        clientService.setClientPhoneNumber(clientId, newPhone);
+
+        // Assert
+        assertEquals(newPhone, clientEntity.getPhoneNumber());
+        verify(clientRepository).save(clientEntity);
+    }
 
     @Test
-    void testSetClientPhoneNumber() {
+    void setClientPhoneNumber_shouldThrowExceptionWhenClientNotFound() {
+
+        String clientId = "404";
+        String phone = "555-0000";
+
+        when(clientRepository.findById(clientId)).thenReturn(Optional.empty());
+
+        // Act + Assert
+        assertThrows(ClientNotFoundException.class, () -> {
+            clientService.setClientPhoneNumber(clientId, phone);
+        });
+
+        verify(clientRepository, never()).save(any());
     }
+
 
     @Test
     void testRemoveClient() {
