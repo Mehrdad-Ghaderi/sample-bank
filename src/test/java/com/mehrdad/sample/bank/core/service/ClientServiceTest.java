@@ -6,8 +6,6 @@ import com.mehrdad.sample.bank.core.entity.ClientEntity;
 import com.mehrdad.sample.bank.core.exception.ClientNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.ClientMapper;
 import com.mehrdad.sample.bank.core.repository.ClientRepository;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -195,6 +193,35 @@ class ClientServiceTest {
         assertFalse(mockEntity.isActive()); // check if status is deactivated
         verify(clientRepository).save(mockEntity); // ensure save is called
     }
+
+    @Test
+    void deactivateClient_shouldDeactivateClientAndFreezeAccounts() {
+        // Given
+        String clientId = "321";
+        ClientEntity mockClientEntity = new ClientEntity();
+        mockClientEntity.setId(clientId);
+        mockClientEntity.setActive(true);
+
+        // Mock a list of accounts
+        AccountEntity account1 = new AccountEntity();
+        account1.setNumber("ACC1");
+        AccountEntity account2 = new AccountEntity();
+        account2.setNumber("ACC2");
+        mockClientEntity.setAccounts(List.of(account1, account2));
+
+        when(clientRepository.findById(clientId)).thenReturn(Optional.of(mockClientEntity));
+
+        // When
+        clientService.deactivateClient(clientId);
+
+        // Then
+        assertFalse(mockClientEntity.isActive()); // Assert client is now deactivated
+
+        verify(accountService).freezeOrUnfreezeAccount("ACC1", false);
+        verify(accountService).freezeOrUnfreezeAccount("ACC2", false);
+        verify(clientRepository).save(mockClientEntity); // Ensure client is saved
+    }
+
 
     @Test
     void activateClient_shouldActivateClientAndUnfreezeAccounts() {
