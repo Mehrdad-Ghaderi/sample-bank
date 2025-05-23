@@ -11,38 +11,32 @@ class ClientServiceTest {
         ClientEntity clientEntity = new ClientEntity("444", "Sam", "987456321", true);
     }
 
-    @Test
-    void getClientById() {
 
+    @Test
+    void testGetClientById() {
     }
 
     @Test
-    void getAllClients() {
-
+    void testGetAllClients() {
     }
 
     @Test
-    void saveClient() {
-
+    void testSaveClient() {
     }
 
     @Test
-    void setClientPhoneNumber() {
-
+    void testSetClientPhoneNumber() {
     }
 
     @Test
-    void removeClient() {
-
+    void testRemoveClient() {
     }
 
     @Test
-    void activateClient() {
-
+    void testActivateClient() {
     }
 
     @Test
-    void deactivateClient() {
-
+    void testDeactivateClient() {
     }
 }
