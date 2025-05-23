@@ -108,8 +108,24 @@ class ClientServiceTest {
     }
 
     @Test
-    void testSaveClient() {
+    void testSaveClient_savesMappedClientEntity() {
+
+        ClientDto clientDto = new ClientDto();
+        clientDto.setId("123");
+
+        ClientEntity clientEntity = new ClientEntity();
+        clientEntity.setId("123");
+
+        when(clientMapper.toClientEntity(clientDto)).thenReturn(clientEntity);
+
+        // Act
+        clientService.saveClient(clientDto);
+
+        // Assert
+        verify(clientMapper).toClientEntity(clientDto);
+        verify(clientRepository).save(clientEntity);
     }
+
 
     @Test
     void testSetClientPhoneNumber() {
