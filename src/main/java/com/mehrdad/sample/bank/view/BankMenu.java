@@ -19,8 +19,7 @@ public class BankMenu implements UIState {
         System.out.println("Bank Menu:\n" +
                 "************************************************\n" +
                 "Enter 1 to view the balance of the bank.\n" +
-                "Enter 2 to send active members the newsletter\n" +
-                "Enter 3 to subscribe to the bank's newsletter\n" +
+
                 "Enter 4 to see all the clients who have more than 10 dollars in their account\n" +
                 "Any other number to Go Back.\n");
 
