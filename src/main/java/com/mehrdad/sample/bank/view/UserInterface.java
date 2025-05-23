@@ -210,9 +210,12 @@ public class UserInterface {
     protected void printAllClients() {
         List<ClientDto> allClients = clientService.getAllClients()
                 .peek(System.out::println)
-                .collect(Collectors.toList());
+                .toList();
 
-        System.out.println(allClients.size() + " clients were found!");
+        String clients = (allClients.size() > 2) ? "s were" : " was";
+        System.out.println(allClients.size()-1 + " client" +
+                 clients
+                + "found!");
     }
 
     protected void activateOrDeactivateClient() {
