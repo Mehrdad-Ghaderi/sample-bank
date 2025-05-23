@@ -9,7 +9,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,23 +22,37 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class ClientServiceTest {
 
-    private ClientRepository clientRepository;     // Mocked repository for DB access
+    @Mock
+    private ClientRepository clientRepository;
+
+    @Mock
+    private ClientMapper clientMapper;
+
+    @Mock
+    private AccountService accountService;
+
+    @InjectMocks
+    private ClientService clientService;
+
+   /* private ClientRepository clientRepository;     // Mocked repository for DB access
     private ClientMapper clientMapper;             // Mocked mapper to convert entity to DTO
     private AccountService accountService;         // Mocked service, unused in this test but required in constructor
-    private ClientService clientService;           // System under test
+    private ClientService clientService; */          // System under test
+
 
     /**
      * Initializes mocks and the service before each test.
      */
-    @BeforeEach
+    /*@BeforeEach
     void setUp() {
         clientRepository = mock(ClientRepository.class);
         clientMapper = mock(ClientMapper.class);
         accountService = mock(AccountService.class); // Not directly used but required
         clientService = new ClientService(clientRepository, clientMapper, accountService);
-    }
+    }*/
 
     /**
      * Tests that {@code getClientById} returns a ClientDto when a client is found.
