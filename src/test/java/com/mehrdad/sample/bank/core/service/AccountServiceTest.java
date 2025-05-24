@@ -119,12 +119,62 @@ class AccountServiceTest {
 
 
     @Test
-    void save() {
+    void save_shouldMapAndPersistAccount() {
+        // Arrange
+        AccountDto mockAccountDto = new AccountDto();
+        ClientDto mockClientDto = new ClientDto();
+
+        ClientEntity mockClientEntity = new ClientEntity();
+        AccountEntity mockAccountEntity = new AccountEntity();
+
+        when(clientMapper.toClientEntity(mockClientDto)).thenReturn(mockClientEntity);
+        when(accountMapper.toAccountEntity(mockAccountDto, mockClientEntity)).thenReturn(mockAccountEntity);
+
+        // Act
+        accountService.save(mockAccountDto, mockClientDto);
+
+        // Assert
+        verify(clientMapper).toClientEntity(mockClientDto);
+        verify(accountMapper).toAccountEntity(mockAccountDto, mockClientEntity);
+        verify(accountRepository).save(mockAccountEntity);
+    }
+
+
+    @Test
+    void createAccount_shouldReturnTrue_whenSaveIsSuccessful() {
+        // Arrange
+        AccountDto account = new AccountDto();
+        ClientDto client = new ClientDto();
+
+        // No need to stub anything; we just want save to run without error
+
+        // Act
+        boolean result = accountService.createAccount(account, client);
+
+        // Assert
+        assertTrue(result);
+        assertTrue(account.isActive()); // check that account was set active
+        verify(accountRepository).save(any()); // check that save was called
     }
 
     @Test
-    void createAccount() {
+    void createAccount_shouldReturnFalse_whenSaveThrowsException() {
+        // Arrange
+        AccountDto account = new AccountDto();
+        ClientDto client = new ClientDto();
+
+        // Stub accountRepository.save() to throw exception
+        doThrow(new RuntimeException("DB Error"))
+                .when(accountRepository).save(any());
+
+        // Act
+        boolean result = accountService.createAccount(account, client);
+
+        // Assert
+        assertFalse(result);
+        verify(accountRepository).save(any()); // still verify save was attempted
     }
+
 
     @Test
     void freezeAccount() {
