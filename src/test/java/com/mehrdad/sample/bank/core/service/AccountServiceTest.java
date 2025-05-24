@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -77,8 +78,45 @@ class AccountServiceTest {
     }
 
     @Test
-    void getAllAccounts() {
+    void testGetAllAccounts_ReturnsActiveAccounts() {
+        // Arrange
+        ClientEntity client1 = new ClientEntity();
+        client1.setActive(true);
+
+        ClientEntity client2 = new ClientEntity();
+        client2.setActive(false); // should be ignored
+
+        List<ClientEntity> clientEntities = List.of(client1, client2);
+
+        when(clientRepository.findAll()).thenReturn(clientEntities);
+
+        // Create DTOs for active client
+        ClientDto clientDto1 = new ClientDto();
+
+        AccountDto activeAccount1 = new AccountDto();
+        activeAccount1.setActive(true);
+
+        AccountDto inactiveAccount = new AccountDto();
+        inactiveAccount.setActive(false); // should be filtered out
+
+        clientDto1.setAccounts(List.of(activeAccount1, inactiveAccount));
+
+        when(clientMapper.toClientDto(client1)).thenReturn(clientDto1);
+
+        // Act
+        List<AccountDto> result = accountService.getAllAccounts();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertTrue(result.get(0).isActive());
+
+        // Verify
+        verify(clientRepository).findAll();
+        verify(clientMapper).toClientDto(client1);
+        verify(clientMapper, never()).toClientDto(client2); // client2 is inactive
     }
+
 
     @Test
     void save() {
