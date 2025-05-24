@@ -35,11 +35,12 @@ public class AccountService {
     }
 
     public AccountDto getAccountByAccountNumber(String accountNumber){
-        ClientDto clientDto = getClientByAccountNumber(accountNumber);
-
-        return accountRepository.findById(accountNumber)
-                .map(accountEntity -> accountMapper.toAccountDto(accountEntity, clientDto))
+        AccountEntity accountEntity = accountRepository.findById(accountNumber)
                 .orElseThrow(() -> new AccountNotFoundException(accountNumber));
+
+        ClientDto clientDto = clientMapper.toClientDto(accountEntity.getClient());
+
+        return accountMapper.toAccountDto(accountEntity, clientDto);
     }
 
     private ClientDto getClientByAccountNumber(String accountNumber) {

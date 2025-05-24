@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
@@ -171,10 +170,8 @@ class ClientServiceTest {
         verify(clientRepository, never()).save(any());
     }
 
-
     @Test
     void removeClient_shouldDeactivateClient() {
-        // Arrange
         String clientId = "123";
         ClientDto clientDto = new ClientDto();
         clientDto.setId(clientId);
@@ -222,7 +219,6 @@ class ClientServiceTest {
         verify(clientRepository).save(mockClientEntity); // Ensure client is saved
     }
 
-
     @Test
     void activateClient_shouldActivateClientAndUnfreezeAccounts() {
         // Given
@@ -249,10 +245,5 @@ class ClientServiceTest {
         verify(accountService).freezeOrUnfreezeAccount("ACC1", true);
         verify(accountService).freezeOrUnfreezeAccount("ACC2", true);
         verify(clientRepository).save(mockClientEntity); // Ensure client is saved
-    }
-
-
-    @Test
-    void testDeactivateClient() {
     }
 }
