@@ -177,14 +177,39 @@ class AccountServiceTest {
 
 
     @Test
-    void freezeAccount() {
+    void freezeAccount_shouldDeactivateAccount() {
+        // Arrange
+        String accountNumber = "ACC123";
+        AccountEntity mockAccount = new AccountEntity();
+        mockAccount.setNumber(accountNumber);
+        mockAccount.setActive(true);
+
+        when(accountRepository.findById(accountNumber)).thenReturn(Optional.of(mockAccount));
+
+        // Act
+        accountService.freezeAccount(accountNumber);
+
+        // Assert
+        assertFalse(mockAccount.isActive()); // account should be frozen
+        verify(accountRepository).save(mockAccount); // ensure save was called
     }
 
     @Test
-    void unfreezeAccount() {
+    void unfreezeAccount_shouldActivateAccount() {
+        // Arrange
+        String accountNumber = "ACC123";
+        AccountEntity mockAccount = new AccountEntity();
+        mockAccount.setNumber(accountNumber);
+        mockAccount.setActive(false); // assume it starts frozen
+
+        when(accountRepository.findById(accountNumber)).thenReturn(Optional.of(mockAccount));
+
+        // Act
+        accountService.unfreezeAccount(accountNumber);
+
+        // Assert
+        assertTrue(mockAccount.isActive()); // should be unfrozen
+        verify(accountRepository).save(mockAccount); // ensure save was triggered
     }
 
-    @Test
-    void freezeOrUnfreezeAccount() {
-    }
 }

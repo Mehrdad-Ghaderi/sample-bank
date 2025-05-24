@@ -398,13 +398,12 @@ public class UserInterface {
 
         MoneyDto money = createMoney(accountDto);
 
-        boolean withdraw = false;
         try {
-            withdraw = transactionService.withdraw(money, true);
+            transactionService.withdraw(money, true);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        printTransactionLog(accountDto, money, "withdrawn from", withdraw);
+        printTransactionLog(accountDto, money, "withdrawn from", true);
     }
 
     private Optional<MoneyDto> prepareMoneyForTransaction() {

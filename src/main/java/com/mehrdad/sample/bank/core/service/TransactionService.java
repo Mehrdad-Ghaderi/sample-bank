@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -53,13 +54,16 @@ public class TransactionService {
 
     @Transactional
     public boolean transfer(AccountDto sender, AccountDto receiver, MoneyDto money) throws Exception {
-        if (withdraw(money, false)) {//first withdrawal is done, if true, then
+        try {
+            withdraw(money, false); //first withdrawal is done, if true, then
             changeMoneyIdAndAccount(receiver, money);
             deposit(money, false);
             saveTransaction(sender, receiver, money);
             return true;
-        } else {
-            return false;
+        } catch (MoneyNotFoundException | IllegalStateException | IllegalArgumentException e) {
+            throw e; // propagate known issues
+        } catch (Exception e) {
+            throw new RuntimeException("Transfer failed due to internal error", e);
         }
     }
 
@@ -114,25 +118,23 @@ public class TransactionService {
     }
 
     @Transactional
-    public boolean withdraw(MoneyDto moneyDto, boolean addToBank) {
+    public void withdraw(MoneyDto moneyDto, boolean addToBank) {
         AccountEntity foundAccountEntity = getAccountEntity(moneyDto.getAccount());
         assertAccountActiveStatus(foundAccountEntity);
         assertAmount(moneyDto);
 
-        Optional<MoneyEntity> moneyEntity = moneyRepository.findById(moneyDto.getId());
+        MoneyEntity moneyEntity = moneyRepository.findById(moneyDto.getId())
+                .orElseThrow(() -> new MoneyNotFoundException("Money ID: " + moneyDto.getId() + " not found!"));
 
-        if (moneyEntity.isEmpty()) {
-            throw new MoneyNotFoundException(moneyMapper.toMoneyEntity(moneyDto, foundAccountEntity));
-        } else {
-            assertSufficientBalance(moneyEntity.get(), moneyDto);
 
-            moneyEntity.get().setAmount(subtractAmount(moneyEntity.get(), moneyDto));
-            moneyRepository.save(moneyEntity.get());
-            if (addToBank) {
-                addToBankAccount(moneyDto);
-            }
+        assertSufficientBalance(moneyEntity, moneyDto);
+
+        moneyEntity.setAmount(subtractAmount(moneyEntity, moneyDto));
+        moneyRepository.save(moneyEntity);
+
+        if (addToBank) {
+            addToBankAccount(moneyDto);
         }
-        return true;
     }
 
     public List<TransactionDto> getLastTransactions(AccountDto account, int numOfLatestTransactions) {

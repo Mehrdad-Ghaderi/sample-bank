@@ -7,14 +7,10 @@ import com.mehrdad.sample.bank.core.entity.MoneyEntity;
  */
 public class MoneyNotFoundException extends RuntimeException {
 
-    private final MoneyEntity moneyEntity;
-
-    public MoneyNotFoundException(MoneyEntity money) {
-        super("There is no " + money.getCurrency() + " in account number " + money.getAccount().getNumber());
-        this.moneyEntity = money;
+    public MoneyNotFoundException(String currency, String accountNumber) {
+        super("There is no " + currency + " in account number " + accountNumber);
     }
 
-    public MoneyEntity getMoneyEntity() {
-        return moneyEntity;
-    }
-}
+    public MoneyNotFoundException(String message) {
+        super(message);
+    }}
