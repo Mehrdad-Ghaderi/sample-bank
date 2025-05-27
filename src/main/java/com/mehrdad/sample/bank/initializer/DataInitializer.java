@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+
 /**
  * Created by Mehrdad Ghaderi, S&M
  * Date: 5/26/2025
@@ -27,24 +29,36 @@ public class DataInitializer implements CommandLineRunner {
         String defaultAccountId = "111.1";
 
         // Step 1: Ensure the client exists
-        ClientEntity client;
-        if (clientRepository.existsById(defaultClientId)) {
-            client = clientRepository.findById(defaultClientId).get();
-        } else {
-            client = new ClientEntity();
-            client.setId(defaultClientId);
-            client.setPhoneNumber("001111111111");
-        }
+        ClientEntity bank;
 
-        // Step 2: Ensure the account exists and link to the client
+        if (!clientRepository.existsById(defaultClientId)) {
+            bank = createBank(defaultClientId);
+        } else {
+            bank = clientRepository.findById(defaultClientId).get();
+        }
         if (!accountRepository.existsById(defaultAccountId)) {
+
             AccountEntity account = new AccountEntity();
             account.setNumber(defaultAccountId);
-            account.setClient(client); // Assign the actual entity
             account.setActive(true);
-            accountRepository.save(account);
-        }
-        client = clientRepository.save(client);
+            account.setClient(bank);
 
+            // 👇 Keep the relationship consistent
+            bank.getAccounts().add(account);
+
+           clientRepository.save(bank);  // This will cascade and save account too if mapped correctly
+        }
+
+    }
+
+    private static ClientEntity createBank(String defaultClientId) {
+        ClientEntity client;
+        client = new ClientEntity();
+        client.setId(defaultClientId);
+        client.setName("BANK");
+        client.setPhoneNumber("001111111111");
+        client.setActive(true);
+        client.setAccounts(new ArrayList<>());
+        return client;
     }
 }
