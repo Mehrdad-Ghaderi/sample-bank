@@ -62,7 +62,7 @@ public class AccountEntity {
     }
 
     @NotNull
-    @Column(name = "active", columnDefinition = "BIT default 1", length = 1)
+    @Column(name = "active", nullable = false)
     public Boolean isActive() {
         return active;
     }
