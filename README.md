@@ -1,6 +1,6 @@
 # 💰 Sample Bank
 
-A backend-focused banking system built with **Spring Boot** that supports key operations like account management, multi-currency transactions, and balance tracking. Ideal for training and showcasing backend skills in Java and Spring Framework.
+A backend-focused banking system built with **Spring Boot** that supports key operations, CRUD operations, account management, multi-currency accounts, transaction history, and balance tracking.
 
 ---
 
@@ -11,24 +11,48 @@ A backend-focused banking system built with **Spring Boot** that supports key op
 - **Tools:** GitLab, Maven, IntelliJ
 - **Tests:** JUnit
 - **Deployment:** Local (can be containerized or deployed to the cloud)
-- 
-## Requirements
-this application must be able to:
-- add a new client
-- support different currencies on only one account number
-- update a client's phone number
-- deposit, withdraw, and transfer money
-- show the balance of an account in each currency
-- store transaction data with the date
-- show desired number of recent transactions of an account
-- remove (deactivate) a client
-- freeze an account
-- show the balance of the bank
-- abort an operation at any time of the process
 
-## Constraints
-- no client without an account
-- all clients have only one account
-- only USD, EURO, POUND, and CAD are supported
-- removal of a member does not remove their past records
+## 🌍 Cloud Database
 
+The PostgreSQL database is hosted on **Supabase**, making this project ready for cloud deployments and scalable integrations. No local DB install needed — the app interacts with a cloud-native PostgreSQL database over REST.
+
+---
+
+## 📦 Features
+
+- ➕ Add a new client
+- 💱 Multi-currency support (USD, EUR, GBP, CAD) under one account
+- 📞 Update client phone number
+- 💸 Deposit, Withdraw, and Transfer money
+- 🧾 View account balance per currency
+- 🕓 Show latest transactions (with timestamp)
+- ❌ Remove (deactivate) a client
+- 🧊 Freeze an account
+- 🏦 View overall bank balance
+- 🔄 Abort any operation during its process
+
+---
+
+## 📌 Business Constraints
+
+- Every client must have exactly **one** account
+- Supported currencies: **USD, EUR, GBP, CAD**
+- Removing a client does **not** delete historical records
+
+---
+
+## 🛠️ Setup Instructions
+
+### Prerequisites
+
+- Java 17+
+- Maven
+- Git
+- (Optional) Postman or any REST client
+
+### Clone & Run
+
+```bash
+git clone https://gitlab.com/Mehrdad-Ghaderi/sample-bank.git
+cd sample-bank
+./mvnw spring-boot:run
