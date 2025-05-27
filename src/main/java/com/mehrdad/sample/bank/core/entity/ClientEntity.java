@@ -69,7 +69,7 @@ public class ClientEntity {
     }
 
     @NotNull
-    @Column(name = "active"co)
+    @Column(name = "active", nullable = false)
     public Boolean isActive() {
         return active;
     }
