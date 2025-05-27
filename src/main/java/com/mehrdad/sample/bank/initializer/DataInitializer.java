@@ -20,8 +20,8 @@ import java.util.ArrayList;
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
-    private AccountRepository accountRepository;
-    private ClientRepository clientRepository;
+    private final AccountRepository accountRepository;
+    private final ClientRepository clientRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -36,13 +36,14 @@ public class DataInitializer implements CommandLineRunner {
         } else {
             bank = clientRepository.findById(defaultClientId).get();
         }
+        clientRepository.save(bank);
         if (!accountRepository.existsById(defaultAccountId)) {
             AccountEntity account = createBankAccount(defaultAccountId, bank);
 
             bank.getAccounts().add(account);
             accountRepository.save(account);
+            clientRepository.save(bank);
         }
-        clientRepository.save(bank);
     }
 
     private static AccountEntity createBankAccount(String defaultAccountId, ClientEntity bank) {
