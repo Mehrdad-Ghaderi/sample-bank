@@ -4,6 +4,7 @@ import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
 import com.mehrdad.sample.bank.core.repository.ClientRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -16,11 +17,10 @@ import java.util.ArrayList;
  * Time: 11:53 PM
  */
 @Component
+@RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
-    @Autowired
     private AccountRepository accountRepository;
-    @Autowired
     private ClientRepository clientRepository;
 
     @Override
@@ -37,18 +37,20 @@ public class DataInitializer implements CommandLineRunner {
             bank = clientRepository.findById(defaultClientId).get();
         }
         if (!accountRepository.existsById(defaultAccountId)) {
+            AccountEntity account = createBankAccount(defaultAccountId, bank);
 
-            AccountEntity account = new AccountEntity();
-            account.setNumber(defaultAccountId);
-            account.setActive(true);
-            account.setClient(bank);
-
-            // 👇 Keep the relationship consistent
             bank.getAccounts().add(account);
-
-           clientRepository.save(bank);  // This will cascade and save account too if mapped correctly
+            accountRepository.save(account);
         }
+        clientRepository.save(bank);
+    }
 
+    private static AccountEntity createBankAccount(String defaultAccountId, ClientEntity bank) {
+        AccountEntity account = new AccountEntity();
+        account.setNumber(defaultAccountId);
+        account.setActive(true);
+        account.setClient(bank);
+        return account;
     }
 
     private static ClientEntity createBank(String defaultClientId) {
