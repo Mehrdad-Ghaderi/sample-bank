@@ -18,6 +18,11 @@ public class HomeController {
     @Autowired
     AccountService accountService;
 
+    @GetMapping("/")
+    public String hello() {
+        return "Hello from cloud!";
+    }
+
     @GetMapping("/home")
     public String displayHome(Model model) {
 
