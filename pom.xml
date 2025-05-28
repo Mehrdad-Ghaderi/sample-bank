@@ -67,7 +67,7 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
 					<!--<fork>true</fork>-->
-					<mainClass>com.mehrdad.sample.bank.view.UserInterfaceOld</mainClass>
+					<mainClass>com.mehrdad.sample.bank.Application</mainClass>
 				</configuration>
 				<executions>
 					<execution>
