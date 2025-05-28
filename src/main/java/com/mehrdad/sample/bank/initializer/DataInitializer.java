@@ -17,11 +17,15 @@ import java.util.ArrayList;
  * Time: 11:53 PM
  */
 @Component
-@RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
     private final AccountRepository accountRepository;
     private final ClientRepository clientRepository;
+
+    public DataInitializer(AccountRepository accountRepository, ClientRepository clientRepository) {
+        this.accountRepository = accountRepository;
+        this.clientRepository = clientRepository;
+    }
 
     @Override
     public void run(String... args) throws Exception {
