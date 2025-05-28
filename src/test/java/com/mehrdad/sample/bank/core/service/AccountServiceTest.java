@@ -169,6 +169,7 @@ class AccountServiceTest {
 
         // Act
         boolean result = accountService.createAccount(account, client);
+        //boolean result = assertDoesNotThrow(() -> accountService.createAccount(account, client));
 
         // Assert
         assertFalse(result);

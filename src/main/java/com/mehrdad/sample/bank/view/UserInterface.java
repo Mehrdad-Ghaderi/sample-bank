@@ -27,6 +27,7 @@ import static java.util.Optional.ofNullable;
  */
 
 @Component
+@RequiredArgsConstructor
 public class UserInterface {
 
     private final ClientService clientService;
@@ -34,12 +35,6 @@ public class UserInterface {
     private final TransactionService transactionService;
     private final Utility utility;
 
-    public UserInterface(ClientService clientService, AccountService accountService, TransactionService transactionService, Utility utility) {
-        this.clientService = clientService;
-        this.accountService = accountService;
-        this.transactionService = transactionService;
-        this.utility = utility;
-    }
 
     public void printMenu() {
         System.out.println("************************************************\n" +
