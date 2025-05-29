@@ -1,5 +1,5 @@
 # 1. Build stage: use Maven + JDK 17 to compile and package
-FROM maven:3.8.6-openjdk-17 AS build
+FROM maven:3.8.6-jdk-17 AS build
 WORKDIR /app
 
 # Copy only POM, download deps
