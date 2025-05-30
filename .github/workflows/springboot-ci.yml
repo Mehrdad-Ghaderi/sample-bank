@@ -1,4 +1,4 @@
-name: Spring Boot CI with Docker
+name: Spring Boot CI with Docker and GHCR
 
 on:
   push:
@@ -7,8 +7,12 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-and-dockerize:
+  build-and-push:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write  # ✅ needed to push to GHCR
 
     steps:
       - name: Checkout code
@@ -26,9 +30,19 @@ jobs:
       - name: Run Tests
         run: mvn test
 
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image
+      - name: Build and push Docker image to GHCR
         run: |
-          docker build -t sample-bank:latest .
+          IMAGE_ID=ghcr.io/${{ github.repository }}
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          docker build -t $IMAGE_ID:latest .
+          docker push $IMAGE_ID:latest
