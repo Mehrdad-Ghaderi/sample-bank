@@ -12,7 +12,7 @@ jobs:
 
     permissions:
       contents: read
-      packages: write  # ✅ needed to push to GHCR
+      packages: write  # needed to push to GHCR
 
     steps:
       - name: Checkout code
