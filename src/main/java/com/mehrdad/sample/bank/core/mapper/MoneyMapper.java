@@ -18,7 +18,7 @@ public class MoneyMapper {
     public MoneyMapper() {
     }
 
-    public MoneyEntity toMoneyEntity(MoneyDto moneyDto, AccountEntity accountEntity) {
+    public MoneyEntity toMoneyEntity(MoneyDto moneyDto/*, AccountEntity accountEntity*/) {
         if (moneyDto == null) {
             return null;
         }
@@ -27,7 +27,7 @@ public class MoneyMapper {
         moneyEntity.setId(moneyDto.getId());
         moneyEntity.setCurrency(moneyDto.getCurrency());
         moneyEntity.setAmount(moneyDto.getAmount());
-        moneyEntity.setAccount(accountEntity);
+        //moneyEntity.setAccount(accountEntity);
 
         return moneyEntity;
     }
@@ -41,7 +41,7 @@ public class MoneyMapper {
         moneyDto.setId(moneyEntity.getId());
         moneyDto.setCurrency(moneyEntity.getCurrency());
         moneyDto.setAmount(moneyEntity.getAmount());
-        moneyDto.setAccount(accountDto);
+        //moneyDto.setAccount(accountDto);
 
         return moneyDto;
     }
@@ -60,7 +60,7 @@ public class MoneyMapper {
             return null;
         }
         return moneyDtos.parallelStream()
-                .map(moneyDto -> toMoneyEntity(moneyDto, accountEntity))
+                .map(moneyDto -> toMoneyEntity(moneyDto/*, accountEntity*/))
                 .collect(Collectors.toList());
     }
 }

@@ -18,11 +18,11 @@ public class MoneyEntity {
     private String id;
     private Currency currency;
     private BigDecimal amount;
-    private AccountEntity account;
+    //private AccountEntity account;
 
     public MoneyEntity(Currency currency, BigDecimal amount, AccountEntity account) {
         this.id = account.getNumber() + currency;
-        this.account = account;
+       // this.account = account;
         this.currency = currency;
         this.amount = amount;
     }
@@ -60,7 +60,7 @@ public class MoneyEntity {
         this.amount = balance;
     }
 
-    @NotNull
+    /*@NotNull
     @ManyToOne(fetch = FetchType.EAGER)
     public AccountEntity getAccount() {
         return account;
@@ -68,14 +68,14 @@ public class MoneyEntity {
 
     public void setAccount(AccountEntity account) {
         this.account = account;
-    }
+    }*/
 
     @Override
     public String toString() {
         return "MoneyEntity{" +
                 ", currency='" + currency + '\'' +
                 ", balance=" + amount +
-                ", account=" + account.getNumber() +
+                /*", account=" + account.getNumber() +*/
                 '}';
     }
 

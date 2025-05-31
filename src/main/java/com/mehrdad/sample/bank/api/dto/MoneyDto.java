@@ -13,20 +13,20 @@ public class MoneyDto {
     private String id;
     private Currency currency;
     private BigDecimal amount;
-    private AccountDto account;
+    //private AccountDto account;
 
     public MoneyDto(Currency currency, BigDecimal amount, AccountDto account) {
         this.id = account.getNumber() + currency;
         this.currency = currency;
         this.amount = amount;
-        this.account = account;
+        //this.account = account;
     }
 
     public MoneyDto(Builder builder) {
         this.id = builder.id;
         this.currency = builder.currency;
         this.amount = builder.amount;
-        this.account = builder.account;
+        //this.account = builder.account;
     }
 
     public MoneyDto() {
@@ -59,29 +59,25 @@ public class MoneyDto {
         this.amount = balance;
     }
 
-    @NotNull
+    /*@NotNull
     public AccountDto getAccount() {
         return account;
     }
 
     public void setAccount(AccountDto account) {
         this.account = account;
-    }
+    }*/
 
     @Override
     public String toString() {
-        return "MoneyDto{" +
-                ", currency='" + currency + '\'' +
-                ", balance=" + amount +
-                ", account=" + account.getNumber() +
-                '}';
+        return currency.toString() +  amount;
     }
 
     public static class Builder {
         private String id;
         private Currency currency;
         private BigDecimal amount;
-        private AccountDto account;
+        //private AccountDto account;
 
         public Builder() {
         }
@@ -101,10 +97,10 @@ public class MoneyDto {
             return this;
         }
 
-        public Builder account(AccountDto account) {
+        /*public Builder account(AccountDto account) {
             this.account = account;
             return this;
-        }
+        }*/
 
         public MoneyDto build() {
             return new MoneyDto(this);

@@ -2,12 +2,15 @@ package com.mehrdad.sample.bank.controllers;
 
 import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.core.service.ClientService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,12 +18,16 @@ import java.util.stream.Collectors;
 /**
  * Created by Mehrdad Ghaderi
  */
-@Controller
-@RequestMapping("/clients")
+@Slf4j
+@RequiredArgsConstructor
+@RestController
+//@RequestMapping(ClientController.CLIENT_PATH)
 public class ClientController {
 
-    @Autowired
-    ClientService clientService;
+    public static final String CLIENT_PATH = "/api/v1/client";
+    public static final String CLIENT_PATH_ID = CLIENT_PATH + "/{clientId}";
+
+    private final ClientService clientService;
 
     @GetMapping("/list")
     public String DisplayClients(Model model) {
@@ -30,7 +37,7 @@ public class ClientController {
         return "clients/clients-list";
     }
 
-    @GetMapping("/all")
+    @GetMapping(CLIENT_PATH)
     public List<ClientDto> getAllClients() {
 
         return clientService.getAllClients().collect(Collectors.toList());

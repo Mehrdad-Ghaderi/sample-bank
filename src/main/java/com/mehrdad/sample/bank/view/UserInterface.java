@@ -379,7 +379,7 @@ public class UserInterface {
 
         boolean deposit = false;
         try {
-            deposit = transactionService.deposit(money, true);
+            deposit = transactionService.deposit(accountDto, money, true);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -399,7 +399,7 @@ public class UserInterface {
         MoneyDto money = createMoney(accountDto);
 
         try {
-            transactionService.withdraw(money, true);
+            transactionService.withdraw(accountDto, money, true);
         } catch (Exception e) {
             e.printStackTrace();
         }

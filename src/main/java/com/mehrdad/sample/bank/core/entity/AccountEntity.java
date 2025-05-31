@@ -1,5 +1,6 @@
 package com.mehrdad.sample.bank.core.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Entity;
 
 import jakarta.persistence.*;
@@ -17,6 +18,8 @@ import java.util.List;
 public class AccountEntity {
 
     private String number;
+
+    @JsonBackReference
     private ClientEntity client;
     private Boolean active;
     private List<MoneyEntity> moneys;
@@ -52,7 +55,8 @@ public class AccountEntity {
         this.client = client;
     }
 
-    @OneToMany(mappedBy = "account", fetch = FetchType.EAGER)
+    @OneToMany(/*mappedBy = "account", */fetch = FetchType.EAGER)
+    @JoinColumn(name = "account_number")
     public List<MoneyEntity> getMoneys() {
         return moneys;
     }

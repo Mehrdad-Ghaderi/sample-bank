@@ -94,8 +94,8 @@ public class TransactionDto {
     @Override
     public String toString() {
         return "Transaction{" +
-                ", Sender=" + sender.getClient().getName() + " " + sender.getNumber() +
-                ", Receiver=" + receiver.getClient().getName() + " " + receiver.getNumber() +
+                ", Sender=" + sender.getNumber() + " " + sender.getNumber() +
+                ", Receiver=" + receiver.getNumber() + " " + receiver.getNumber() +
                 ", Amount=" + amount + currency +
                 ", Time=" + transactionTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss")) +
                 '}';

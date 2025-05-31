@@ -1,5 +1,6 @@
 package com.mehrdad.sample.bank.core.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -15,6 +16,8 @@ public class ClientEntity {
     private String id;
     private String name;
     private String phoneNumber;
+
+    @JsonManagedReference
     private List<AccountEntity> accounts;
     private Boolean active;
 
