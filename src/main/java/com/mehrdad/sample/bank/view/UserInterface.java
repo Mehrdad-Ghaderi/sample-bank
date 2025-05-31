@@ -539,9 +539,9 @@ public class UserInterface {
             return;
         }
 
-        System.out.println("Here is the list of all the currencies available in the bank:");
+        System.out.println("Available funds in the bank:");
         bankAccount.getMoneys().stream()
-                .map(moneyDto -> moneyDto.getAmount().negate())
+                .map(moneyDto -> moneyDto.getCurrency() + "" +  moneyDto.getAmount().negate())
                 .forEach(System.out::println);
     }
 

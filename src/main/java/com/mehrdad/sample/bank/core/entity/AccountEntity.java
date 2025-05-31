@@ -77,8 +77,8 @@ public class AccountEntity {
 
     @Override
     public String toString() {
-        return String.format("AccountEntity{number='%s', clientId=%s, active=%s}",
-                number, client != null ? client.getId() : null, active);
+        return String.format("%s , active=%s}",
+                number, active);
     }
 
 }

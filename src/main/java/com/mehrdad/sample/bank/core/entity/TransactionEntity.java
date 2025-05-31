@@ -2,6 +2,7 @@ package com.mehrdad.sample.bank.core.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -92,10 +93,10 @@ public class TransactionEntity {
 
     @Override
     public String toString() {
-        return "Transaction:\nfrom" +
-                 sender +
-                ", to " + receiver +
-                ", " + amount + currency +
+        return "Transaction: " + currency +amount +
+                " from " + sender.getNumber() +
+                ", to " + receiver.getNumber() +
+                ", " +
                 transactionTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss"));
     }
 
