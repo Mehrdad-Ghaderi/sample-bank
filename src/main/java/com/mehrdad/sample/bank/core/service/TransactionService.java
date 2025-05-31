@@ -82,7 +82,7 @@ public class TransactionService {
     private void saveTransaction(AccountDto sender, AccountDto receiver, MoneyDto money) {
         TransactionEntity transaction = createTransaction(sender, receiver, money);
         transactionRepository.save(transaction);
-        notifyMembers(transaction);
+        System.out.println(transaction);
     }
 
     /**
@@ -228,14 +228,4 @@ public class TransactionService {
             throw new InvalidAmountException(moneyDto.getAmount());
         }
     }
-
-    private void notifyMembers(TransactionEntity transaction) {
-        if (transaction.getSender().isActive()) {
-            System.out.println(transaction.toString());
-        }
-        if (transaction.getReceiver().isActive()) {
-            System.out.println(transaction.toString());
-        }
-    }
-
 }

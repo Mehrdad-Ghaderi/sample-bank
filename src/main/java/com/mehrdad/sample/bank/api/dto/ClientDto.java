@@ -83,8 +83,8 @@ public class ClientDto {
 
     @Override
     public String toString() {
-        return String.format("Client{id='%s', name='%s', phoneNumber='%s', active=%s, \naccounts=%s}",
-                id, name, phoneNumber, active, accounts);
+        return String.format("%s, %s, %s, %s, \n    accounts=%s",
+                id, name, phoneNumber, active?"active":"deactivated", accounts);
     }
 
     public String concatNameAndId() {

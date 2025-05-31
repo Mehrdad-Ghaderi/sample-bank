@@ -95,7 +95,7 @@ public class TransactionEntity {
         return "TransactionEntity{" +
                 ", sender=" + sender +
                 ", receiver=" + receiver +
-                ", money=" + amount + currency +
+                ", " + amount + currency +
                 ", transaction time=" + transactionTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss")) +
                 '}';
     }

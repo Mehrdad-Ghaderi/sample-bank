@@ -228,7 +228,7 @@ public class UserInterface {
         String clients = (allClients.size() > 2) ? "s were" : " was";
         System.out.println(allClients.size() - 1 + " client" +
                 clients
-                + "found!");
+                + " found!");
     }
 
     protected void activateOrDeactivateClient() {
@@ -526,7 +526,7 @@ public class UserInterface {
 
     protected void printTransactionLog(AccountDto account, MoneyDto money, String string, boolean transactionIsDone) {
         if (transactionIsDone) {
-            System.out.println(money.getAmount() + money.getCurrency().toString() + " was successfully " + string + " account number " + account.getNumber() + ".");
+            System.out.println(money + " was successfully " + string + " account number " + account.getNumber() + ".");
         } else {
             System.out.println("Transaction was not successful.");
         }
