@@ -92,12 +92,11 @@ public class TransactionEntity {
 
     @Override
     public String toString() {
-        return "TransactionEntity{" +
-                ", sender=" + sender +
-                ", receiver=" + receiver +
+        return "Transaction:\nfrom" +
+                 sender +
+                ", to " + receiver +
                 ", " + amount + currency +
-                ", transaction time=" + transactionTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss")) +
-                '}';
+                transactionTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss"));
     }
 
 }
