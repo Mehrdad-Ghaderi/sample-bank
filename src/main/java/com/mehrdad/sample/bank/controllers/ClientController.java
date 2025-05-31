@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -27,6 +28,12 @@ public class ClientController {
         var allClients = clientService.getAllClients().collect(Collectors.toList());
         model.addAttribute("allClients", allClients);
         return "clients/clients-list";
+    }
+
+    @GetMapping("/all")
+    public List<ClientDto> listClient() {
+
+        return clientService.getAllClients().collect(Collectors.toList());
     }
 
     @GetMapping("/new")
