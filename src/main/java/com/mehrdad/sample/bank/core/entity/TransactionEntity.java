@@ -95,8 +95,8 @@ public class TransactionEntity {
     public String toString() {
         return "Transaction: " + currency +amount +
                 " from " + sender.getNumber() +
-                ", to " + receiver.getNumber() +
-                ", " +
+                " to " + receiver.getNumber() +
+                " " +
                 transactionTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss"));
     }
 

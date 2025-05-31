@@ -421,7 +421,6 @@ public class UserInterface {
         System.out.println("Enter the account number you would like to send money from:");
         Optional<AccountDto> foundSenderAccount = getAccountByAccountNumber();
         if (foundSenderAccount.isEmpty()) return;
-
         AccountDto senderAccount = foundSenderAccount.get();
         if (accountInactive(senderAccount)) {
             return;
@@ -430,9 +429,11 @@ public class UserInterface {
         System.out.println("Enter the account number you would like to send money to:");
         Optional<AccountDto> foundReceiverAccount = getAccountByAccountNumber();
         if (foundReceiverAccount.isEmpty()) return;
+        if (accountInactive(senderAccount)) {
+            return;
+        }
 
         MoneyDto money = createMoney(senderAccount);
-
         boolean transaction = false;
         try {
             transaction = transactionService.transfer(senderAccount, foundReceiverAccount.get(), money);
@@ -459,8 +460,7 @@ public class UserInterface {
     }
 
     protected void viewAccountBalance() {
-        System.out.println("BALANCE:" +
-                "Enter the account number:");
+        System.out.println("Enter the account number:");
         Optional<AccountDto> foundAccount = getAccountByAccountNumber();
         if (foundAccount.isEmpty()) return;
 
@@ -541,7 +541,7 @@ public class UserInterface {
 
         System.out.println("Available funds in the bank:");
         bankAccount.getMoneys().stream()
-                .map(moneyDto -> moneyDto.getCurrency() + "" +  moneyDto.getAmount().negate())
+                .map(moneyDto -> moneyDto.getCurrency() + "" + moneyDto.getAmount().negate())
                 .forEach(System.out::println);
     }
 
