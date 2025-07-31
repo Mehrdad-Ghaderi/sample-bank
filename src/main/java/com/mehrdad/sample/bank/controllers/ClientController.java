@@ -4,12 +4,9 @@ import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.core.service.ClientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -20,11 +17,10 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RequiredArgsConstructor
-@RestController
-//@RequestMapping(ClientController.CLIENT_PATH)
+@RestController(ClientController.CLIENT_PATH)
 public class ClientController {
 
-    public static final String CLIENT_PATH = "/api/v1/client";
+    public static final String CLIENT_PATH = "/api/v1/clients";
     public static final String CLIENT_PATH_ID = CLIENT_PATH + "/{clientId}";
 
     private final ClientService clientService;
@@ -45,21 +41,22 @@ public class ClientController {
 
     @GetMapping("/new")
     public String displayNewClientForm(Model model) {
+
         model.addAttribute("client", new ClientDto());
         return "/clients/client-new";
     }
 
-    @PostMapping("/save")
+    @PostMapping
     public String createClient(ClientDto clientDto, Model model) {
         var clientById = clientService.getClientById(clientDto.getId());
         if (clientById.isPresent()) {
-
             return "redirect:/clients/failed-submission";
         }
         clientDto.setActive(true);
         clientService.saveClient(clientDto);
         return "/common/successful-submission";
     }
+
 
     @GetMapping("/failed-submission")
     public String failedSubmission(Model model) {
