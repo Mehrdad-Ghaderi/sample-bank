@@ -54,7 +54,7 @@ public class UserInterface {
                 "Enter 14 to view the transactions of an account.\n" +
                 "Enter 15 to view the balance of an account.\n" +
                 "Enter 16 to view the balance of the bank.\n" +
-                "Enter 4000 to see all the clients who have more than 10 dollars in their account\n" +
+                //"Enter 17 to see all the clients who have more than 10 dollars in their account\n" +
                 "Any other number to Go Back");
     }
 

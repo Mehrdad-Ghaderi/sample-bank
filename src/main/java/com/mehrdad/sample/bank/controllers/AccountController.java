@@ -14,7 +14,7 @@ import static com.mehrdad.sample.bank.controllers.AccountController.ACCOUNT_PATH
 @RestController(ACCOUNT_PATH)
 public class AccountController {
 
-    public static final String ACCOUNT_PATH = "/accounts";
+    public static final String ACCOUNT_PATH = "accounts";
 
     @Autowired
     AccountService accountService;

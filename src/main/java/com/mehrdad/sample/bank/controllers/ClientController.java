@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @RestController
 public class ClientController {
 
-    public static final String CLIENT_PATH = "/api/v1/clients";
+    public static final String CLIENT_PATH = "api/v1/clients";
     public static final String CLIENT_PATH_ID = CLIENT_PATH + "/{clientId}";
 
     private final ClientService clientService;
