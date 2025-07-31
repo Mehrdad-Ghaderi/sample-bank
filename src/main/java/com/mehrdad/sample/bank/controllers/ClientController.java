@@ -49,7 +49,7 @@ public class ClientController {
 
     @DeleteMapping(CLIENT_PATH_ID)
     public void deleteClientById(@PathVariable("clientId") String clientId) {
-        clientService.removeClient(clientId);
+        clientService.removeClientById(clientId);
 
     }
 

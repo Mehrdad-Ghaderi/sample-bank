@@ -63,13 +63,13 @@ public class ClientService {
         activateOrDeactivateClient(clientId, false);
     }
 
-    private void activateOrDeactivateClient(String clientId, boolean status) {
+    private void activateOrDeactivateClient(String clientId, boolean state) {
         ClientEntity foundClientEntity = clientRepository.findById(clientId)
                 .orElseThrow(() -> new ClientNotFoundException(clientId));
 
-        foundClientEntity.setActive(status);
+        foundClientEntity.setActive(state);
         for (AccountEntity accountEntity : foundClientEntity.getAccounts()) {
-            accountService.freezeOrUnfreezeAccount(accountEntity.getNumber(), status);
+            accountService.freezeOrUnfreezeAccount(accountEntity.getNumber(), state);
         }
         clientRepository.save(foundClientEntity);
     }
