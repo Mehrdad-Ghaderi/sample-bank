@@ -4,11 +4,11 @@ import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.core.service.ClientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RequiredArgsConstructor
-@RestController(ClientController.CLIENT_PATH)
+@RestController
 public class ClientController {
 
     public static final String CLIENT_PATH = "/api/v1/clients";
@@ -25,21 +25,43 @@ public class ClientController {
 
     private final ClientService clientService;
 
-    @GetMapping("/list")
-    public String DisplayClients(Model model) {
-
-        var allClients = clientService.getAllClients().collect(Collectors.toList());
-        model.addAttribute("allClients", allClients);
-        return "clients/clients-list";
-    }
-
     @GetMapping(CLIENT_PATH)
     public List<ClientDto> getAllClients() {
 
         return clientService.getAllClients().collect(Collectors.toList());
     }
 
-    @GetMapping("/new")
+    @GetMapping(CLIENT_PATH_ID)
+    public ClientDto getClientById(@PathVariable("clientId") String clientId) {
+        return clientService.getClientById(clientId).orElse(null);
+    }
+
+    @PostMapping(CLIENT_PATH)
+    public ResponseEntity<ClientDto> createClient(@RequestBody ClientDto clientDto) {
+        ClientDto savedClientDto = clientService.saveClient(clientDto);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedClientDto.getId())
+                .toUri();
+        return ResponseEntity.created(location).build();
+    }
+
+    @DeleteMapping(CLIENT_PATH_ID)
+    public void deleteClientById(@PathVariable("clientId") String clientId) {
+        clientService.removeClient(clientId);
+
+    }
+
+    /*@GetMapping("/list")
+    public String DisplayClients(Model model) {
+
+        var allClients = clientService.getAllClients().collect(Collectors.toList());
+        model.addAttribute("allClients", allClients);
+        return "clients/clients-list";
+    }*/
+
+    /*@GetMapping("/new")
     public String displayNewClientForm(Model model) {
 
         model.addAttribute("client", new ClientDto());
@@ -66,5 +88,5 @@ public class ClientController {
     @GetMapping("/successful-submission")
     public String successfulSubmission(Model model) {
         return "/common/successful-submission";
-    }
+    }*/
 }

@@ -33,7 +33,7 @@ public class ClientEntity {
 
     @Id
     @NotBlank
-    @Size(max = 10)
+    @Size(max = 10, message = "ID cannot be longer than 10 characters")
     public String getId() {
         return id;
     }
@@ -43,7 +43,7 @@ public class ClientEntity {
     }
 
     @NotBlank
-    @Size(max = 45)
+    @Size(max = 45, message = "Name cannot be longer than 45 characters")
     public String getName() {
         return name;
     }
@@ -53,7 +53,7 @@ public class ClientEntity {
     }
 
     @NotBlank
-    @Size(max = 15)
+    @Size(max = 15, message = "Phone number cannot be longer than 15 characters")
     public String getPhoneNumber() {
         return phoneNumber;
     }

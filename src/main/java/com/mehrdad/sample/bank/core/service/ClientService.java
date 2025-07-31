@@ -34,8 +34,9 @@ public class ClientService {
         return clientRepository.findAll().stream().map(clientMapper::toClientDto);
     }
 
-    public void saveClient(ClientDto client) {
-        clientRepository.save(clientMapper.toClientEntity(client));
+    public ClientDto saveClient(ClientDto client) {
+        ClientEntity savedClientEntity = clientRepository.save(clientMapper.toClientEntity(client));
+        return clientMapper.toClientDto(savedClientEntity);
     }
 
     public void setClientPhoneNumber(String clientId, String phoneNumber) {
@@ -48,6 +49,10 @@ public class ClientService {
 
     public void removeClient(ClientDto client) {
         deactivateClient(client.getId());
+    }
+
+    public void removeClientById(String clientId) {
+            deactivateClient(clientId);
     }
 
     public void activateClient(String clientId) {

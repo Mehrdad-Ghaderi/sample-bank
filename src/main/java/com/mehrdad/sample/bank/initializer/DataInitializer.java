@@ -5,7 +5,6 @@ import com.mehrdad.sample.bank.core.entity.ClientEntity;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
 import com.mehrdad.sample.bank.core.repository.ClientRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
