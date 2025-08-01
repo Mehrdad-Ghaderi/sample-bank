@@ -57,8 +57,6 @@ class AccountServiceTest {
         when(accountRepository.findById(accountNumber)).thenReturn(Optional.of(mockAccountEntity));
 
         // Mock behavior: clientMapper.toClientDto
-        ClientDto mockClientDto = new ClientDto();
-        when(clientMapper.toClientDto(mockClientEntity)).thenReturn(mockClientDto);
 
         // Mock behavior: accountMapper.toAccountDto
         AccountDto mockAccountDto = new AccountDto();
@@ -73,7 +71,6 @@ class AccountServiceTest {
 
         // Verify interaction
         verify(accountRepository, times(1)).findById(accountNumber);
-        verify(clientMapper).toClientDto(mockClientEntity);
         verify(accountMapper).toAccountDto(mockAccountEntity);
     }
 
@@ -127,14 +124,12 @@ class AccountServiceTest {
         ClientEntity mockClientEntity = new ClientEntity();
         AccountEntity mockAccountEntity = new AccountEntity();
 
-        when(clientMapper.toClientEntity(mockClientDto)).thenReturn(mockClientEntity);
         when(accountMapper.toAccountEntity(mockAccountDto)).thenReturn(mockAccountEntity);
 
         // Act
         accountService.save(mockAccountDto, mockClientDto);
 
         // Assert
-        verify(clientMapper).toClientEntity(mockClientDto);
         verify(accountMapper).toAccountEntity(mockAccountDto);
         verify(accountRepository).save(mockAccountEntity);
     }
