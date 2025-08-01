@@ -1,8 +1,12 @@
 package com.mehrdad.sample.bank.core.exception;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
 /**
  * Created by Mehrdad Ghaderi
  */
+@ResponseStatus(code = HttpStatus.FORBIDDEN)
 public class AccountInactiveException extends RuntimeException {
 
     private final String accountNumber;
