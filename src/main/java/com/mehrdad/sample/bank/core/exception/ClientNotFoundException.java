@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 /**
  * Created by Mehrdad Ghaderi
  */
-@ResponseStatus(code = HttpStatus.NOT_FOUND)
 public class ClientNotFoundException extends RuntimeException {
 
     private final String clientId;

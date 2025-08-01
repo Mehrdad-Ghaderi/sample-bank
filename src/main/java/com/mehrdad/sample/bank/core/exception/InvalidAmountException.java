@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 /**
  * Created by Mehrdad Ghaderi
  */
-@ResponseStatus(code = HttpStatus.FORBIDDEN)
 public class InvalidAmountException extends RuntimeException {
 
     private final BigDecimal amount;

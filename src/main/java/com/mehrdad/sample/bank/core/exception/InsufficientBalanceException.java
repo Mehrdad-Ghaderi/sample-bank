@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 /**
  * Created by Mehrdad Ghaderi
  */
-@ResponseStatus(code = HttpStatus.FORBIDDEN)
 public class InsufficientBalanceException extends RuntimeException {
 
     private final MoneyEntity moneyEntity;

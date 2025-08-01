@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 /**
  * Created by Mehrdad Ghaderi
  */
-@ResponseStatus(code = HttpStatus.NOT_FOUND)
 public class MoneyNotFoundException extends RuntimeException {
 
     public MoneyNotFoundException(String currency, String accountNumber) {
