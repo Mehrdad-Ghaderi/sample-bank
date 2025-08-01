@@ -1,8 +1,5 @@
 package com.mehrdad.sample.bank.core.exception;
 
-import com.mehrdad.sample.bank.core.entity.MoneyEntity;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  * Created by Mehrdad Ghaderi

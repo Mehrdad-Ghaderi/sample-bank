@@ -1,11 +1,9 @@
 package com.mehrdad.sample.bank.core.service;
 
 import com.mehrdad.sample.bank.api.dto.AccountDto;
-import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.api.dto.MoneyDto;
 import com.mehrdad.sample.bank.api.dto.TransactionDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
-import com.mehrdad.sample.bank.core.entity.ClientEntity;
 import com.mehrdad.sample.bank.core.entity.MoneyEntity;
 import com.mehrdad.sample.bank.core.entity.TransactionEntity;
 import com.mehrdad.sample.bank.core.exception.*;
@@ -43,7 +41,11 @@ public class TransactionService {
     private final ClientMapper clientMapper;
     private final AccountService accountService;
 
-    public TransactionService(MoneyRepository moneyRepository, AccountRepository accountRepository, MoneyMapper moneyMapper, AccountMapper accountMapper, TransactionRepository transactionRepository, TransactionMapper transactionMapper, ClientMapper clientMapper, AccountService accountService) {
+    public TransactionService(MoneyRepository moneyRepository, AccountRepository accountRepository,
+                              MoneyMapper moneyMapper, AccountMapper accountMapper,
+                              TransactionRepository transactionRepository,
+                              TransactionMapper transactionMapper,
+                              ClientMapper clientMapper, AccountService accountService) {
         this.moneyRepository = moneyRepository;
         this.accountRepository = accountRepository;
         this.moneyMapper = moneyMapper;
@@ -57,24 +59,22 @@ public class TransactionService {
     @Transactional
     public boolean transfer(AccountDto sender, AccountDto receiver, MoneyDto money) throws Exception {
         try {
-            withdraw(sender, money, false); //first withdrawal is done, if true, then
+            withdraw(sender, money, false);
             changeMoneyIdAndAccount(receiver, money);
             deposit(receiver, money, false);
             saveTransaction(sender, receiver, money);
             return true;
         } catch (MoneyNotFoundException | IllegalStateException | IllegalArgumentException e) {
-            throw e; // propagate known issues
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Transfer failed due to internal error", e);
         }
     }
 
     private TransactionEntity createTransaction(AccountDto sender, AccountDto receiver, MoneyDto money) {
-        //ClientEntity senderClientEntity = clientMapper.toClientEntity(sender.getClient());
-        AccountEntity senderAccountEntity = accountMapper.toAccountEntity(sender/*, senderClientEntity*/);
+        AccountEntity senderAccountEntity = accountMapper.toAccountEntity(sender);
 
-        //ClientEntity receiverClientEntity = clientMapper.toClientEntity(receiver.getClient());
-        AccountEntity receiverAccountEntity = accountMapper.toAccountEntity(receiver/*, receiverClientEntity*/);
+        AccountEntity receiverAccountEntity = accountMapper.toAccountEntity(receiver);
 
         return new TransactionEntity(senderAccountEntity, receiverAccountEntity, money.getAmount(), money.getCurrency().toString());
     }
@@ -88,14 +88,11 @@ public class TransactionService {
     /**
      * changes the account of MoneyDto after withdrawal from the sender account
      * in order for the same Money object to be used for deposit method, which needs a MoneyDto,
-     * but with a different Id and Account.
+     * but with a different ID and Account.
      *
-     * @param receiver
-     * @param money
      */
     private void changeMoneyIdAndAccount(AccountDto receiver, @NotNull MoneyDto money) {
-        //money.setAccount(receiver);
-        money.setId(receiver.getNumber() + money.getCurrency()); //this is how the Money id is implemented
+        money.setId(receiver.getNumber() + money.getCurrency());
     }
 
     @Transactional
@@ -107,7 +104,7 @@ public class TransactionService {
         Optional<MoneyEntity> moneyEntity = moneyRepository.findById(moneyDto.getId());
 
         if (moneyEntity.isEmpty()) {
-            MoneyEntity newMoney = moneyMapper.toMoneyEntity(moneyDto/*, foundAccountEntity*/);
+            MoneyEntity newMoney = moneyMapper.toMoneyEntity(moneyDto);
             moneyRepository.save(newMoney);
         } else {
             moneyEntity.get().setAmount(addAmount(moneyEntity.get(), moneyDto));
@@ -145,10 +142,9 @@ public class TransactionService {
         Optional<MoneyEntity> foundBankMoney = moneyRepository.findById(BANK_ACCOUNT_NUMBER + moneyDto.getCurrency());
 
         if (foundBankMoney.isEmpty()) {
-            MoneyEntity bankMoneyEntity = moneyMapper.toMoneyEntity(moneyDto/*, bankAccount*/);
+            MoneyEntity bankMoneyEntity = moneyMapper.toMoneyEntity(moneyDto);
             bankMoneyEntity.setAmount(moneyDto.getAmount());
             bankMoneyEntity.setId(BANK_ACCOUNT_NUMBER + moneyDto.getCurrency());
-            //bankMoneyEntity.setAccount(bankAccount);
             moneyRepository.save(bankMoneyEntity);
         } else {
             foundBankMoney.get().setAmount(foundBankMoney.get().getAmount().add(moneyDto.getAmount()));
@@ -156,8 +152,7 @@ public class TransactionService {
         }
 
         assert bankAccount != null;
-        ClientDto bank = clientMapper.toClientDto(bankAccount.getClient());
-        AccountDto bankAccountDto = accountMapper.toAccountDto(bankAccount, bank);
+        AccountDto bankAccountDto = accountMapper.toAccountDto(bankAccount);
         saveTransaction(accountDto, bankAccountDto, moneyDto);
     }
 
@@ -167,10 +162,9 @@ public class TransactionService {
         Optional<MoneyEntity> foundBankMoney = moneyRepository.findById(BANK_ACCOUNT_NUMBER + moneyDto.getCurrency());
 
         if (foundBankMoney.isEmpty()) {
-            MoneyEntity bankMoneyEntity = moneyMapper.toMoneyEntity(moneyDto/*, bankAccount*/);
+            MoneyEntity bankMoneyEntity = moneyMapper.toMoneyEntity(moneyDto);
             bankMoneyEntity.setAmount(moneyDto.getAmount().negate());
             bankMoneyEntity.setId(BANK_ACCOUNT_NUMBER + moneyDto.getCurrency());
-           // bankMoneyEntity.setAccount(bankAccount);
             moneyRepository.save(bankMoneyEntity);
         } else {
             foundBankMoney.get().setAmount(foundBankMoney.get().getAmount().subtract(moneyDto.getAmount()));
@@ -178,8 +172,7 @@ public class TransactionService {
         }
 
         assert bankAccount != null;
-        ClientDto bank = clientMapper.toClientDto(bankAccount.getClient());
-        AccountDto bankAccountDto = accountMapper.toAccountDto(bankAccount, bank);
+        AccountDto bankAccountDto = accountMapper.toAccountDto(bankAccount);
         saveTransaction(bankAccountDto, accountDto, moneyDto);
     }
 
@@ -210,7 +203,7 @@ public class TransactionService {
 
 
     private void assertAccountActiveStatus(AccountEntity account) {
-        if (!account.isActive()) {
+        if (!account.getActive()) {
             System.out.println("Account number " + account.getNumber() + " is inactive.");
             throw new AccountInactiveException(account.getNumber());
         }

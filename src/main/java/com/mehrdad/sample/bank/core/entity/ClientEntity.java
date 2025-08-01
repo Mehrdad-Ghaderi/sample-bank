@@ -5,79 +5,52 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.util.List;
 
 /**
  * Created by Mehrdad Ghaderi
  */
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class ClientEntity {
-
-    private String id;
-    private String name;
-    private String phoneNumber;
-
-    @JsonManagedReference
-    private List<AccountEntity> accounts;
-    private Boolean active;
-
-    public ClientEntity() {
-    }
-
-    public ClientEntity(String id, String name, String phoneNumber, Boolean status) {
-        this.id = id; //has to be validated for uniqueness
-        this.name = name;
-        this.phoneNumber = phoneNumber; // has to be validated for uniqueness
-        this.active = status;
-    }
 
     @Id
     @NotBlank
     @Size(max = 10, message = "ID cannot be longer than 10 characters")
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
+    @Column(length = 10, unique = true, nullable = false)
+    private String id;
 
     @NotBlank
     @Size(max = 45, message = "Name cannot be longer than 45 characters")
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
+    @Column(length = 45, nullable = false)
+    private String name;
 
     @NotBlank
     @Size(max = 15, message = "Phone number cannot be longer than 15 characters")
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
+    @Column(length = 15, unique = true, nullable = false)
+    private String phoneNumber;
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    @OneToMany(mappedBy = "client", fetch = FetchType.EAGER)
-    public List<AccountEntity> getAccounts() {
-        return accounts;
-    }
-
-    public void setAccounts(List<AccountEntity> accounts) {
-        this.accounts = accounts;
-    }
+    @JsonManagedReference
+    @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<AccountEntity> accounts;
 
     @NotNull
     @Column(name = "active", nullable = false)
-    public Boolean isActive() {
-        return active;
-    }
+    private Boolean active;
 
-    public void setActive(Boolean status) {
+
+    public ClientEntity(String id, String name, String phoneNumber, Boolean status) {
+        this.id = id;
+        this.name = name;
+        this.phoneNumber = phoneNumber;
         this.active = status;
     }
 

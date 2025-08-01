@@ -24,7 +24,6 @@ public enum Currency {
         return symbol;
     }
 
-    // Implementing a fromString method on an enum type
     private static final Map<String, Currency> stringToEnum = Stream.of(values())
             .collect(toMap(Object::toString, e -> e));
 

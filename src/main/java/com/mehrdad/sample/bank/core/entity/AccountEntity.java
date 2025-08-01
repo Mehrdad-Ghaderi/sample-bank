@@ -8,6 +8,10 @@ import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -15,17 +19,29 @@ import java.util.List;
  * Created by Mehrdad Ghaderi
  */
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class AccountEntity {
 
+    @Id
+    @NotBlank
+    @Size(max = 10, message = "Account number cannot be longer than 10 characters")
     private String number;
 
     @JsonBackReference
+    @NotNull
+    @ManyToOne(fetch = FetchType.EAGER)
     private ClientEntity client;
-    private Boolean active;
-    private List<MoneyEntity> moneys;
 
-    public AccountEntity() {
-    }
+    @NotNull
+    @Column(name = "active", nullable = false)
+    private Boolean active;
+
+    @OneToMany(/*mappedBy = "account", */fetch = FetchType.EAGER)
+    @JoinColumn(name = "account_number")
+    private List<MoneyEntity> moneys;
 
     public AccountEntity(String number, ClientEntity client, Boolean status) {
         this.number = number;
@@ -34,46 +50,9 @@ public class AccountEntity {
     }
 
 
-    @Id
-    @NotBlank
-    @Size(max = 10)
-    public String getNumber() {
-        return number;
-    }
 
-    public void setNumber(String number) {
-        this.number = number;
-    }
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.EAGER)
-    public ClientEntity getClient() {
-        return client;
-    }
 
-    public void setClient(ClientEntity client) {
-        this.client = client;
-    }
-
-    @OneToMany(/*mappedBy = "account", */fetch = FetchType.EAGER)
-    @JoinColumn(name = "account_number")
-    public List<MoneyEntity> getMoneys() {
-        return moneys;
-    }
-
-    public void setMoneys(List<MoneyEntity> moneys) {
-        this.moneys = moneys;
-    }
-
-    @NotNull
-    @Column(name = "active", nullable = false)
-    public Boolean isActive() {
-        return active;
-    }
-
-    public void setActive(Boolean active) {
-        this.active = active;
-    }
 
     @Override
     public String toString() {

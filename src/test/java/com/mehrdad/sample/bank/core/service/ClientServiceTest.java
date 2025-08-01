@@ -16,7 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -95,7 +94,7 @@ class ClientServiceTest {
         when(clientMapper.toClientDto(client2)).thenReturn(dto2);
 
         // Act
-        List<ClientDto> result = clientService.getAllClients().collect(Collectors.toList());
+        List<ClientDto> result = clientService.getAllClients().toList();
 
         // Assert
         assertEquals(2, result.size(), "Should return 2 clients");
@@ -130,8 +129,6 @@ class ClientServiceTest {
     /**
      * Updates the phone number of a client identified by the given client ID.
      *
-     * @param clientId    The ID of the client whose phone number is to be updated.
-     * @param phoneNumber The new phone number to set.
      * @throws ClientNotFoundException if no client is found with the provided ID.
      */
     @Test
@@ -163,9 +160,7 @@ class ClientServiceTest {
         when(clientRepository.findById(clientId)).thenReturn(Optional.empty());
 
         // Act + Assert
-        assertThrows(ClientNotFoundException.class, () -> {
-            clientService.setClientPhoneNumber(clientId, phone);
-        });
+        assertThrows(ClientNotFoundException.class, () -> clientService.setClientPhoneNumber(clientId, phone));
 
         verify(clientRepository, never()).save(any());
     }
@@ -187,7 +182,7 @@ class ClientServiceTest {
         clientService.removeClient(clientDto);
 
         // Assert
-        assertFalse(mockEntity.isActive()); // check if status is deactivated
+        assertFalse(mockEntity.getActive());
         verify(clientRepository).save(mockEntity); // ensure save is called
     }
 
@@ -212,7 +207,7 @@ class ClientServiceTest {
         clientService.deactivateClient(clientId);
 
         // Then
-        assertFalse(mockClientEntity.isActive()); // Assert client is now deactivated
+        assertFalse(mockClientEntity.getActive()); // Assert client is now deactivated
 
         verify(accountService).freezeOrUnfreezeAccount("ACC1", false);
         verify(accountService).freezeOrUnfreezeAccount("ACC2", false);
@@ -240,7 +235,7 @@ class ClientServiceTest {
         clientService.activateClient(clientId);
 
         // Then
-        assertTrue(mockClientEntity.isActive()); // Assert client is now active
+        assertTrue(mockClientEntity.getActive()); // Assert client is now active
 
         verify(accountService).freezeOrUnfreezeAccount("ACC1", true);
         verify(accountService).freezeOrUnfreezeAccount("ACC2", true);

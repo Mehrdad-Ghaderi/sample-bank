@@ -62,7 +62,7 @@ class AccountServiceTest {
 
         // Mock behavior: accountMapper.toAccountDto
         AccountDto mockAccountDto = new AccountDto();
-        when(accountMapper.toAccountDto(mockAccountEntity, mockClientDto)).thenReturn(mockAccountDto);
+        when(accountMapper.toAccountDto(mockAccountEntity)).thenReturn(mockAccountDto);
 
         // Act
         AccountDto result = accountService.getAccountByAccountNumber(accountNumber);
@@ -74,7 +74,7 @@ class AccountServiceTest {
         // Verify interaction
         verify(accountRepository, times(1)).findById(accountNumber);
         verify(clientMapper).toClientDto(mockClientEntity);
-        verify(accountMapper).toAccountDto(mockAccountEntity, mockClientDto);
+        verify(accountMapper).toAccountDto(mockAccountEntity);
     }
 
     @Test
@@ -109,7 +109,7 @@ class AccountServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertTrue(result.get(0).isActive());
+        assertTrue(result.get(0).getActive());
 
         // Verify
         verify(clientRepository).findAll();
@@ -128,14 +128,14 @@ class AccountServiceTest {
         AccountEntity mockAccountEntity = new AccountEntity();
 
         when(clientMapper.toClientEntity(mockClientDto)).thenReturn(mockClientEntity);
-        when(accountMapper.toAccountEntity(mockAccountDto, mockClientEntity)).thenReturn(mockAccountEntity);
+        when(accountMapper.toAccountEntity(mockAccountDto)).thenReturn(mockAccountEntity);
 
         // Act
         accountService.save(mockAccountDto, mockClientDto);
 
         // Assert
         verify(clientMapper).toClientEntity(mockClientDto);
-        verify(accountMapper).toAccountEntity(mockAccountDto, mockClientEntity);
+        verify(accountMapper).toAccountEntity(mockAccountDto);
         verify(accountRepository).save(mockAccountEntity);
     }
 
@@ -153,7 +153,7 @@ class AccountServiceTest {
 
         // Assert
         assertTrue(result);
-        assertTrue(account.isActive()); // check that account was set active
+        assertTrue(account.getActive()); // check that account was set active
         verify(accountRepository).save(any()); // check that save was called
     }
 
@@ -169,7 +169,6 @@ class AccountServiceTest {
 
         // Act
         boolean result = accountService.createAccount(account, client);
-        //boolean result = assertDoesNotThrow(() -> accountService.createAccount(account, client));
 
         // Assert
         assertFalse(result);
@@ -191,7 +190,7 @@ class AccountServiceTest {
         accountService.freezeAccount(accountNumber);
 
         // Assert
-        assertFalse(mockAccount.isActive()); // account should be frozen
+        assertFalse(mockAccount.getActive()); // account should be frozen
         verify(accountRepository).save(mockAccount); // ensure save was called
     }
 
@@ -209,7 +208,7 @@ class AccountServiceTest {
         accountService.unfreezeAccount(accountNumber);
 
         // Assert
-        assertTrue(mockAccount.isActive()); // should be unfrozen
+        assertTrue(mockAccount.getActive());
         verify(accountRepository).save(mockAccount); // ensure save was triggered
     }
 

@@ -336,7 +336,7 @@ public class UserInterface {
         String userChoice = "";
 
         while (true) {
-            if (accountDto.isActive()) {
+            if (accountDto.getActive()) {
                 System.out.println("Account number, " + accountDto.getNumber() + ", is not frozen.");
                 System.out.println("Press F to freeze it, or Q to go back to main menu");
                 userChoice = utility.getUserInputString();
@@ -472,7 +472,7 @@ public class UserInterface {
 
 
     protected boolean accountInactive(AccountDto account) {
-        if (!account.isActive()) {
+        if (!account.getActive()) {
             System.out.println("Account number " + account.getNumber() + " is inactive.");
             return true;
         }

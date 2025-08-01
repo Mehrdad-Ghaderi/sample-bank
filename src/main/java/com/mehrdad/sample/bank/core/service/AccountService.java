@@ -38,9 +38,7 @@ public class AccountService {
         AccountEntity accountEntity = accountRepository.findById(accountNumber)
                 .orElseThrow(() -> new AccountNotFoundException(accountNumber));
 
-        ClientDto clientDto = clientMapper.toClientDto(accountEntity.getClient());
-
-        return accountMapper.toAccountDto(accountEntity, clientDto);
+        return accountMapper.toAccountDto(accountEntity);
     }
 
     private ClientDto getClientByAccountNumber(String accountNumber) {
@@ -51,17 +49,16 @@ public class AccountService {
     public List<AccountDto> getAllAccounts() {
 
         return clientRepository.findAll().parallelStream()
-                .filter(ClientEntity::isActive)
+                .filter(ClientEntity::getActive)
                 .map(clientMapper::toClientDto)
                 .map(ClientDto::getAccounts)
                 .flatMap(Collection::parallelStream)
-                .filter(AccountDto::isActive)
+                .filter(AccountDto::getActive)
                 .collect(Collectors.toList());
     }
 
     public void save(AccountDto account, ClientDto clientDto) {
-        ClientEntity clientEntity = clientMapper.toClientEntity(clientDto);
-        accountRepository.save(accountMapper.toAccountEntity(account/*, clientEntity*/));
+        accountRepository.save(accountMapper.toAccountEntity(account));
     }
 
     public boolean createAccount(AccountDto account, ClientDto client) {
