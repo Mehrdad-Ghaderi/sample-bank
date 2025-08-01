@@ -9,6 +9,5 @@ import java.time.LocalDateTime;
  * Date: 7/29/2025
  * Time: 11:32 PM
  */
-@Getter
 public record ErrorDetails(LocalDateTime timestamp, String message, String details) {
 }
