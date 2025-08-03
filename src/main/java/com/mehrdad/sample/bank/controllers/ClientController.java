@@ -7,6 +7,7 @@ import com.mehrdad.sample.bank.core.service.AccountService;
 import com.mehrdad.sample.bank.core.service.ClientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -61,5 +62,26 @@ public class ClientController {
         return clientService.getClientById(clientId)
                 .map(ClientDto::getAccounts)
                 .orElseThrow(() -> new ClientNotFoundException(clientId));
+    }
+
+    @PostMapping(CLIENT_PATH_ID + "/accounts")
+    public ResponseEntity<Object> createAccountByClientId(@PathVariable("clientId") String clientID,
+                                                          @RequestBody AccountDto accountDto) {
+
+        Optional<ClientDto> foundClient = clientService.getClientById(clientID);
+
+        if (foundClient.isEmpty()) {
+            throw new ClientNotFoundException(clientID);
+        }
+
+        accountService.createAccount(accountDto, foundClient.get());
+        AccountDto savedAccountDto = accountService.getAccountByAccountNumber(accountDto.getNumber());
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedAccountDto.getNumber())
+                .toUri();
+
+        return ResponseEntity.created(location).build();
     }
 }
