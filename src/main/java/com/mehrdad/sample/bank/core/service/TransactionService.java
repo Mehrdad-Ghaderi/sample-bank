@@ -45,22 +45,18 @@ public class TransactionService {
     private final AccountMapper accountMapper;
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
-    private final ClientMapper clientMapper;
-    private final AccountService accountService;
+
 
     public TransactionService(MoneyRepository moneyRepository, AccountRepository accountRepository,
                               MoneyMapper moneyMapper, AccountMapper accountMapper,
                               TransactionRepository transactionRepository,
-                              TransactionMapper transactionMapper,
-                              ClientMapper clientMapper, AccountService accountService) {
+                              TransactionMapper transactionMapper) {
         this.moneyRepository = moneyRepository;
         this.accountRepository = accountRepository;
         this.moneyMapper = moneyMapper;
         this.accountMapper = accountMapper;
         this.transactionRepository = transactionRepository;
         this.transactionMapper = transactionMapper;
-        this.clientMapper = clientMapper;
-        this.accountService = accountService;
     }
 
     /**
@@ -249,13 +245,13 @@ public class TransactionService {
         saveTransaction(bankAccountDto, accountDto, moneyDto);
     }
 
-/**
- * Retrieves the last N transactions for a specific account.
- *
- * @param account               the account to retrieve transactions for
- * @param numOfLatestTransactions number of recent transactions to fetch
- * @return a list of transaction DTOs
- */
+    /**
+     * Retrieves the last N transactions for a specific account.
+     *
+     * @param account                 the account to retrieve transactions for
+     * @param numOfLatestTransactions number of recent transactions to fetch
+     * @return a list of transaction DTOs
+     */
     public List<TransactionDto> getLastTransactions(AccountDto account, int numOfLatestTransactions) {
         return transactionRepository.findLastTransactions(account.getNumber(), numOfLatestTransactions)
                 .parallelStream()
