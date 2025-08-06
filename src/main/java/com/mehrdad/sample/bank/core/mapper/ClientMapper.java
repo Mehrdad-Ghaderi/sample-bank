@@ -34,22 +34,16 @@ public class ClientMapper {
         if (clientDto == null) {
             return null;
         }
-        ClientEntity clientEntity = toClientEntityWithoutAccounts(clientDto);
-
-        clientEntity.setAccounts(accountMapper.toAccountEntityList(clientDto.getAccounts(), clientDto));
-
-        return clientEntity;
-    }
-
-    public ClientEntity toClientEntityWithoutAccounts(ClientDto clientDto) {
-        if (clientDto == null) {
-            return null;
-        }
         ClientEntity clientEntity = new ClientEntity();
         clientEntity.setId(clientDto.getId());
         clientEntity.setName(clientDto.getName());
         clientEntity.setPhoneNumber(clientDto.getPhoneNumber());
         clientEntity.setActive(clientDto.isActive());
+        clientEntity.setAccounts(accountMapper.toAccountEntityList(clientDto.getAccounts(), clientEntity));
+
+        if (clientEntity.getAccounts() != null) {
+            clientEntity.getAccounts().forEach(account -> account.setClient(clientEntity));
+        }
 
         return clientEntity;
     }

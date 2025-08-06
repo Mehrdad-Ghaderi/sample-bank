@@ -58,7 +58,7 @@ public class AccountService {
     }
 
     public void save(AccountDto account, ClientDto clientDto) {
-        accountRepository.save(accountMapper.toAccountEntity(account, clientDto));
+        accountRepository.save(accountMapper.toAccountEntity(account, clientMapper.toClientEntity(clientDto)));
     }
 
     public boolean createAccount(AccountDto account, ClientDto clientDto) {

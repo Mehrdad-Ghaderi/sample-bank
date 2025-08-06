@@ -3,6 +3,7 @@ package com.mehrdad.sample.bank.core.mapper;
 import com.mehrdad.sample.bank.api.dto.AccountDto;
 import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
+import com.mehrdad.sample.bank.core.entity.ClientEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -15,11 +16,9 @@ import java.util.stream.Collectors;
 public class AccountMapper {
 
     private final MoneyMapper moneyMapper;
-    private final ClientMapper clientMapper;
 
-    public AccountMapper(MoneyMapper moneyMapper, ClientMapper clientMapper) {
+    public AccountMapper(MoneyMapper moneyMapper) {
         this.moneyMapper = moneyMapper;
-        this.clientMapper = clientMapper;
     }
 
     public AccountDto toAccountDto(AccountEntity accountEntity) {
@@ -43,7 +42,7 @@ public class AccountMapper {
                 .collect(Collectors.toList());
     }
 
-    public AccountEntity toAccountEntity(AccountDto accountDto, ClientDto clientDto) {
+    public AccountEntity toAccountEntity(AccountDto accountDto, ClientEntity clientEntity) {
         if (accountDto == null) {
             return null;
         }
@@ -51,18 +50,17 @@ public class AccountMapper {
         accountEntity.setNumber(accountDto.getNumber());
         accountEntity.setActive(accountDto.getActive());
         accountEntity.setMoneys(moneyMapper.toMoneyEntityList(accountDto.getMoneys()));
-
-        accountEntity.setClient(clientMapper.toClientEntityWithoutAccounts(clientDto));
+        accountEntity.setClient(clientEntity);
 
         return accountEntity;
     }
 
-    public List<AccountEntity> toAccountEntityList(List<AccountDto> dtoList, ClientDto clientDto) {
+    public List<AccountEntity> toAccountEntityList(List<AccountDto> dtoList, ClientEntity clientEntity) {
         if (dtoList == null) {
             return null;
         }
         return dtoList.parallelStream()
-                .map(dto -> toAccountEntity(dto, clientDto))
+                .map(dto -> toAccountEntity(dto, clientEntity))
                 .collect(Collectors.toList());
     }
 
