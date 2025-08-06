@@ -63,6 +63,24 @@ public class TransactionService {
         this.accountService = accountService;
     }
 
+    /**
+     * Executes a money transfer from a sender account to a receiver account.
+     *
+     * <p>This method performs the following steps atomically:
+     * <ul>
+     *     <li>Withdraws the amount from the sender's account</li>
+     *     <li>Changes the Money ID and account to match the receiver</li>
+     *     <li>Deposits the amount to the receiver's account</li>
+     *     <li>Saves the transaction in the transaction history</li>
+     * </ul>
+     * </p>
+     *
+     * @param sender   the sender account
+     * @param receiver the receiver account
+     * @param money    the money object containing the amount and currency
+     * @return true if the transfer is successful
+     * @throws Exception if withdrawal or deposit fails
+     */
     @Transactional
     public boolean transfer(AccountDto sender, AccountDto receiver, MoneyDto money) throws Exception {
         try {
@@ -78,12 +96,27 @@ public class TransactionService {
         }
     }
 
+    /**
+     * Saves a transaction record between two accounts.
+     *
+     * @param sender   the sender account
+     * @param receiver the receiver account
+     * @param money    the money object containing the amount and currency
+     */
     private void saveTransaction(AccountDto sender, AccountDto receiver, MoneyDto money) {
         TransactionEntity transaction = createTransaction(sender, receiver, money);
         transactionRepository.save(transaction);
         System.out.println(transaction);
     }
 
+    /**
+     * Creates a transaction entity from sender, receiver, and money details.
+     *
+     * @param sender   the sender account
+     * @param receiver the receiver account
+     * @param money    the money object
+     * @return a new TransactionEntity
+     */
     private TransactionEntity createTransaction(AccountDto sender, AccountDto receiver, MoneyDto money) {
         AccountEntity senderAccountEntity = getAccountEntity(sender);
         AccountEntity receiverAccountEntity = getAccountEntity(receiver);
@@ -92,14 +125,26 @@ public class TransactionService {
     }
 
     /**
-     * changes the account of MoneyDto after withdrawal from the sender account
-     * in order for the same Money object to be used for deposit method, which needs a MoneyDto,
-     * but with a different ID and Account.
+     * Updates the ID of a MoneyDto to match the receiver's account.
+     *
+     * <p>This is necessary after withdrawal so the same MoneyDto can be reused for deposit.</p>
+     *
+     * @param receiver the receiver account
+     * @param money    the money object
      */
     private void changeMoneyIdAndAccount(AccountDto receiver, @NotNull MoneyDto money) {
         money.setId(receiver.getNumber() + money.getCurrency());
     }
 
+    /**
+     * Deposits money into an account. Optionally subtracts the amount from the bank's account.
+     *
+     * @param accountDto       the target account
+     * @param moneyDto         the money object
+     * @param subtractFromBank if true, subtracts the amount from the bank's account
+     * @return true if deposit succeeds
+     * @throws Exception if account is inactive or amount is invalid
+     */
     @Transactional
     public boolean deposit(AccountDto accountDto, MoneyDto moneyDto, boolean subtractFromBank) throws Exception {
         AccountEntity foundAccountEntity = getAccountEntity(accountDto);
@@ -121,6 +166,13 @@ public class TransactionService {
         return true;
     }
 
+    /**
+     * Withdraws money from an account. Optionally adds the amount to the bank's account.
+     *
+     * @param accountDto the source account
+     * @param moneyDto   the money object
+     * @param addToBank  if true, adds the amount to the bank's account
+     */
     @Transactional
     public void withdraw(AccountDto accountDto, MoneyDto moneyDto, boolean addToBank) {
         AccountEntity foundAccountEntity = getAccountEntity(accountDto);
@@ -140,6 +192,15 @@ public class TransactionService {
         }
     }
 
+    /**
+     * Updates the bank's central account balance by adding or subtracting the specified amount.
+     *
+     * <p>If the bank's balance record does not exist, it will be initialized with a zero balance before
+     * performing the operation.</p>
+     *
+     * @param moneyDto  the money object containing the amount and currency to adjust
+     * @param operation the type of operation (ADD or SUBTRACT)
+     */
     private void updateBankBalance(MoneyDto moneyDto, BankOperation operation) {
         String bankMoneyId = BANK_ACCOUNT_NUMBER + moneyDto.getCurrency();
         Optional<MoneyEntity> foundBankMoney = moneyRepository.findById(bankMoneyId);
@@ -160,20 +221,41 @@ public class TransactionService {
         moneyRepository.save(bankMoneyEntity);
     }
 
+    /**
+     * Transfers a specified amount from a customer account to the bank's account and records the transaction.
+     *
+     * <p>This method is typically called when the bank needs to collect money (e.g. fees).</p>
+     *
+     * @param accountDto the customer account sending the money
+     * @param moneyDto   the money object containing the amount and currency to deposit
+     */
     private void addToBankAccount(AccountDto accountDto, MoneyDto moneyDto) {
         updateBankBalance(moneyDto, BankOperation.ADD);
         AccountDto bankAccountDto = accountMapper.toAccountDto(getBankAccount());
         saveTransaction(accountDto, bankAccountDto, moneyDto);
     }
 
+    /**
+     * Transfers a specified amount from the bank's account to a customer account and records the transaction.
+     *
+     * <p>This method is typically called when the bank disburses funds to a customer.</p>
+     *
+     * @param accountDto the customer account receiving the money
+     * @param moneyDto   the money object containing the amount and currency to withdraw
+     */
     private void subtractFromBankAccount(AccountDto accountDto, MoneyDto moneyDto) {
         updateBankBalance(moneyDto, BankOperation.SUBTRACT);
         AccountDto bankAccountDto = accountMapper.toAccountDto(getBankAccount());
         saveTransaction(bankAccountDto, accountDto, moneyDto);
     }
 
-
-
+/**
+ * Retrieves the last N transactions for a specific account.
+ *
+ * @param account               the account to retrieve transactions for
+ * @param numOfLatestTransactions number of recent transactions to fetch
+ * @return a list of transaction DTOs
+ */
     public List<TransactionDto> getLastTransactions(AccountDto account, int numOfLatestTransactions) {
         return transactionRepository.findLastTransactions(account.getNumber(), numOfLatestTransactions)
                 .parallelStream()
