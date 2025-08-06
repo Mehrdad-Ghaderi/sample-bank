@@ -39,7 +39,7 @@ public class ClientEntity {
     private String phoneNumber;
 
     @JsonManagedReference
-    @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "client", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<AccountEntity> accounts;
 
     @NotNull

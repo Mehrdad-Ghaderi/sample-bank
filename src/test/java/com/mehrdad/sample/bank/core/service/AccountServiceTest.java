@@ -127,7 +127,7 @@ class AccountServiceTest {
         when(accountMapper.toAccountEntity(mockAccountDto)).thenReturn(mockAccountEntity);
 
         // Act
-        accountService.save(mockAccountDto, mockClientDto);
+        accountService.save(mockAccountDto, clientDto);
 
         // Assert
         verify(accountMapper).toAccountEntity(mockAccountDto);

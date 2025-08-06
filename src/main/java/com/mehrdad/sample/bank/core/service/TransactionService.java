@@ -71,25 +71,23 @@ public class TransactionService {
         }
     }
 
-    private TransactionEntity createTransaction(AccountDto sender, AccountDto receiver, MoneyDto money) {
-        AccountEntity senderAccountEntity = accountMapper.toAccountEntity(sender);
-
-        AccountEntity receiverAccountEntity = accountMapper.toAccountEntity(receiver);
-
-        return new TransactionEntity(senderAccountEntity, receiverAccountEntity, money.getAmount(), money.getCurrency().toString());
-    }
-
     private void saveTransaction(AccountDto sender, AccountDto receiver, MoneyDto money) {
         TransactionEntity transaction = createTransaction(sender, receiver, money);
         transactionRepository.save(transaction);
         System.out.println(transaction);
     }
 
+    private TransactionEntity createTransaction(AccountDto sender, AccountDto receiver, MoneyDto money) {
+        AccountEntity senderAccountEntity = getAccountEntity(sender);
+        AccountEntity receiverAccountEntity = getAccountEntity(receiver);
+
+        return new TransactionEntity(senderAccountEntity, receiverAccountEntity, money.getAmount(), money.getCurrency().toString());
+    }
+
     /**
      * changes the account of MoneyDto after withdrawal from the sender account
      * in order for the same Money object to be used for deposit method, which needs a MoneyDto,
      * but with a different ID and Account.
-     *
      */
     private void changeMoneyIdAndAccount(AccountDto receiver, @NotNull MoneyDto money) {
         money.setId(receiver.getNumber() + money.getCurrency());
@@ -125,20 +123,18 @@ public class TransactionService {
         MoneyEntity moneyEntity = moneyRepository.findById(moneyDto.getId())
                 .orElseThrow(() -> new MoneyNotFoundException("Money ID: " + moneyDto.getId() + " not found!"));
 
-
         assertSufficientBalance(foundAccountEntity, moneyEntity, moneyDto);
 
         moneyEntity.setAmount(subtractAmount(moneyEntity, moneyDto));
         moneyRepository.save(moneyEntity);
 
         if (addToBank) {
-            addToBankAccount(accountDto,moneyDto);
+            addToBankAccount(accountDto, moneyDto);
         }
     }
 
     private void addToBankAccount(AccountDto accountDto, MoneyDto moneyDto) {
         AccountEntity bankAccount = getBankAccount();
-
         Optional<MoneyEntity> foundBankMoney = moneyRepository.findById(BANK_ACCOUNT_NUMBER + moneyDto.getCurrency());
 
         if (foundBankMoney.isEmpty()) {
@@ -158,7 +154,6 @@ public class TransactionService {
 
     private void subtractFromBankAccount(AccountDto accountDto, MoneyDto moneyDto) {
         AccountEntity bankAccount = getBankAccount();
-
         Optional<MoneyEntity> foundBankMoney = moneyRepository.findById(BANK_ACCOUNT_NUMBER + moneyDto.getCurrency());
 
         if (foundBankMoney.isEmpty()) {
@@ -179,7 +174,7 @@ public class TransactionService {
     public List<TransactionDto> getLastTransactions(AccountDto account, int numOfLatestTransactions) {
         return transactionRepository.findLastTransactions(account.getNumber(), numOfLatestTransactions)
                 .parallelStream()
-                .map(transactionMapper::toTransactionEntity)
+                .map(transactionMapper::toTransactionDto)
                 .collect(Collectors.toList());
     }
 

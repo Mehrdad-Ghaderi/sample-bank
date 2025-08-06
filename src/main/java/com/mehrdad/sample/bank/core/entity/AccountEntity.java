@@ -49,11 +49,6 @@ public class AccountEntity {
         this.active = status;
     }
 
-
-
-
-
-
     @Override
     public String toString() {
         return String.format("%s , active=%s}",

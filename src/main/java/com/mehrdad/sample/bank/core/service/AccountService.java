@@ -58,14 +58,13 @@ public class AccountService {
     }
 
     public void save(AccountDto account, ClientDto clientDto) {
-        accountRepository.save(accountMapper.toAccountEntity(account));
+        accountRepository.save(accountMapper.toAccountEntity(account, clientDto));
     }
 
-    public boolean createAccount(AccountDto account, ClientDto client) {
-
+    public boolean createAccount(AccountDto account, ClientDto clientDto) {
         try {
             account.setActive(true);
-            save(account, client);
+            save(account, clientDto);
             return true;
         } catch (Exception e) {
             e.printStackTrace();

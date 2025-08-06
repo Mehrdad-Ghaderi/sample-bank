@@ -17,7 +17,7 @@ public class TransactionMapper {
         this.accountMapper = accountMapper;
     }
 
-    public TransactionDto toTransactionEntity(TransactionEntity transaction) {
+    public TransactionDto toTransactionDto(TransactionEntity transaction) {
         if (transaction == null) {
             return null;
         }
@@ -32,5 +32,4 @@ public class TransactionMapper {
 
         return transactionDto;
     }
-
 }
