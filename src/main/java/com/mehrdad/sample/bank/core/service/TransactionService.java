@@ -30,6 +30,13 @@ import java.util.stream.Collectors;
 @Service
 public class TransactionService {
 
+
+    private enum BankOperation {
+        ADD,
+        SUBTRACT
+    }
+
+
     private static final String BANK_ACCOUNT_NUMBER = "111.1";
 
     private final MoneyRepository moneyRepository;
@@ -133,43 +140,39 @@ public class TransactionService {
         }
     }
 
-    private void addToBankAccount(AccountDto accountDto, MoneyDto moneyDto) {
-        AccountEntity bankAccount = getBankAccount();
-        Optional<MoneyEntity> foundBankMoney = moneyRepository.findById(BANK_ACCOUNT_NUMBER + moneyDto.getCurrency());
+    private void updateBankBalance(MoneyDto moneyDto, BankOperation operation) {
+        String bankMoneyId = BANK_ACCOUNT_NUMBER + moneyDto.getCurrency();
+        Optional<MoneyEntity> foundBankMoney = moneyRepository.findById(bankMoneyId);
 
-        if (foundBankMoney.isEmpty()) {
-            MoneyEntity bankMoneyEntity = moneyMapper.toMoneyEntity(moneyDto);
-            bankMoneyEntity.setAmount(moneyDto.getAmount());
-            bankMoneyEntity.setId(BANK_ACCOUNT_NUMBER + moneyDto.getCurrency());
-            moneyRepository.save(bankMoneyEntity);
+        MoneyEntity bankMoneyEntity = foundBankMoney.orElseGet(() -> {
+            MoneyEntity newMoney = moneyMapper.toMoneyEntity(moneyDto);
+            newMoney.setId(bankMoneyId);
+            newMoney.setAmount(BigDecimal.ZERO);
+            return newMoney;
+        });
+
+        if (operation == BankOperation.ADD) {
+            bankMoneyEntity.setAmount(bankMoneyEntity.getAmount().add(moneyDto.getAmount()));
         } else {
-            foundBankMoney.get().setAmount(foundBankMoney.get().getAmount().add(moneyDto.getAmount()));
-            moneyRepository.save(foundBankMoney.get());
+            bankMoneyEntity.setAmount(bankMoneyEntity.getAmount().subtract(moneyDto.getAmount()));
         }
 
-        assert bankAccount != null;
-        AccountDto bankAccountDto = accountMapper.toAccountDto(bankAccount);
+        moneyRepository.save(bankMoneyEntity);
+    }
+
+    private void addToBankAccount(AccountDto accountDto, MoneyDto moneyDto) {
+        updateBankBalance(moneyDto, BankOperation.ADD);
+        AccountDto bankAccountDto = accountMapper.toAccountDto(getBankAccount());
         saveTransaction(accountDto, bankAccountDto, moneyDto);
     }
 
     private void subtractFromBankAccount(AccountDto accountDto, MoneyDto moneyDto) {
-        AccountEntity bankAccount = getBankAccount();
-        Optional<MoneyEntity> foundBankMoney = moneyRepository.findById(BANK_ACCOUNT_NUMBER + moneyDto.getCurrency());
-
-        if (foundBankMoney.isEmpty()) {
-            MoneyEntity bankMoneyEntity = moneyMapper.toMoneyEntity(moneyDto);
-            bankMoneyEntity.setAmount(moneyDto.getAmount().negate());
-            bankMoneyEntity.setId(BANK_ACCOUNT_NUMBER + moneyDto.getCurrency());
-            moneyRepository.save(bankMoneyEntity);
-        } else {
-            foundBankMoney.get().setAmount(foundBankMoney.get().getAmount().subtract(moneyDto.getAmount()));
-            moneyRepository.save(foundBankMoney.get());
-        }
-
-        assert bankAccount != null;
-        AccountDto bankAccountDto = accountMapper.toAccountDto(bankAccount);
+        updateBankBalance(moneyDto, BankOperation.SUBTRACT);
+        AccountDto bankAccountDto = accountMapper.toAccountDto(getBankAccount());
         saveTransaction(bankAccountDto, accountDto, moneyDto);
     }
+
+
 
     public List<TransactionDto> getLastTransactions(AccountDto account, int numOfLatestTransactions) {
         return transactionRepository.findLastTransactions(account.getNumber(), numOfLatestTransactions)
