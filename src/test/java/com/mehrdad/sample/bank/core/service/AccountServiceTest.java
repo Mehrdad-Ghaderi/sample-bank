@@ -124,15 +124,21 @@ class AccountServiceTest {
         ClientEntity mockClientEntity = new ClientEntity();
         AccountEntity mockAccountEntity = new AccountEntity();
 
-        when(accountMapper.toAccountEntity(mockAccountDto)).thenReturn(mockAccountEntity);
+        // Stub clientMapper conversion (important!)
+        when(clientMapper.toClientEntity(mockClientDto)).thenReturn(mockClientEntity);
+
+        // Stub accountMapper conversion
+        when(accountMapper.toAccountEntity(mockAccountDto, mockClientEntity)).thenReturn(mockAccountEntity);
 
         // Act
-        accountService.save(mockAccountDto, clientDto);
+        accountService.save(mockAccountDto, mockClientDto);
 
         // Assert
-        verify(accountMapper).toAccountEntity(mockAccountDto);
+        verify(clientMapper).toClientEntity(mockClientDto);
+        verify(accountMapper).toAccountEntity(mockAccountDto, mockClientEntity);
         verify(accountRepository).save(mockAccountEntity);
     }
+
 
 
     @Test
