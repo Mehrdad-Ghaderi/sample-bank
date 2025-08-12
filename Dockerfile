@@ -1,13 +1,12 @@
 # 1. Build stage: use Maven + JDK 21 to compile and package
-FROM maven:3.9.4-eclipse-temurin-21 AS build
+FROM maven:3.9.11-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Copy only POM, download dependencies offline
+# Copy only Maven wrapper + POM, set execution permission, and download dependencies
 COPY pom.xml .
 COPY mvnw .
 COPY .mvn .mvn
-RUN chmod +x mvnw
-RUN ./mvnw dependency:go-offline -B
+RUN chmod +x mvnw && ./mvnw dependency:go-offline
 
 # Copy source code and build the project
 COPY src ./src
