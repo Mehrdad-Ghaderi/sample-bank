@@ -15,5 +15,4 @@ public class BankConfiguration {
     public Scanner scanner() {
         return new Scanner(System.in);
     }
-
 }
