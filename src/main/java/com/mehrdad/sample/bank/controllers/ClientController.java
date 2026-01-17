@@ -49,7 +49,7 @@ public class ClientController {
                 .path("/{id}")
                 .buildAndExpand(savedClientDto.getId())
                 .toUri();
-        return ResponseEntity.created(location).build();
+        return ResponseEntity.created(location).body(savedClientDto);
     }
 
     @DeleteMapping(CLIENT_PATH_ID)
