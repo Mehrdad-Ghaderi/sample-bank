@@ -47,11 +47,11 @@ public class ClientEntity {
     private Boolean active;
 
 
-    public ClientEntity(String id, String name, String phoneNumber, Boolean status) {
+    public ClientEntity(String id, String name, String phoneNumber, Boolean active) {
         this.id = id;
         this.name = name;
         this.phoneNumber = phoneNumber;
-        this.active = status;
+        this.active = active;
     }
 
     @Override
