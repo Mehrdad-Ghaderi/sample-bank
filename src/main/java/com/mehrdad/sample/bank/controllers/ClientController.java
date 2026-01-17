@@ -57,6 +57,11 @@ public class ClientController {
         clientService.removeClientById(clientId);
     }
 
+    @PostMapping(CLIENT_PATH_ID)
+    public void activateClient(@PathVariable("clientId") String clientId) {
+        clientService.activateClient(clientId);
+    }
+
     @GetMapping(CLIENT_PATH_ID + "/accounts")
     public List<AccountDto> getAccountsByClientId(@PathVariable("clientId") String clientId) {
         return clientService.getClientById(clientId)
