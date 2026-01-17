@@ -37,7 +37,7 @@ public class ClientController {
     }
 
     @GetMapping(CLIENT_PATH_ID)
-    public ClientDto getClientById(@PathVariable("clientId") String clientId) {
+    public ClientDto getClientById(@PathVariable String clientId) {
         return clientService.getClientById(clientId).orElse(null);
     }
 
@@ -53,17 +53,17 @@ public class ClientController {
     }
 
     @DeleteMapping(CLIENT_PATH_ID)
-    public void deleteClientById(@PathVariable("clientId") String clientId) {
+    public void deleteClientById(@PathVariable String clientId) {
         clientService.removeClientById(clientId);
     }
 
     @PostMapping(CLIENT_PATH_ID)
-    public void activateClient(@PathVariable("clientId") String clientId) {
+    public void activateClient(@PathVariable String clientId) {
         clientService.activateClient(clientId);
     }
 
     @GetMapping(CLIENT_PATH_ID + "/accounts")
-    public List<AccountDto> getAccountsByClientId(@PathVariable("clientId") String clientId) {
+    public List<AccountDto> getAccountsByClientId(@PathVariable String clientId) {
         return clientService.getClientById(clientId)
                 .map(ClientDto::getAccounts)
                 .orElseThrow(() -> new ClientNotFoundException(clientId));
