@@ -3,6 +3,8 @@ package com.mehrdad.sample.bank.core.service;
 import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
+import com.mehrdad.sample.bank.core.exception.ClientAlreadyActiveException;
+import com.mehrdad.sample.bank.core.exception.ClientAlreadyInactiveException;
 import com.mehrdad.sample.bank.core.exception.ClientNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.ClientMapper;
 import com.mehrdad.sample.bank.core.repository.ClientRepository;
@@ -66,6 +68,14 @@ public class ClientService {
     private void activateOrDeactivateClient(String clientId, boolean state) {
         ClientEntity foundClientEntity = clientRepository.findById(clientId)
                 .orElseThrow(() -> new ClientNotFoundException(clientId));
+
+        if (state && Boolean.TRUE.equals(foundClientEntity.getActive())) {
+            throw new ClientAlreadyActiveException(clientId);
+        }
+
+        if (!state && Boolean.FALSE.equals(foundClientEntity.getActive())) {
+            throw new ClientAlreadyInactiveException(clientId);
+        }
 
         foundClientEntity.setActive(state);
         for (AccountEntity accountEntity : foundClientEntity.getAccounts()) {

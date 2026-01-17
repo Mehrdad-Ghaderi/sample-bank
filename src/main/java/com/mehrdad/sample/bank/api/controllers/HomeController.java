@@ -1,4 +1,4 @@
-package com.mehrdad.sample.bank.controllers;
+package com.mehrdad.sample.bank.api.controllers;
 
 import com.mehrdad.sample.bank.core.service.AccountService;
 import com.mehrdad.sample.bank.core.service.ClientService;

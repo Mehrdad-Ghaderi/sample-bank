@@ -1,4 +1,4 @@
-package com.mehrdad.sample.bank.controllers;
+package com.mehrdad.sample.bank.api.controllers;
 
 import com.mehrdad.sample.bank.api.dto.AccountDto;
 import com.mehrdad.sample.bank.api.dto.ClientDto;
