@@ -46,6 +46,10 @@ public class AccountService {
         return accountEntity.map(AccountEntity::getClient).map(clientMapper::toClientDto).orElse(null);
     }
 
+    /*public List<AccountDto> getAccountByClientId(String clientId) {
+        return clientRepository.getClientEntityBy.
+    } */
+
     public List<AccountDto> getAllAccounts() {
 
         return clientRepository.findAll().parallelStream()

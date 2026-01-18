@@ -38,7 +38,7 @@ public class ClientController {
 
     @GetMapping(CLIENT_PATH_ID)
     public ClientDto getClientById(@PathVariable String clientId) {
-        return clientService.getClientById(clientId).orElse(null);
+        return clientService.getClientById(clientId);
     }
 
     @PostMapping(CLIENT_PATH)
@@ -61,33 +61,5 @@ public class ClientController {
     @PostMapping(CLIENT_PATH_ID)
     public void activateClient(@PathVariable String clientId) {
         clientService.activateClient(clientId);
-    }
-
-    @GetMapping(CLIENT_PATH_ID + "/accounts")
-    public List<AccountDto> getAccountsByClientId(@PathVariable String clientId) {
-        return clientService.getClientById(clientId)
-                .map(ClientDto::getAccounts)
-                .orElseThrow(() -> new ClientNotFoundException(clientId));
-    }
-
-    @PostMapping(CLIENT_PATH_ID + "/accounts")
-    public ResponseEntity<Object> createAccountByClientId(@PathVariable("clientId") String clientID,
-                                                          @RequestBody AccountDto accountDto) {
-
-        Optional<ClientDto> foundClient = clientService.getClientById(clientID);
-
-        if (foundClient.isEmpty()) {
-            throw new ClientNotFoundException(clientID);
-        }
-
-        accountService.createAccount(accountDto, foundClient.get());
-        AccountDto savedAccountDto = accountService.getAccountByAccountNumber(accountDto.getNumber());
-
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(savedAccountDto.getNumber())
-                .toUri();
-
-        return ResponseEntity.created(location).build();
     }
 }

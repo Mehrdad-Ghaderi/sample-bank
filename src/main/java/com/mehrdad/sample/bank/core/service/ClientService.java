@@ -28,7 +28,7 @@ public class ClientService {
         this.accountService = accountService;
     }
 
-    public Optional<ClientDto> getClientById(String clientId) {
+    public ClientDto getClientById(String clientId) {
         return clientRepository.findById(clientId)
                 .map(clientMapper::toClientDto)
                 .orElseThrow(() ->new ClientNotFoundException(clientId));
