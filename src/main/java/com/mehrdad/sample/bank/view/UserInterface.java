@@ -10,6 +10,7 @@ import com.mehrdad.sample.bank.core.service.AccountService;
 import com.mehrdad.sample.bank.core.service.ClientService;
 import com.mehrdad.sample.bank.core.service.TransactionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -33,6 +34,7 @@ public class UserInterface {
     private final AccountService accountService;
     private final TransactionService transactionService;
     private final Utility utility;
+    private final DataSourceTransactionManager dataSourceTransactionManager;
 
 
     public void printMenu() {
@@ -142,14 +144,13 @@ public class UserInterface {
         System.out.println("Enter the ID: ");
         String id = utility.getUserInputString();
 
-        Optional<ClientDto> client = clientService.getClientById(id);
+        ClientDto client = clientService.getClientById(id);
 
-        if (client.isPresent()) {
+        if (client != null) {
             System.out.println("The client is already a member of this bank.");
 
-            ClientDto foundClient = client.get();
-            if (!foundClient.isActive()) {
-                activateOrDeactivateClient(foundClient);
+            if (!client.isActive()) {
+                activateOrDeactivateClient(client);
             }
             return;
         }
@@ -177,13 +178,12 @@ public class UserInterface {
         System.out.println("Enter the ID of the client whose phone number you would like to update:");
         String id = utility.getUserInputString();
 
-        Optional<ClientDto> client = clientService.getClientById(id);
-        if (client.isEmpty()) {
+        ClientDto foundClient = clientService.getClientById(id);
+        if (foundClient == null) {
             System.out.println("The client does not exist.");
             return;
         }
 
-        ClientDto foundClient = client.get();
         System.out.println("Enter " + foundClient.getName() + "'s new phone number :");
         String newPhoneNumber = utility.getUserInputString();
         System.out.println(foundClient.getName() + "'s old phone number, " + foundClient.getPhoneNumber() + ", was removed.");
@@ -196,13 +196,12 @@ public class UserInterface {
         System.out.println("Enter the ID: ");
         String id = utility.getUserInputString();
 
-        Optional<ClientDto> client = clientService.getClientById(id);
-        if (client.isEmpty()) {
+        ClientDto foundClient = clientService.getClientById(id);
+        if (foundClient == null) {
             System.out.println("No client with that ID was found.");
             return;
         }
 
-        ClientDto foundClient = client.get();
         if (!foundClient.isActive()) {
             System.out.println(foundClient.getName() + "'s membership status is already inactive.");
             return;
@@ -215,8 +214,13 @@ public class UserInterface {
     protected void printClient() {
         System.out.println("Enter the ID of the client you want information on:");
         String clientId = utility.getUserInputString();
-        Optional<ClientDto> clientById = clientService.getClientById(clientId);
-        clientById.ifPresentOrElse(System.out::println, () -> System.out.println("No client with that ID was found"));
+        ClientDto foundClient = clientService.getClientById(clientId);
+        if (foundClient != null) {
+            System.out.println(foundClient);
+        } else {
+            System.out.println("No client with that ID was found");
+
+        }
     }
 
     protected void printAllClients() {
@@ -233,12 +237,12 @@ public class UserInterface {
     protected void activateOrDeactivateClient() {
         System.out.println("Enter the client ID:");
         String id = utility.getUserInputString();
-        Optional<ClientDto> client = clientService.getClientById(id);
-        if (client.isEmpty()) {
+        ClientDto foundClient = clientService.getClientById(id);
+        if (foundClient == null) {
             System.out.println("No client with that ID was found.");
             return;
         }
-        activateOrDeactivateClient(client.get());
+        activateOrDeactivateClient(foundClient);
     }
 
     protected void activateOrDeactivateClient(ClientDto client) {
@@ -277,13 +281,13 @@ public class UserInterface {
         System.out.println("Account Setup:\n" +
                 "Enter the ID of the client for whom you would like to open an account:");
         String clientID = utility.getUserInputString();
-        Optional<ClientDto> foundClient = clientService.getClientById(clientID);
-        if (foundClient.isEmpty()) {
+        ClientDto foundClient = clientService.getClientById(clientID);
+        if (foundClient == null) {
             System.out.println("No client with the ID, " + clientID + ", was found.");
             return;
         }
 
-        createAccountFor(foundClient.get());
+        createAccountFor(foundClient);
     }
 
     protected void createAccountFor(ClientDto client) {
