@@ -53,6 +53,7 @@ public class ClientController {
     }
 
     @DeleteMapping(CLIENT_PATH_ID)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteClientById(@PathVariable String clientId) {
         clientService.removeClientById(clientId);
     }
