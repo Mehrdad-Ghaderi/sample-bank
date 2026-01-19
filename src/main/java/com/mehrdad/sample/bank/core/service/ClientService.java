@@ -1,7 +1,6 @@
 package com.mehrdad.sample.bank.core.service;
 
 import com.mehrdad.sample.bank.api.dto.ClientDto;
-import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
 import com.mehrdad.sample.bank.core.exception.ClientAlreadyActiveException;
 import com.mehrdad.sample.bank.core.exception.ClientAlreadyInactiveException;
@@ -10,7 +9,6 @@ import com.mehrdad.sample.bank.core.mapper.ClientMapper;
 import com.mehrdad.sample.bank.core.repository.ClientRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -20,12 +18,10 @@ import java.util.stream.Stream;
 public class ClientService {
     private final ClientRepository clientRepository;
     private final ClientMapper clientMapper;
-    private final AccountService accountService;
 
-    public ClientService(ClientRepository clientRepository, ClientMapper clientMapper, AccountService accountService) {
+    public ClientService(ClientRepository clientRepository, ClientMapper clientMapper) {
         this.clientRepository = clientRepository;
         this.clientMapper = clientMapper;
-        this.accountService = accountService;
     }
 
     public ClientDto getClientById(String clientId) {
@@ -59,7 +55,6 @@ public class ClientService {
             deactivateClient(clientId);
     }
 
-
     public void activateClient(String clientId) {
         activateOrDeactivateClient(clientId, true);
     }
@@ -79,11 +74,7 @@ public class ClientService {
         if (!state && Boolean.FALSE.equals(foundClientEntity.getActive())) {
             throw new ClientAlreadyInactiveException(clientId);
         }
-
         foundClientEntity.setActive(state);
-        for (AccountEntity accountEntity : foundClientEntity.getAccounts()) {
-            accountService.freezeOrUnfreezeAccount(accountEntity.getNumber(), state);
-        }
         clientRepository.save(foundClientEntity);
     }
 }

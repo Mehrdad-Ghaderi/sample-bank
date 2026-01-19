@@ -24,31 +24,39 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
     private final ClientMapper clientMapper;
+    private final ClientService clientService;
 
     public AccountService(ClientRepository clientRepository, AccountRepository accountRepository,
-                          AccountMapper accountMapper, ClientMapper clientMapper) {
+                          AccountMapper accountMapper, ClientMapper clientMapper, ClientService clientService) {
 
         this.clientRepository = clientRepository;
         this.accountRepository = accountRepository;
         this.accountMapper = accountMapper;
         this.clientMapper = clientMapper;
+        this.clientService = clientService;
     }
 
     public AccountDto getAccountByAccountNumber(String accountNumber){
-        AccountEntity accountEntity = accountRepository.findById(accountNumber)
+
+        return accountRepository.findById(accountNumber)
+                .map(accountMapper::toAccountDto)
+                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
+    }
+
+    public List<AccountDto> getAccountsByClientId(String clientId) {
+        return clientService.getClientById(clientId).getAccounts();
+    }
+
+    public ClientDto getClientByAccountNumber(String accountNumber) {
+        return accountRepository.findById(accountNumber)
+                .map(AccountEntity::getClient)
+                .map(clientMapper::toClientDto)
                 .orElseThrow(() -> new AccountNotFoundException(accountNumber));
 
-        return accountMapper.toAccountDto(accountEntity);
+//        Optional<AccountEntity> accountEntity = accountRepository.findById(accountNumber);
+//        return accountEntity.map(AccountEntity::getClient).map(clientMapper::toClientDto).orElse(null);
     }
 
-    private ClientDto getClientByAccountNumber(String accountNumber) {
-        Optional<AccountEntity> accountEntity = accountRepository.findById(accountNumber);
-        return accountEntity.map(AccountEntity::getClient).map(clientMapper::toClientDto).orElse(null);
-    }
-
-    /*public List<AccountDto> getAccountByClientId(String clientId) {
-        return clientRepository.getClientEntityBy.
-    } */
 
     public List<AccountDto> getAllAccounts() {
 
@@ -84,11 +92,11 @@ public class AccountService {
         freezeOrUnfreezeAccount(accountNumber, true);
     }
 
-    public void freezeOrUnfreezeAccount(String accountNumber, Boolean b) {
+    public void freezeOrUnfreezeAccount(String accountNumber, Boolean activate) {
         AccountEntity foundAccount = accountRepository.findById(accountNumber)
                 .orElseThrow(() -> new AccountNotFoundException(accountNumber));
 
-        foundAccount.setActive(b);
+        foundAccount.setActive(activate);
         accountRepository.save(foundAccount);
     }
 }
