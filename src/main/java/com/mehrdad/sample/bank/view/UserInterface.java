@@ -10,7 +10,6 @@ import com.mehrdad.sample.bank.core.service.AccountService;
 import com.mehrdad.sample.bank.core.service.ClientService;
 import com.mehrdad.sample.bank.core.service.TransactionService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -34,7 +33,7 @@ public class UserInterface {
     private final AccountService accountService;
     private final TransactionService transactionService;
     private final Utility utility;
-    private final DataSourceTransactionManager dataSourceTransactionManager;
+//    private final DataSourceTransactionManager dataSourceTransactionManager;
 
 
     public void printMenu() {
@@ -207,7 +206,7 @@ public class UserInterface {
             return;
         }
 
-        clientService.removeClient(foundClient);
+        clientService.deactivateClient(foundClient);
         System.out.println(foundClient.getName() + "'s membership status has been deactivated.");
     }
 
