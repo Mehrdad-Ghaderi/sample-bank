@@ -2,6 +2,7 @@ package com.mehrdad.sample.bank.core.service;
 
 import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
+import com.mehrdad.sample.bank.core.entity.Status;
 import com.mehrdad.sample.bank.core.exception.ClientAlreadyActiveException;
 import com.mehrdad.sample.bank.core.exception.ClientAlreadyInactiveException;
 import com.mehrdad.sample.bank.core.exception.ClientNotFoundException;
@@ -56,25 +57,25 @@ public class ClientService {
     }
 
     public void activateClient(String clientId) {
-        activateOrDeactivateClient(clientId, true);
+        activateOrDeactivateClient(clientId, Status.ACTIVE);
     }
 
     public void deactivateClient(String clientId) {
-        activateOrDeactivateClient(clientId, false);
+        activateOrDeactivateClient(clientId, Status.INACTIVE);
     }
 
-    private void activateOrDeactivateClient(String clientId, boolean state) {
+    private void activateOrDeactivateClient(String clientId, Status status) {
         ClientEntity foundClientEntity = clientRepository.findById(clientId)
                 .orElseThrow(() -> new ClientNotFoundException(clientId));
 
-        if (state && Boolean.TRUE.equals(foundClientEntity.getActive())) {
+        if (status == Status.ACTIVE && foundClientEntity.getStatus() == Status.ACTIVE) {
             throw new ClientAlreadyActiveException(clientId);
         }
 
-        if (!state && Boolean.FALSE.equals(foundClientEntity.getActive())) {
+        if (status == Status.INACTIVE && foundClientEntity.getStatus() == Status.INACTIVE) {
             throw new ClientAlreadyInactiveException(clientId);
         }
-        foundClientEntity.setActive(state);
+        foundClientEntity.setStatus(status);
         clientRepository.save(foundClientEntity);
     }
 }
