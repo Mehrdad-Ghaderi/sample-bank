@@ -1,6 +1,7 @@
 package com.mehrdad.sample.bank.api.dto;
 
 
+import com.mehrdad.sample.bank.core.entity.Status;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -16,12 +17,14 @@ public class ClientDto {
     private String phoneNumber;
     private List<AccountDto> accounts;
     private Boolean active;
+    private Status status;
 
-    public ClientDto(String id, String name, String phoneNumber, Boolean active) {
+    public ClientDto(String id, String name, String phoneNumber, Boolean active, Status status) {
         this.id = id;
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.active = active;
+        this.status = status;
     }
 
     public ClientDto(Builder builder) {
@@ -30,6 +33,7 @@ public class ClientDto {
         this.phoneNumber = builder.phoneNumber;
         this.active = builder.active;
         this.accounts = builder.accounts;
+        this.status = status;
     }
 
     public ClientDto() {
@@ -73,6 +77,14 @@ public class ClientDto {
         this.active = status;
     }
 
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
     public List<AccountDto> getAccounts() {
         return accounts;
     }
@@ -83,8 +95,8 @@ public class ClientDto {
 
     @Override
     public String toString() {
-        return String.format("%s, %s, %s, %s, \n    accounts=%s",
-                id, name, phoneNumber, active?"active":"deactivated", accounts);
+        return String.format("%s, %s, %s, %s, %s \n    accounts=%s",
+                id, name, phoneNumber, active?"active":"deactivated", status, accounts);
     }
 
     public String concatNameAndId() {
@@ -99,6 +111,7 @@ public class ClientDto {
         private String phoneNumber;
         private List<AccountDto> accounts;
         private Boolean active;
+        private Status status;
 
         public Builder() {
         }
@@ -125,6 +138,11 @@ public class ClientDto {
 
         public Builder active(Boolean active) {
             this.active = active;
+            return this;
+        }
+
+        public Builder status(Status status) {
+            this.status = status;
             return this;
         }
 

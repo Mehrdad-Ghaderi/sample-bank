@@ -46,6 +46,10 @@ public class ClientEntity {
     @Column(name = "active", nullable = false)
     private Boolean active;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Status status;
+
 
     public ClientEntity(String id, String name, String phoneNumber, Boolean active) {
         this.id = id;
@@ -54,9 +58,17 @@ public class ClientEntity {
         this.active = active;
     }
 
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
     @Override
     public String toString() {
-        return String.format("ClientEntity{id='%s', name='%s', phoneNumber='%s', active=%s, accounts=%s}",
-                id, name, phoneNumber, active, accounts);
+        return String.format("ClientEntity{id='%s', name='%s', phoneNumber='%s', active=%s, accounts=%s, status=%s}",
+                id, name, phoneNumber, active, accounts, status);
     }
 }
