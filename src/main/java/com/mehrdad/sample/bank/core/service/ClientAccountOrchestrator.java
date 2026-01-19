@@ -1,8 +1,6 @@
 package com.mehrdad.sample.bank.core.service;
 
 import com.mehrdad.sample.bank.api.dto.AccountDto;
-import com.mehrdad.sample.bank.core.entity.AccountEntity;
-import com.mehrdad.sample.bank.core.entity.ClientEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +23,7 @@ public class ClientAccountOrchestrator {
         if (activate) {
             clientService.activateClient(clientId);
         } else {
-            clientService.removeClientById(clientId);
+            clientService.DeactivateClientById(clientId);
         }
         List<AccountDto> accounts = accountService.getAccountsByClientId(clientId);
         for (AccountDto accountDto : accounts) {

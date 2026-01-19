@@ -47,11 +47,11 @@ public class ClientService {
         clientRepository.save(foundClientEntity);
     }
 
-    public void removeClient(ClientDto client) {
+    public void deactivateClient(ClientDto client) {
         deactivateClient(client.getId());
     }
 
-    public void removeClientById(String clientId) {
+    public void DeactivateClientById(String clientId) {
             deactivateClient(clientId);
     }
 

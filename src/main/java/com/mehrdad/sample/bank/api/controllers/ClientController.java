@@ -52,7 +52,7 @@ public class ClientController {
     @DeleteMapping(CLIENT_By_ID)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteClientById(@PathVariable String clientId) {
-        clientService.removeClientById(clientId);
+        clientService.DeactivateClientById(clientId);
     }
 
     @PostMapping(CLIENT_By_ID)
