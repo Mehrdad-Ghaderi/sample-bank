@@ -165,7 +165,7 @@ public class UserInterface {
                 .active(true)
                 .build();
         //ClientDto newClient = new ClientDto(id, name, phoneNumber, true);
-        clientService.saveClient(newClient);
+        clientService.createClient(newClient);
         System.out.println(newClient.getName() + " was added to the repository.");
 
         //made it static so it can also be accessed from ClientMenu but it didn't work

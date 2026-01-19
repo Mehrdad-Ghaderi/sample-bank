@@ -40,7 +40,7 @@ public class ClientController {
 
     @PostMapping(CLIENTS)
     public ResponseEntity<ClientDto> createClient(@RequestBody ClientDto clientDto) {
-        ClientDto savedClientDto = clientService.saveClient(clientDto);
+        ClientDto savedClientDto = clientService.createClient(clientDto);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")

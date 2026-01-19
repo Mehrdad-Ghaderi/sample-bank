@@ -4,6 +4,7 @@ import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
 import com.mehrdad.sample.bank.core.entity.Status;
 import com.mehrdad.sample.bank.core.exception.ClientAlreadyActiveException;
+import com.mehrdad.sample.bank.core.exception.ClientAlreadyExistException;
 import com.mehrdad.sample.bank.core.exception.ClientAlreadyInactiveException;
 import com.mehrdad.sample.bank.core.exception.ClientNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.ClientMapper;
@@ -35,7 +36,10 @@ public class ClientService {
         return clientRepository.findAll().stream().map(clientMapper::toClientDto);
     }
 
-    public ClientDto saveClient(ClientDto client) {
+    public ClientDto createClient(ClientDto client) {
+        if (clientRepository.findById(client.getId()).isPresent()) {
+            throw new ClientAlreadyExistException(client.getId());
+        }
         ClientEntity savedClientEntity = clientRepository.save(clientMapper.toClientEntity(client));
         return clientMapper.toClientDto(savedClientEntity);
     }
