@@ -42,33 +42,24 @@ public class ClientEntity {
     @OneToMany(mappedBy = "client", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<AccountEntity> accounts;
 
-    @NotNull
-    @Column(name = "active", nullable = false)
-    private Boolean active;
+//    @NotNull
+//    @Column(name = "active", nullable = false)
+//    private Boolean active;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status;
 
 
-    public ClientEntity(String id, String name, String phoneNumber, Boolean active) {
+    public ClientEntity(String id, String name, String phoneNumber) {
         this.id = id;
         this.name = name;
         this.phoneNumber = phoneNumber;
-        this.active = active;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
     }
 
     @Override
     public String toString() {
-        return String.format("ClientEntity{id='%s', name='%s', phoneNumber='%s', active=%s, accounts=%s, status=%s}",
-                id, name, phoneNumber, active, accounts, status);
+        return String.format("ClientEntity{id='%s', name='%s', phoneNumber='%s', status=%s, accounts=%s}",
+                id, name, phoneNumber, status, accounts);
     }
 }

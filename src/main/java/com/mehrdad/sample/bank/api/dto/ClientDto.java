@@ -16,14 +16,12 @@ public class ClientDto {
     private String name;
     private String phoneNumber;
     private List<AccountDto> accounts;
-    private Boolean active;
     private Status status;
 
-    public ClientDto(String id, String name, String phoneNumber, Boolean active, Status status) {
+    public ClientDto(String id, String name, String phoneNumber, Status status) {
         this.id = id;
         this.name = name;
         this.phoneNumber = phoneNumber;
-        this.active = active;
         this.status = status;
     }
 
@@ -31,7 +29,6 @@ public class ClientDto {
         this.id = builder.id;
         this.name = builder.name;
         this.phoneNumber = builder.phoneNumber;
-        this.active = builder.active;
         this.accounts = builder.accounts;
         this.status = status;
     }
@@ -69,14 +66,6 @@ public class ClientDto {
     }
 
     @NotNull
-    public Boolean isActive() {
-        return active;
-    }
-
-    public void setActive(Boolean status) {
-        this.active = status;
-    }
-
     public Status getStatus() {
         return status;
     }
@@ -95,8 +84,8 @@ public class ClientDto {
 
     @Override
     public String toString() {
-        return String.format("%s, %s, %s, %s, %s \n    accounts=%s",
-                id, name, phoneNumber, active?"active":"deactivated", status, accounts);
+        return String.format("%s, %s, %s, %s \n    accounts=%s",
+                id, name, phoneNumber, status, accounts);
     }
 
     public String concatNameAndId() {
@@ -110,7 +99,6 @@ public class ClientDto {
         private String name;
         private String phoneNumber;
         private List<AccountDto> accounts;
-        private Boolean active;
         private Status status;
 
         public Builder() {
@@ -133,11 +121,6 @@ public class ClientDto {
 
         public Builder accounts(List<AccountDto> accountDtos) {
             this.accounts = accountDtos;
-            return this;
-        }
-
-        public Builder active(Boolean active) {
-            this.active = active;
             return this;
         }
 

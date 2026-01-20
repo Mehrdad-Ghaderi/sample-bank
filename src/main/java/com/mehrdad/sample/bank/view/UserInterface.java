@@ -5,6 +5,7 @@ import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.api.dto.MoneyDto;
 import com.mehrdad.sample.bank.api.dto.TransactionDto;
 import com.mehrdad.sample.bank.core.entity.Currency;
+import com.mehrdad.sample.bank.core.entity.Status;
 import com.mehrdad.sample.bank.core.exception.AccountNotFoundException;
 import com.mehrdad.sample.bank.core.service.AccountService;
 import com.mehrdad.sample.bank.core.service.ClientService;
@@ -146,9 +147,9 @@ public class UserInterface {
         ClientDto client = clientService.getClientById(id);
 
         if (client != null) {
-            System.out.println("The client is already a member of this bank.");
+            System.out.println("The client is already a client of this bank.");
 
-            if (!client.isActive()) {
+            if (client.getStatus() == Status.INACTIVE) {
                 activateOrDeactivateClient(client);
             }
             return;
@@ -162,7 +163,7 @@ public class UserInterface {
                 .id(id)
                 .name(name)
                 .phoneNumber(phoneNumber)
-                .active(true)
+                .status(Status.ACTIVE)
                 .build();
         //ClientDto newClient = new ClientDto(id, name, phoneNumber, true);
         clientService.createClient(newClient);
@@ -201,7 +202,7 @@ public class UserInterface {
             return;
         }
 
-        if (!foundClient.isActive()) {
+        if (foundClient.getStatus() == Status.INACTIVE) {
             System.out.println(foundClient.getName() + "'s membership status is already inactive.");
             return;
         }
@@ -248,7 +249,7 @@ public class UserInterface {
         String userChoice = "";
 
         while (true) {
-            if (!client.isActive()) {
+            if (client.getStatus() == Status.INACTIVE) {
                 System.out.println(client.getName() + " is inactive");
                 System.out.println("Press A to ACTIVATE the client's membership, or Q to go back to main menu.");
                 userChoice = utility.getUserInputString();
