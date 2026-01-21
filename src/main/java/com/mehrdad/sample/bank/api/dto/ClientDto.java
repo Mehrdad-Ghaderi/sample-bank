@@ -2,84 +2,44 @@ package com.mehrdad.sample.bank.api.dto;
 
 
 import com.mehrdad.sample.bank.core.entity.Status;
+import jakarta.persistence.Entity;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.util.List;
 
 /**
  * Created by Mehrdad Ghaderi
  */
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class ClientDto {
 
+    @Size(max = 10)
     private String id;
+    @NotBlank
+    @Size(max = 45)
     private String name;
+    @NotBlank
+    @Size(max = 15)
     private String phoneNumber;
     private List<AccountDto> accounts;
+    @NotNull
     private Status status;
-
-    public ClientDto(String id, String name, String phoneNumber, Status status) {
-        this.id = id;
-        this.name = name;
-        this.phoneNumber = phoneNumber;
-        this.status = status;
-    }
 
     public ClientDto(Builder builder) {
         this.id = builder.id;
         this.name = builder.name;
         this.phoneNumber = builder.phoneNumber;
         this.accounts = builder.accounts;
-        this.status = status;
-    }
-
-    public ClientDto() {
-    }
-
-    @Size(max = 10)
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    @NotBlank
-    @Size(max = 45)
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @NotBlank
-    @Size(max = 15)
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    @NotNull
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public List<AccountDto> getAccounts() {
-        return accounts;
-    }
-
-    public void setAccounts(List<AccountDto> accounts) {
-        this.accounts = accounts;
+        this.status = builder.status;
     }
 
     @Override
@@ -87,12 +47,6 @@ public class ClientDto {
         return String.format("%s, %s, %s, %s \n    accounts=%s",
                 id, name, phoneNumber, status, accounts);
     }
-
-    public String concatNameAndId() {
-        return "{" + this.getName() + ", ID: " + this.getId() + "}";
-    }
-
-
 
     public static class Builder {
         private String id;

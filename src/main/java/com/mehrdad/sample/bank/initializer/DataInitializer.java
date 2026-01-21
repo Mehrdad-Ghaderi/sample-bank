@@ -24,11 +24,11 @@ public class DataInitializer implements CommandLineRunner {
     private final ClientRepository clientRepository;
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         String defaultClientId = "111";
         String defaultAccountId = "111.1";
 
-        // Step 1: Ensure the client exists
+        // Step 1: Ensure the main bank(client and account exists
         ClientEntity bank;
 
         if (!clientRepository.existsById(defaultClientId)) {

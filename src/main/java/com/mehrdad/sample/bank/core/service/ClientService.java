@@ -29,7 +29,7 @@ public class ClientService {
     public ClientDto getClientById(String clientId) {
         return clientRepository.findById(clientId)
                 .map(clientMapper::toClientDto)
-                .orElseThrow(() ->new ClientNotFoundException(clientId));
+                .orElseThrow(() -> new ClientNotFoundException(clientId));
     }
 
     public Stream<ClientDto> getAllClients() {
@@ -57,7 +57,7 @@ public class ClientService {
     }
 
     public void DeactivateClientById(String clientId) {
-            deactivateClient(clientId);
+        deactivateClient(clientId);
     }
 
     public void activateClient(String clientId) {

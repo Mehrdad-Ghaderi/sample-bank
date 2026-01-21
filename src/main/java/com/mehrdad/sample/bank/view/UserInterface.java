@@ -165,12 +165,8 @@ public class UserInterface {
                 .phoneNumber(phoneNumber)
                 .status(Status.ACTIVE)
                 .build();
-        //ClientDto newClient = new ClientDto(id, name, phoneNumber, true);
         clientService.createClient(newClient);
         System.out.println(newClient.getName() + " was added to the repository.");
-
-        //made it static so it can also be accessed from ClientMenu but it didn't work
-        //AccountMenu.createAccountFor(newClient);
     }
 
     protected void updatePhoneNumber() {
@@ -371,7 +367,10 @@ public class UserInterface {
     protected void depositMoney() {
         System.out.println("Enter the account number you would like to deposit money into:");
         Optional<AccountDto> foundAccount = getAccountByAccountNumber();
-        if (foundAccount.isEmpty()) return;
+        if (foundAccount.isEmpty()) {
+            System.out.println("The account does not exist");
+            return;
+        }
 
         AccountDto accountDto = foundAccount.get();
         if (accountInactive(accountDto)) {
