@@ -3,6 +3,7 @@ package com.mehrdad.sample.bank.api.exception;
 
 import com.mehrdad.sample.bank.api.error.ApiError;
 import com.mehrdad.sample.bank.core.exception.ClientAlreadyActiveException;
+import com.mehrdad.sample.bank.core.exception.ClientAlreadyExistException;
 import com.mehrdad.sample.bank.core.exception.ClientAlreadyInactiveException;
 import com.mehrdad.sample.bank.core.exception.ClientNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
-import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -68,6 +68,24 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
+                .body(error);
+    }
+
+    @ExceptionHandler(ClientAlreadyExistException.class)
+    public ResponseEntity<ApiError> handleClientExist(
+            ClientAlreadyExistException ex,
+            HttpServletRequest request) {
+
+        ApiError error = new ApiError(
+                Instant.now(),
+                HttpStatus.CONFLICT.value(),
+                "CLIENT_ALREADY_EXIST",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
                 .body(error);
     }
 }

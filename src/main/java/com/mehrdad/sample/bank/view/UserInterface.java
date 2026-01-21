@@ -5,6 +5,7 @@ import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.api.dto.MoneyDto;
 import com.mehrdad.sample.bank.api.dto.TransactionDto;
 import com.mehrdad.sample.bank.core.entity.Currency;
+import com.mehrdad.sample.bank.core.entity.Status;
 import com.mehrdad.sample.bank.core.exception.AccountNotFoundException;
 import com.mehrdad.sample.bank.core.service.AccountService;
 import com.mehrdad.sample.bank.core.service.ClientService;
@@ -146,9 +147,9 @@ public class UserInterface {
         ClientDto client = clientService.getClientById(id);
 
         if (client != null) {
-            System.out.println("The client is already a member of this bank.");
+            System.out.println("The client is already a client of this bank.");
 
-            if (!client.isActive()) {
+            if (client.getStatus() == Status.INACTIVE) {
                 activateOrDeactivateClient(client);
             }
             return;
@@ -162,14 +163,10 @@ public class UserInterface {
                 .id(id)
                 .name(name)
                 .phoneNumber(phoneNumber)
-                .active(true)
+                .status(Status.ACTIVE)
                 .build();
-        //ClientDto newClient = new ClientDto(id, name, phoneNumber, true);
-        clientService.saveClient(newClient);
+        clientService.createClient(newClient);
         System.out.println(newClient.getName() + " was added to the repository.");
-
-        //made it static so it can also be accessed from ClientMenu but it didn't work
-        //AccountMenu.createAccountFor(newClient);
     }
 
     protected void updatePhoneNumber() {
@@ -201,7 +198,7 @@ public class UserInterface {
             return;
         }
 
-        if (!foundClient.isActive()) {
+        if (foundClient.getStatus() == Status.INACTIVE) {
             System.out.println(foundClient.getName() + "'s membership status is already inactive.");
             return;
         }
@@ -248,7 +245,7 @@ public class UserInterface {
         String userChoice = "";
 
         while (true) {
-            if (!client.isActive()) {
+            if (client.getStatus() == Status.INACTIVE) {
                 System.out.println(client.getName() + " is inactive");
                 System.out.println("Press A to ACTIVATE the client's membership, or Q to go back to main menu.");
                 userChoice = utility.getUserInputString();
@@ -370,7 +367,10 @@ public class UserInterface {
     protected void depositMoney() {
         System.out.println("Enter the account number you would like to deposit money into:");
         Optional<AccountDto> foundAccount = getAccountByAccountNumber();
-        if (foundAccount.isEmpty()) return;
+        if (foundAccount.isEmpty()) {
+            System.out.println("The account does not exist");
+            return;
+        }
 
         AccountDto accountDto = foundAccount.get();
         if (accountInactive(accountDto)) {

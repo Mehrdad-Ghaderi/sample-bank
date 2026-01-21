@@ -2,7 +2,9 @@ package com.mehrdad.sample.bank.core.service;
 
 import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
+import com.mehrdad.sample.bank.core.entity.Status;
 import com.mehrdad.sample.bank.core.exception.ClientAlreadyActiveException;
+import com.mehrdad.sample.bank.core.exception.ClientAlreadyExistException;
 import com.mehrdad.sample.bank.core.exception.ClientAlreadyInactiveException;
 import com.mehrdad.sample.bank.core.exception.ClientNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.ClientMapper;
@@ -27,14 +29,17 @@ public class ClientService {
     public ClientDto getClientById(String clientId) {
         return clientRepository.findById(clientId)
                 .map(clientMapper::toClientDto)
-                .orElseThrow(() ->new ClientNotFoundException(clientId));
+                .orElseThrow(() -> new ClientNotFoundException(clientId));
     }
 
     public Stream<ClientDto> getAllClients() {
         return clientRepository.findAll().stream().map(clientMapper::toClientDto);
     }
 
-    public ClientDto saveClient(ClientDto client) {
+    public ClientDto createClient(ClientDto client) {
+        if (clientRepository.findById(client.getId()).isPresent()) {
+            throw new ClientAlreadyExistException(client.getId());
+        }
         ClientEntity savedClientEntity = clientRepository.save(clientMapper.toClientEntity(client));
         return clientMapper.toClientDto(savedClientEntity);
     }
@@ -52,29 +57,29 @@ public class ClientService {
     }
 
     public void DeactivateClientById(String clientId) {
-            deactivateClient(clientId);
+        deactivateClient(clientId);
     }
 
     public void activateClient(String clientId) {
-        activateOrDeactivateClient(clientId, true);
+        activateOrDeactivateClient(clientId, Status.ACTIVE);
     }
 
     public void deactivateClient(String clientId) {
-        activateOrDeactivateClient(clientId, false);
+        activateOrDeactivateClient(clientId, Status.INACTIVE);
     }
 
-    private void activateOrDeactivateClient(String clientId, boolean state) {
+    private void activateOrDeactivateClient(String clientId, Status status) {
         ClientEntity foundClientEntity = clientRepository.findById(clientId)
                 .orElseThrow(() -> new ClientNotFoundException(clientId));
 
-        if (state && Boolean.TRUE.equals(foundClientEntity.getActive())) {
+        if (status == Status.ACTIVE && foundClientEntity.getStatus() == Status.ACTIVE) {
             throw new ClientAlreadyActiveException(clientId);
         }
 
-        if (!state && Boolean.FALSE.equals(foundClientEntity.getActive())) {
+        if (status == Status.INACTIVE && foundClientEntity.getStatus() == Status.INACTIVE) {
             throw new ClientAlreadyInactiveException(clientId);
         }
-        foundClientEntity.setActive(state);
+        foundClientEntity.setStatus(status);
         clientRepository.save(foundClientEntity);
     }
 }

@@ -2,6 +2,7 @@ package com.mehrdad.sample.bank.initializer;
 
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.ClientEntity;
+import com.mehrdad.sample.bank.core.entity.Status;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
 import com.mehrdad.sample.bank.core.repository.ClientRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,11 +24,11 @@ public class DataInitializer implements CommandLineRunner {
     private final ClientRepository clientRepository;
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         String defaultClientId = "111";
         String defaultAccountId = "111.1";
 
-        // Step 1: Ensure the client exists
+        // Step 1: Ensure the main bank(client and account exists
         ClientEntity bank;
 
         if (!clientRepository.existsById(defaultClientId)) {
@@ -59,7 +60,7 @@ public class DataInitializer implements CommandLineRunner {
         client.setId(defaultClientId);
         client.setName("BANK");
         client.setPhoneNumber("001111111111");
-        client.setActive(true);
+        client.setStatus(Status.ACTIVE);
         client.setAccounts(new ArrayList<>());
         return client;
     }

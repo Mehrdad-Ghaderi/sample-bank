@@ -3,7 +3,7 @@ package com.mehrdad.sample.bank.core.service;
 import com.mehrdad.sample.bank.api.dto.AccountDto;
 import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
-import com.mehrdad.sample.bank.core.entity.ClientEntity;
+import com.mehrdad.sample.bank.core.entity.Status;
 import com.mehrdad.sample.bank.core.exception.AccountNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.AccountMapper;
 import com.mehrdad.sample.bank.core.mapper.ClientMapper;
@@ -52,16 +52,13 @@ public class AccountService {
                 .map(AccountEntity::getClient)
                 .map(clientMapper::toClientDto)
                 .orElseThrow(() -> new AccountNotFoundException(accountNumber));
-
-//        Optional<AccountEntity> accountEntity = accountRepository.findById(accountNumber);
-//        return accountEntity.map(AccountEntity::getClient).map(clientMapper::toClientDto).orElse(null);
     }
 
 
     public List<AccountDto> getAllAccounts() {
 
         return clientRepository.findAll().parallelStream()
-                .filter(ClientEntity::getActive)
+                .filter(client -> client.getStatus() == Status.ACTIVE)
                 .map(clientMapper::toClientDto)
                 .map(ClientDto::getAccounts)
                 .flatMap(Collection::parallelStream)

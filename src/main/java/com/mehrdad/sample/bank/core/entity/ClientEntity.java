@@ -3,7 +3,6 @@ package com.mehrdad.sample.bank.core.entity;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -42,21 +41,13 @@ public class ClientEntity {
     @OneToMany(mappedBy = "client", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<AccountEntity> accounts;
 
-    @NotNull
-    @Column(name = "active", nullable = false)
-    private Boolean active;
-
-
-    public ClientEntity(String id, String name, String phoneNumber, Boolean active) {
-        this.id = id;
-        this.name = name;
-        this.phoneNumber = phoneNumber;
-        this.active = active;
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Status status;
 
     @Override
     public String toString() {
-        return String.format("ClientEntity{id='%s', name='%s', phoneNumber='%s', active=%s, accounts=%s}",
-                id, name, phoneNumber, active, accounts);
+        return String.format("ClientEntity{id='%s', name='%s', phoneNumber='%s', status=%s, accounts=%s}",
+                id, name, phoneNumber, status, accounts);
     }
 }

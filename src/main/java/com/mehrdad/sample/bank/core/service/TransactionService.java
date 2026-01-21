@@ -8,7 +8,6 @@ import com.mehrdad.sample.bank.core.entity.MoneyEntity;
 import com.mehrdad.sample.bank.core.entity.TransactionEntity;
 import com.mehrdad.sample.bank.core.exception.*;
 import com.mehrdad.sample.bank.core.mapper.AccountMapper;
-import com.mehrdad.sample.bank.core.mapper.ClientMapper;
 import com.mehrdad.sample.bank.core.mapper.MoneyMapper;
 import com.mehrdad.sample.bank.core.mapper.TransactionMapper;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
@@ -78,7 +77,7 @@ public class TransactionService {
      * @throws Exception if withdrawal or deposit fails
      */
     @Transactional
-    public boolean transfer(AccountDto sender, AccountDto receiver, MoneyDto money) throws Exception {
+    public boolean transfer(AccountDto sender, AccountDto receiver, MoneyDto money) {
         try {
             withdraw(sender, money, false);
             changeMoneyIdAndAccount(receiver, money);
