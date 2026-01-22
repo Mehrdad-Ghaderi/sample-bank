@@ -13,7 +13,6 @@ public class MoneyDto {
     private String id;
     private Currency currency;
     private BigDecimal amount;
-    //private AccountDto account;
 
     public MoneyDto(Currency currency, BigDecimal amount, AccountDto account) {
         this.id = account.getNumber() + currency;

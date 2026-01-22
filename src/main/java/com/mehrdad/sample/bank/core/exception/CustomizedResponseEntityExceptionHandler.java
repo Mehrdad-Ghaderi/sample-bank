@@ -58,8 +58,8 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
 
         return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }
-    @ExceptionHandler(ClientNotFoundException.class)
-    public final ResponseEntity<ErrorDetails> handleClientNotFoundException(Exception ex, WebRequest request) throws Exception {
+    @ExceptionHandler(CustomerNotFoundException.class)
+    public final ResponseEntity<ErrorDetails> handleCustomerNotFoundException(Exception ex, WebRequest request) throws Exception {
         ErrorDetails errorDetails = new ErrorDetails(LocalDateTime.now(),
                 ex.getMessage(), request.getDescription(false));
 

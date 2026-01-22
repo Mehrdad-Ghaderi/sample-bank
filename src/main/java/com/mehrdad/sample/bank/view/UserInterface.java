@@ -1,35 +1,16 @@
 package com.mehrdad.sample.bank.view;
 
-import com.mehrdad.sample.bank.api.dto.AccountDto;
-import com.mehrdad.sample.bank.api.dto.ClientDto;
-import com.mehrdad.sample.bank.api.dto.MoneyDto;
-import com.mehrdad.sample.bank.api.dto.TransactionDto;
-import com.mehrdad.sample.bank.core.entity.Currency;
-import com.mehrdad.sample.bank.core.entity.Status;
-import com.mehrdad.sample.bank.core.exception.AccountNotFoundException;
-import com.mehrdad.sample.bank.core.service.AccountService;
-import com.mehrdad.sample.bank.core.service.ClientService;
-import com.mehrdad.sample.bank.core.service.TransactionService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
-import java.math.BigDecimal;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import static java.util.Optional.ofNullable;
-
 /**
  * Created by Mehrdad Ghaderi, S&M
  * Date: 4/25/2025
  * Time: 12:59 AM
  */
 
-@Component
-@RequiredArgsConstructor
+/*@Component
+@RequiredArgsConstructor*/
 public class UserInterface {
 
+/*
     private final ClientService clientService;
     private final AccountService accountService;
     private final TransactionService transactionService;
@@ -160,7 +141,6 @@ public class UserInterface {
         System.out.println("Enter the phone number:");
         String phoneNumber = utility.getUserInputString();
         ClientDto newClient = new ClientDto.Builder()
-                .id(id)
                 .name(name)
                 .phoneNumber(phoneNumber)
                 .status(Status.ACTIVE)
@@ -546,5 +526,6 @@ public class UserInterface {
                 .map(moneyDto -> moneyDto.getCurrency() + "" + moneyDto.getAmount().negate())
                 .forEach(System.out::println);
     }
+*/
 
 }

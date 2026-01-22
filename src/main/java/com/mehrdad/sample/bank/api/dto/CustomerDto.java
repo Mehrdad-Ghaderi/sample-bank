@@ -2,7 +2,6 @@ package com.mehrdad.sample.bank.api.dto;
 
 
 import com.mehrdad.sample.bank.core.entity.Status;
-import jakarta.persistence.Entity;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -12,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by Mehrdad Ghaderi
@@ -20,10 +20,10 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClientDto {
+public class CustomerDto {
 
     @Size(max = 10)
-    private String id;
+    private UUID id;
     @NotBlank
     @Size(max = 45)
     private String name;
@@ -34,7 +34,7 @@ public class ClientDto {
     @NotNull
     private Status status;
 
-    public ClientDto(Builder builder) {
+    public CustomerDto(Builder builder) {
         this.id = builder.id;
         this.name = builder.name;
         this.phoneNumber = builder.phoneNumber;
@@ -49,7 +49,7 @@ public class ClientDto {
     }
 
     public static class Builder {
-        private String id;
+        private UUID id;
         private String name;
         private String phoneNumber;
         private List<AccountDto> accounts;
@@ -58,7 +58,7 @@ public class ClientDto {
         public Builder() {
         }
 
-        public Builder id(String id) {
+        public Builder id(UUID id) {
             this.id = id;
             return this;
         }
@@ -83,8 +83,8 @@ public class ClientDto {
             return this;
         }
 
-        public ClientDto build() {
-            return new ClientDto(this);
+        public CustomerDto build() {
+            return new CustomerDto(this);
         }
     }
 }

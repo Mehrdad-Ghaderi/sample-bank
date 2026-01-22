@@ -9,7 +9,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by Mehrdad Ghaderi
@@ -19,13 +21,15 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClientEntity {
+public class CustomerEntity {
 
     @Id
-    @NotBlank
-    @Size(max = 10, message = "ID cannot be longer than 10 characters")
+    @GeneratedValue
+    @Column(nullable = false, updatable = false)
+    private UUID id;
+
     @Column(length = 10, unique = true, nullable = false)
-    private String id;
+    private String externalReference;
 
     @NotBlank
     @Size(max = 45, message = "Name cannot be longer than 45 characters")
@@ -45,9 +49,17 @@ public class ClientEntity {
     @Column(nullable = false)
     private Status status;
 
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt = Instant.now();
+
+    @Column(nullable = false)
+    private Instant updatedAt = Instant.now();
+
     @Override
     public String toString() {
-        return String.format("ClientEntity{id='%s', name='%s', phoneNumber='%s', status=%s, accounts=%s}",
-                id, name, phoneNumber, status, accounts);
+        return String.format(
+                "CustomerEntity{id=%s, name='%s', phoneNumber='%s', status=%s, createdAt=%s, updatedAt=%s}",
+                id, name, phoneNumber, status, createdAt, updatedAt
+        );
     }
 }

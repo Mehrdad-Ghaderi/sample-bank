@@ -2,10 +2,10 @@ package com.mehrdad.sample.bank.api.exception;
 
 
 import com.mehrdad.sample.bank.api.error.ApiError;
-import com.mehrdad.sample.bank.core.exception.ClientAlreadyActiveException;
-import com.mehrdad.sample.bank.core.exception.ClientAlreadyExistException;
-import com.mehrdad.sample.bank.core.exception.ClientAlreadyInactiveException;
-import com.mehrdad.sample.bank.core.exception.ClientNotFoundException;
+import com.mehrdad.sample.bank.core.exception.CustomerAlreadyActiveException;
+import com.mehrdad.sample.bank.core.exception.CustomerAlreadyExistException;
+import com.mehrdad.sample.bank.core.exception.CustomerAlreadyInactiveException;
+import com.mehrdad.sample.bank.core.exception.CustomerNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,15 +17,15 @@ import java.time.Instant;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ClientAlreadyActiveException.class)
-    public ResponseEntity<ApiError> handleClientAlreadyActive(
-            ClientAlreadyActiveException ex,
+    @ExceptionHandler(CustomerAlreadyActiveException.class)
+    public ResponseEntity<ApiError> handleCustomerAlreadyActive(
+            CustomerAlreadyActiveException ex,
             HttpServletRequest request) {
 
         ApiError error = new ApiError(
                 Instant.now(),
                 HttpStatus.CONFLICT.value(),
-                "CLIENT_ALREADY_ACTIVE",
+                "Customer_ALREADY_ACTIVE",
                 ex.getMessage(),
                 request.getRequestURI()
         );
@@ -35,15 +35,15 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
-    @ExceptionHandler(ClientAlreadyInactiveException.class)
-    public ResponseEntity<ApiError> handleClientAlreadyInactive(
-            ClientAlreadyInactiveException ex,
+    @ExceptionHandler(CustomerAlreadyInactiveException.class)
+    public ResponseEntity<ApiError> handleCustomerAlreadyInactive(
+            CustomerAlreadyInactiveException ex,
             HttpServletRequest request) {
 
         ApiError error = new ApiError(
                 Instant.now(),
                 HttpStatus.CONFLICT.value(),
-                "CLIENT_ALREADY_INACTIVE",
+                "Customer_ALREADY_INACTIVE",
                 ex.getMessage(),
                 request.getRequestURI()
         );
@@ -53,15 +53,15 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
-    @ExceptionHandler(ClientNotFoundException.class)
-    public ResponseEntity<ApiError> handleClientNotFound(
-            ClientNotFoundException ex,
+    @ExceptionHandler(CustomerNotFoundException.class)
+    public ResponseEntity<ApiError> handleCustomerNotFound(
+            CustomerNotFoundException ex,
             HttpServletRequest request) {
 
         ApiError error = new ApiError(
                 Instant.now(),
                 HttpStatus.CONFLICT.value(),
-                "CLIENT_NOT_FOUND",
+                "Customer_NOT_FOUND",
                 ex.getMessage(),
                 request.getRequestURI()
         );
@@ -71,15 +71,15 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
-    @ExceptionHandler(ClientAlreadyExistException.class)
-    public ResponseEntity<ApiError> handleClientExist(
-            ClientAlreadyExistException ex,
+    @ExceptionHandler(CustomerAlreadyExistException.class)
+    public ResponseEntity<ApiError> handleCustomerExist(
+            CustomerAlreadyExistException ex,
             HttpServletRequest request) {
 
         ApiError error = new ApiError(
                 Instant.now(),
                 HttpStatus.CONFLICT.value(),
-                "CLIENT_ALREADY_EXIST",
+                "Customer_ALREADY_EXIST",
                 ex.getMessage(),
                 request.getRequestURI()
         );

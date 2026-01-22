@@ -1,7 +1,7 @@
 package com.mehrdad.sample.bank.api.controllers;
 
 import com.mehrdad.sample.bank.core.service.AccountService;
-import com.mehrdad.sample.bank.core.service.ClientService;
+import com.mehrdad.sample.bank.core.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class HomeController {
 
     @Autowired
-    ClientService clientService;
+    CustomerService customerService;
     @Autowired
     AccountService accountService;
 
@@ -27,8 +27,8 @@ public class HomeController {
     @GetMapping("/home")
     public String displayHome(Model model) {
 
-        long clientsCount = clientService.getAllClients().count();
-        model.addAttribute("clientsCount", clientsCount);
+        long customersCount = customerService.getAllCustomers().count();
+        model.addAttribute("customersCount", customersCount);
 
         long accountsCount = accountService.getAllAccounts().stream().count();
         model.addAttribute("accountsCount", accountsCount);
