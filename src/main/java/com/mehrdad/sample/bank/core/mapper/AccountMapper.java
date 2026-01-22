@@ -1,9 +1,8 @@
 package com.mehrdad.sample.bank.core.mapper;
 
 import com.mehrdad.sample.bank.api.dto.AccountDto;
-import com.mehrdad.sample.bank.api.dto.ClientDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
-import com.mehrdad.sample.bank.core.entity.ClientEntity;
+import com.mehrdad.sample.bank.core.entity.CustomerEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -42,7 +41,7 @@ public class AccountMapper {
                 .collect(Collectors.toList());
     }
 
-    public AccountEntity toAccountEntity(AccountDto accountDto, ClientEntity clientEntity) {
+    public AccountEntity toAccountEntity(AccountDto accountDto, CustomerEntity customerEntity) {
         if (accountDto == null) {
             return null;
         }
@@ -50,17 +49,17 @@ public class AccountMapper {
         accountEntity.setNumber(accountDto.getNumber());
         accountEntity.setActive(accountDto.getActive());
         accountEntity.setMoneys(moneyMapper.toMoneyEntityList(accountDto.getMoneys()));
-        accountEntity.setClient(clientEntity);
+        accountEntity.setCustomer(customerEntity);
 
         return accountEntity;
     }
 
-    public List<AccountEntity> toAccountEntityList(List<AccountDto> dtoList, ClientEntity clientEntity) {
+    public List<AccountEntity> toAccountEntityList(List<AccountDto> dtoList, CustomerEntity customerEntity) {
         if (dtoList == null) {
             return null;
         }
         return dtoList.parallelStream()
-                .map(dto -> toAccountEntity(dto, clientEntity))
+                .map(dto -> toAccountEntity(dto, customerEntity))
                 .collect(Collectors.toList());
     }
 

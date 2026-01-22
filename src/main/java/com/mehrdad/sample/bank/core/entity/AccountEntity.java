@@ -33,7 +33,7 @@ public class AccountEntity {
     @JsonBackReference
     @NotNull
     @ManyToOne(fetch = FetchType.EAGER)
-    private ClientEntity client;
+    private CustomerEntity customer;
 
     @NotNull
     @Column(name = "active", nullable = false)
@@ -43,9 +43,9 @@ public class AccountEntity {
     @JoinColumn(name = "account_number")
     private List<MoneyEntity> moneys;
 
-    public AccountEntity(String number, ClientEntity client, Boolean status) {
+    public AccountEntity(String number, CustomerEntity customer, Boolean status) {
         this.number = number;
-        this.client = client;
+        this.customer = customer;
         this.active = status;
     }
 

@@ -1,8 +1,5 @@
 package com.mehrdad.sample.bank.view;
 
-import com.mehrdad.sample.bank.core.service.AccountService;
-import com.mehrdad.sample.bank.core.service.ClientService;
-import com.mehrdad.sample.bank.core.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,9 +11,10 @@ import java.util.Scanner;
 /**
  * Created by Mehrdad Ghaderi
  */
-@Service
-@RequiredArgsConstructor
+/*@Service
+@RequiredArgsConstructor*/
 public class Utility {
+/*
     private final Scanner scanner;
 
     protected BigDecimal getUserBigDecimal() {
@@ -51,4 +49,5 @@ public class Utility {
             }
         }
     }
+*/
 }

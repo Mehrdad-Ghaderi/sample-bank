@@ -2,14 +2,13 @@ package com.mehrdad.sample.bank.api.controllers;
 
 import com.mehrdad.sample.bank.api.dto.AccountDto;
 import com.mehrdad.sample.bank.core.service.AccountService;
-import com.mehrdad.sample.bank.core.service.ClientService;
+import com.mehrdad.sample.bank.core.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
 import java.util.List;
+import java.util.UUID;
 
 
 /**
@@ -24,12 +23,12 @@ public class AccountController {
     public static final String ACCOUNTS = API_V1 + "/accounts";
     public static final String ACCOUNT_BY_ID = ACCOUNTS + "/{accountNumber}";
 
-    public static final String CLIENTS = API_V1 + "/clients";
-    public static final String CLIENT_ACCOUNTS = CLIENTS + "/{clientId}/accounts";
+    public static final String CLIENTS = API_V1 + "/customers";
+    public static final String CLIENT_ACCOUNTS = CLIENTS + "/{customerId}/accounts";
 
 
     private final AccountService accountService;
-    private final ClientService clientService;
+    private final CustomerService customerService;
 
     @GetMapping(ACCOUNTS)
     public List<AccountDto> getAccounts() {
@@ -46,22 +45,22 @@ public class AccountController {
     }
 
     @GetMapping(CLIENT_ACCOUNTS)
-    public ResponseEntity<List<AccountDto>> getAccountsByClientId(@PathVariable String clientId) {
+    public ResponseEntity<List<AccountDto>> getAccountsByCustomerId(@PathVariable UUID customerId) {
 
-        List<AccountDto> accounts = accountService.getAccountsByClientId(clientId);
+        List<AccountDto> accounts = accountService.getAccountsByCustomerId(customerId);
         return ResponseEntity.ok(accounts);
     }
 
     /**
-     * Get all accounts belonging to a client
+     * Get all accounts belonging to a customer
      */
   /*  @PostMapping(CLIENT_ACCOUNTS)
-    public ResponseEntity<Object> createAccountByClientId(@PathVariable("clientId") String clientID,
+    public ResponseEntity<Object> createAccountByCustomerId(@PathVariable("customerId") UUID customerID,
                                                           @RequestBody AccountDto accountDto) {
 
-        ClientDto foundClient = clientService.getClientById(clientID);
+        CustomerDto foundCustomer = customerService.getCustomerById(customerID);
 
-        accountService.createAccount(accountDto, foundClient);
+        accountService.createAccount(accountDto, foundCustomer);
         AccountDto savedAccountDto = accountService.getAccountByAccountNumber(accountDto.getNumber());
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -75,14 +74,14 @@ public class AccountController {
 
     /*
     *//**
-     * Create a new account for a client
+     * Create a new account for a customer
      *//*
     @PostMapping(CLIENT_ACCOUNTS)
-    public ResponseEntity<AccountDto> createAccountForClient(
-            @PathVariable String clientId,
+    public ResponseEntity<AccountDto> createAccountForCustomer(
+            @PathVariable String customerId,
             @RequestBody @Valid CreateAccountRequest request) {
 
-        AccountDto created = accountService.createAccountForClient(clientId, request);
+        AccountDto created = accountService.createAccountForCustomer(customerId, request);
 
         URI location = URI.create(
                 "/api/v1/accounts/" + created.getAccountNumber()

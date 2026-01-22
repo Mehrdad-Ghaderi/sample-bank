@@ -1,14 +1,14 @@
 package com.mehrdad.sample.bank.core.service;
 
 import com.mehrdad.sample.bank.api.dto.AccountDto;
-import com.mehrdad.sample.bank.api.dto.ClientDto;
+import com.mehrdad.sample.bank.api.dto.CustomerDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.Status;
 import com.mehrdad.sample.bank.core.exception.AccountNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.AccountMapper;
-import com.mehrdad.sample.bank.core.mapper.ClientMapper;
+import com.mehrdad.sample.bank.core.mapper.CustomerMapper;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
-import com.mehrdad.sample.bank.core.repository.ClientRepository;
+import com.mehrdad.sample.bank.core.repository.CustomerRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -20,16 +20,16 @@ import java.util.stream.Collectors;
 @Service
 public class AccountService {
 
-    private final ClientRepository clientRepository;
+    private final CustomerRepository customerRepository;
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
-    private final ClientMapper clientMapper;
-    private final ClientService clientService;
+    private final CustomerMapper clientMapper;
+    private final CustomerService clientService;
 
-    public AccountService(ClientRepository clientRepository, AccountRepository accountRepository,
-                          AccountMapper accountMapper, ClientMapper clientMapper, ClientService clientService) {
+    public AccountService(CustomerRepository customerRepository, AccountRepository accountRepository,
+                          AccountMapper accountMapper, CustomerMapper clientMapper, CustomerService clientService) {
 
-        this.clientRepository = clientRepository;
+        this.customerRepository = customerRepository;
         this.accountRepository = accountRepository;
         this.accountMapper = accountMapper;
         this.clientMapper = clientMapper;
@@ -43,37 +43,37 @@ public class AccountService {
                 .orElseThrow(() -> new AccountNotFoundException(accountNumber));
     }
 
-    public List<AccountDto> getAccountsByClientId(String clientId) {
-        return clientService.getClientById(clientId).getAccounts();
+    public List<AccountDto> getAccountsByCustomerId(UUID clientId) {
+        return clientService.getCustomerById(clientId).getAccounts();
     }
 
-    public ClientDto getClientByAccountNumber(String accountNumber) {
+    public CustomerDto getCustomerByAccountNumber(String accountNumber) {
         return accountRepository.findById(accountNumber)
-                .map(AccountEntity::getClient)
-                .map(clientMapper::toClientDto)
+                .map(AccountEntity::getCustomer)
+                .map(clientMapper::toCustomerDto)
                 .orElseThrow(() -> new AccountNotFoundException(accountNumber));
     }
 
 
     public List<AccountDto> getAllAccounts() {
 
-        return clientRepository.findAll().parallelStream()
+        return customerRepository.findAll().parallelStream()
                 .filter(client -> client.getStatus() == Status.ACTIVE)
-                .map(clientMapper::toClientDto)
-                .map(ClientDto::getAccounts)
+                .map(clientMapper::toCustomerDto)
+                .map(CustomerDto::getAccounts)
                 .flatMap(Collection::parallelStream)
                 .filter(AccountDto::getActive)
                 .collect(Collectors.toList());
     }
 
-    public void save(AccountDto account, ClientDto clientDto) {
-        accountRepository.save(accountMapper.toAccountEntity(account, clientMapper.toClientEntity(clientDto)));
+    public void save(AccountDto account, CustomerDto customerDto) {
+        accountRepository.save(accountMapper.toAccountEntity(account, clientMapper.toCustomerEntity(customerDto)));
     }
 
-    public boolean createAccount(AccountDto account, ClientDto clientDto) {
+    public boolean createAccount(AccountDto account, CustomerDto customerDto) {
         try {
             account.setActive(true);
-            save(account, clientDto);
+            save(account, customerDto);
             return true;
         } catch (Exception e) {
             e.printStackTrace();

@@ -1,25 +1,5 @@
 package com.mehrdad.sample.bank.core.service;
 
-import com.mehrdad.sample.bank.api.dto.AccountDto;
-import com.mehrdad.sample.bank.api.dto.ClientDto;
-import com.mehrdad.sample.bank.core.entity.AccountEntity;
-import com.mehrdad.sample.bank.core.entity.ClientEntity;
-import com.mehrdad.sample.bank.core.mapper.AccountMapper;
-import com.mehrdad.sample.bank.core.mapper.ClientMapper;
-import com.mehrdad.sample.bank.core.repository.AccountRepository;
-import com.mehrdad.sample.bank.core.repository.ClientRepository;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 /**
  * Created by Mehrdad Ghaderi, S&M
  * Date: 5/23/2025
@@ -29,7 +9,7 @@ import static org.mockito.Mockito.*;
 class AccountServiceTest {
 
 //    @Mock
-//    private ClientRepository clientRepository;
+//    private CustomerRepository customerRepository;
 //
 //    @Mock
 //    private AccountRepository accountRepository;
@@ -38,7 +18,7 @@ class AccountServiceTest {
 //    private AccountMapper accountMapper;
 //
 //    @Mock
-//    private ClientMapper clientMapper;
+//    private CustomerMapper customerMapper;
 //
 //    @InjectMocks
 //    private AccountService accountService;
@@ -47,16 +27,16 @@ class AccountServiceTest {
 //    void getAccountByAccountNumber() {
 //        String accountNumber = "ACC123";
 //
-//        // Create mock AccountEntity and ClientEntity
+//        // Create mock AccountEntity and CustomerEntity
 //        AccountEntity mockAccountEntity = new AccountEntity();
 //        mockAccountEntity.setNumber(accountNumber);
-//        ClientEntity mockClientEntity = new ClientEntity();
-//        mockAccountEntity.setClient(mockClientEntity);
+//        CustomerEntity mockCustomerEntity = new CustomerEntity();
+//        mockAccountEntity.setCustomer(mockCustomerEntity);
 //
 //        // Mock behavior: accountRepository.findById
 //        when(accountRepository.findById(accountNumber)).thenReturn(Optional.of(mockAccountEntity));
 //
-//        // Mock behavior: clientMapper.toClientDto
+//        // Mock behavior: customerMapper.toCustomerDto
 //
 //        // Mock behavior: accountMapper.toAccountDto
 //        AccountDto mockAccountDto = new AccountDto();
@@ -77,18 +57,18 @@ class AccountServiceTest {
 //    @Test
 //    void testGetAllAccounts_ReturnsActiveAccounts() {
 //        // Arrange
-//        ClientEntity client1 = new ClientEntity();
-//        client1.setActive(true);
+//        CustomerEntity customer1 = new CustomerEntity();
+//        customer1.setActive(true);
 //
-//        ClientEntity client2 = new ClientEntity();
-//        client2.setActive(false); // should be ignored
+//        CustomerEntity customer2 = new CustomerEntity();
+//        customer2.setActive(false); // should be ignored
 //
-//        List<ClientEntity> clientEntities = List.of(client1, client2);
+//        List<CustomerEntity> customerEntities = List.of(customer1, customer2);
 //
-//        when(clientRepository.findAll()).thenReturn(clientEntities);
+//        when(customerRepository.findAll()).thenReturn(customerEntities);
 //
-//        // Create DTOs for active client
-//        ClientDto clientDto1 = new ClientDto();
+//        // Create DTOs for active customer
+//        CustomerDto customerDto1 = new CustomerDto();
 //
 //        AccountDto activeAccount1 = new AccountDto();
 //        activeAccount1.setActive(true);
@@ -96,9 +76,9 @@ class AccountServiceTest {
 //        AccountDto inactiveAccount = new AccountDto();
 //        inactiveAccount.setActive(false); // should be filtered out
 //
-//        clientDto1.setAccounts(List.of(activeAccount1, inactiveAccount));
+//        customerDto1.setAccounts(List.of(activeAccount1, inactiveAccount));
 //
-//        when(clientMapper.toClientDto(client1)).thenReturn(clientDto1);
+//        when(customerMapper.toCustomerDto(customer1)).thenReturn(customerDto1);
 //
 //        // Act
 //        List<AccountDto> result = accountService.getAllAccounts();
@@ -109,9 +89,9 @@ class AccountServiceTest {
 //        assertTrue(result.get(0).getActive());
 //
 //        // Verify
-//        verify(clientRepository).findAll();
-//        verify(clientMapper).toClientDto(client1);
-//        verify(clientMapper, never()).toClientDto(client2); // client2 is inactive
+//        verify(customerRepository).findAll();
+//        verify(customerMapper).toCustomerDto(customer1);
+//        verify(customerMapper, never()).toCustomerDto(customer2); // customer2 is inactive
 //    }
 //
 //
@@ -119,23 +99,23 @@ class AccountServiceTest {
 //    void save_shouldMapAndPersistAccount() {
 //        // Arrange
 //        AccountDto mockAccountDto = new AccountDto();
-//        ClientDto mockClientDto = new ClientDto();
+//        CustomerDto mockCustomerDto = new CustomerDto();
 //
-//        ClientEntity mockClientEntity = new ClientEntity();
+//        CustomerEntity mockCustomerEntity = new CustomerEntity();
 //        AccountEntity mockAccountEntity = new AccountEntity();
 //
-//        // Stub clientMapper conversion (important!)
-//        when(clientMapper.toClientEntity(mockClientDto)).thenReturn(mockClientEntity);
+//        // Stub customerMapper conversion (important!)
+//        when(customerMapper.toCustomerEntity(mockCustomerDto)).thenReturn(mockCustomerEntity);
 //
 //        // Stub accountMapper conversion
-//        when(accountMapper.toAccountEntity(mockAccountDto, mockClientEntity)).thenReturn(mockAccountEntity);
+//        when(accountMapper.toAccountEntity(mockAccountDto, mockCustomerEntity)).thenReturn(mockAccountEntity);
 //
 //        // Act
-//        accountService.save(mockAccountDto, mockClientDto);
+//        accountService.save(mockAccountDto, mockCustomerDto);
 //
 //        // Assert
-//        verify(clientMapper).toClientEntity(mockClientDto);
-//        verify(accountMapper).toAccountEntity(mockAccountDto, mockClientEntity);
+//        verify(customerMapper).toCustomerEntity(mockCustomerDto);
+//        verify(accountMapper).toAccountEntity(mockAccountDto, mockCustomerEntity);
 //        verify(accountRepository).save(mockAccountEntity);
 //    }
 //
@@ -145,12 +125,12 @@ class AccountServiceTest {
 //    void createAccount_shouldReturnTrue_whenSaveIsSuccessful() {
 //        // Arrange
 //        AccountDto account = new AccountDto();
-//        ClientDto client = new ClientDto();
+//        CustomerDto customer = new CustomerDto();
 //
 //        // No need to stub anything; we just want save to run without error
 //
 //        // Act
-//        boolean result = accountService.createAccount(account, client);
+//        boolean result = accountService.createAccount(account, customer);
 //
 //        // Assert
 //        assertTrue(result);
@@ -162,14 +142,14 @@ class AccountServiceTest {
 //    void createAccount_shouldReturnFalse_whenSaveThrowsException() {
 //        // Arrange
 //        AccountDto account = new AccountDto();
-//        ClientDto client = new ClientDto();
+//        CustomerDto customer = new CustomerDto();
 //
 //        // Stub accountRepository.save() to throw exception
 //        doThrow(new RuntimeException("DB Error"))
 //                .when(accountRepository).save(any());
 //
 //        // Act
-//        boolean result = accountService.createAccount(account, client);
+//        boolean result = accountService.createAccount(account, customer);
 //
 //        // Assert
 //        assertFalse(result);
