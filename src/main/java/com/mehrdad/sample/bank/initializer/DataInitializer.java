@@ -26,7 +26,6 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        UUID id = UUID.randomUUID();
         String defaultCustomerName = "BANK";
         String defaultAccountId = "111.1";
 
@@ -44,14 +43,6 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
-    private static AccountEntity createBankAccount(String defaultAccountId, CustomerEntity bank) {
-        AccountEntity account = new AccountEntity();
-        account.setNumber(defaultAccountId);
-        account.setActive(true);
-        account.setCustomer(bank);
-        return account;
-    }
-
     private static CustomerEntity createBank(String defaultCustomerId) {
         CustomerEntity client;
         client = new CustomerEntity();
@@ -60,5 +51,13 @@ public class DataInitializer implements CommandLineRunner {
         client.setStatus(Status.ACTIVE);
         client.setAccounts(new ArrayList<>());
         return client;
+    }
+
+    private static AccountEntity createBankAccount(String defaultAccountId, CustomerEntity bank) {
+        AccountEntity account = new AccountEntity();
+        account.setNumber(defaultAccountId);
+        account.setStatus(Status.ACTIVE);
+        account.setCustomer(bank);
+        return account;
     }
 }

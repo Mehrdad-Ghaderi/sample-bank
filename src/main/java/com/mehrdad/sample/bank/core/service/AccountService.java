@@ -62,7 +62,7 @@ public class AccountService {
                 .map(clientMapper::toCustomerDto)
                 .map(CustomerDto::getAccounts)
                 .flatMap(Collection::parallelStream)
-                .filter(AccountDto::getActive)
+                .filter(account -> account.getStatus() == Status.ACTIVE)
                 .collect(Collectors.toList());
     }
 
@@ -72,7 +72,7 @@ public class AccountService {
 
     public boolean createAccount(AccountDto account, CustomerDto customerDto) {
         try {
-            account.setActive(true);
+            account.setStatus(Status.ACTIVE);
             save(account, customerDto);
             return true;
         } catch (Exception e) {
@@ -82,18 +82,18 @@ public class AccountService {
     }
 
     public void freezeAccount(String accountNumber) {
-        freezeOrUnfreezeAccount(accountNumber, false);
+        freezeOrUnfreezeAccount(accountNumber, Status.FROZEN);
     }
 
     public void unfreezeAccount(String accountNumber) {
-        freezeOrUnfreezeAccount(accountNumber, true);
+        freezeOrUnfreezeAccount(accountNumber, Status.ACTIVE);
     }
 
-    public void freezeOrUnfreezeAccount(String accountNumber, Boolean activate) {
+    public void freezeOrUnfreezeAccount(String accountNumber, Status status) {
         AccountEntity foundAccount = accountRepository.findById(accountNumber)
                 .orElseThrow(() -> new AccountNotFoundException(accountNumber));
 
-        foundAccount.setActive(activate);
+        foundAccount.setStatus(status);
         accountRepository.save(foundAccount);
     }
 }

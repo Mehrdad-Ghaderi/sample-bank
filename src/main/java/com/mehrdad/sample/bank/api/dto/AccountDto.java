@@ -1,6 +1,7 @@
 package com.mehrdad.sample.bank.api.dto;
 
 
+import com.mehrdad.sample.bank.core.entity.Status;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -23,21 +24,21 @@ public class AccountDto {
     private String number;
 
     @NotNull
-    private Boolean active;
+    private Status status;
 
     @NotNull
     private List<MoneyDto> moneys;
 
-    public AccountDto(String number, Boolean status) {
+    public AccountDto(String number, Status status) {
         this.number = number;
-        this.active = status;
+        this.status = status;
     }
 
 
     @Override
     public String toString() {
-        return String.format("no='%s', balance=%s %s",
-                number, printMoneys(), active? "active" : "deactivated");
+        return String.format("number='%s', balance=%s, status=%s",
+                number, printMoneys(), status);
     }
 
     private String printMoneys() {

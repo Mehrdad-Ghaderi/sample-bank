@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by Mehrdad Ghaderi
@@ -26,6 +27,10 @@ import java.util.List;
 public class AccountEntity {
 
     @Id
+    @GeneratedValue
+    @Column(nullable = false, updatable = false)
+    private UUID id;
+
     @NotBlank
     @Size(max = 10, message = "Account number cannot be longer than 10 characters")
     private String number;
@@ -35,24 +40,18 @@ public class AccountEntity {
     @ManyToOne(fetch = FetchType.EAGER)
     private CustomerEntity customer;
 
-    @NotNull
-    @Column(name = "active", nullable = false)
-    private Boolean active;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Status status;
 
     @OneToMany(/*mappedBy = "account", */fetch = FetchType.EAGER)
     @JoinColumn(name = "account_number")
     private List<MoneyEntity> moneys;
 
-    public AccountEntity(String number, CustomerEntity customer, Boolean status) {
-        this.number = number;
-        this.customer = customer;
-        this.active = status;
-    }
-
     @Override
     public String toString() {
         return String.format("%s , active=%s}",
-                number, active);
+                number, status);
     }
 
 }
