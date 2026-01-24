@@ -1,20 +1,20 @@
 package com.mehrdad.sample.bank.core.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.Instant;
+import java.util.UUID;
 
 /**
  * Created by Mehrdad Ghaderi
  */
 @Entity
+@Table(name = "transaction_entity")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,42 +22,24 @@ import java.time.format.DateTimeFormatter;
 public class TransactionEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue
+    private UUID id;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "sender_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_account_id", nullable = false)
     private AccountEntity sender;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "receiver_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receiver_account_id", nullable = false)
     private AccountEntity receiver;
 
-    @NotNull
+    @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal amount;
 
-    @NotNull
-    private String currency;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 3)
+    private Currency currency;
 
-    @NotNull
-    private LocalDateTime transactionTime;
-
-    public TransactionEntity(AccountEntity sender, AccountEntity receiver, BigDecimal amount, String currency) {
-        this.sender = sender;
-        this.receiver = receiver;
-        this.amount = amount;
-        this.currency = currency;
-        this.transactionTime = LocalDateTime.now();
-    }
-
-    @Override
-    public String toString() {
-        return "Transaction: " + currency +amount +
-                " from " + sender.getNumber() +
-                " to " + receiver.getNumber() +
-                " " +
-                transactionTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss"));
-    }
+    @Column(nullable = false)
+    private Instant transactionTime = Instant.now();
 }

@@ -1,30 +1,43 @@
 package com.mehrdad.sample.bank.api.dto;
 
 
+import com.mehrdad.sample.bank.core.entity.Currency;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.Instant;
+import java.util.UUID;
 
 /**
  * Created by Mehrdad Ghaderi
  */
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class TransactionDto {
+    @NotNull
+    private UUID id;
 
-    private Long id;
+    @NotNull
     private AccountDto sender;
-    private AccountDto receiver;
-    private BigDecimal amount;
-    private String currency;
-    private LocalDateTime transactionTime;
 
-    public TransactionDto(AccountDto sender, AccountDto receiver, BigDecimal amount, String currency) {
-        this.sender = sender;
-        this.receiver = receiver;
-        this.amount = amount;
-        this.currency = currency;
-        this.transactionTime = LocalDateTime.now();
-    }
+    @NotNull
+    private AccountDto receiver;
+
+    @NotNull
+    private BigDecimal amount;
+
+    @NotNull
+    private Currency currency;
+
+    @NotNull
+    private Instant transactionTime;
+
 
     public TransactionDto(Builder builder) {
         this.id = builder.id;
@@ -35,84 +48,18 @@ public class TransactionDto {
         this.transactionTime = builder.transactionTime;
     }
 
-    public TransactionDto() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    @NotNull
-    public AccountDto getSender() {
-        return sender;
-    }
-
-    public void setSender(AccountDto sender) {
-        this.sender = sender;
-    }
-
-    @NotNull
-    public AccountDto getReceiver() {
-        return receiver;
-    }
-
-    public void setReceiver(AccountDto receiver) {
-        this.receiver = receiver;
-    }
-
-    @NotNull
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
-
-    @NotNull
-    public String getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
-
-    @NotNull
-    public LocalDateTime getTransactionTime() {
-        return transactionTime;
-    }
-
-    public void setTransactionTime(LocalDateTime transactionTime) {
-        this.transactionTime = transactionTime;
-    }
-
-    @Override
-    public String toString() {
-        return "Transaction{" +
-                ", Sender=" + sender.getNumber() + " " + sender.getNumber() +
-                ", Receiver=" + receiver.getNumber() + " " + receiver.getNumber() +
-                ", Amount=" + amount + currency +
-                ", Time=" + transactionTime.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss")) +
-                '}';
-    }
-
     public static class Builder{
-        private Long id;
+        private UUID id;
         private AccountDto sender;
         private AccountDto receiver;
         private BigDecimal amount;
-        private String currency;
-        private LocalDateTime transactionTime;
+        private Currency currency;
+        private Instant transactionTime;
 
         public Builder() {
         }
 
-        public Builder id(Long id) {
+        public Builder id(UUID id) {
             this.id = id;
             return this;
         }
@@ -131,12 +78,12 @@ public class TransactionDto {
             return this;
         }
 
-        public Builder currency(String currency) {
+        public Builder currency(Currency currency) {
             this.currency = currency;
             return this;
         }
 
-        public Builder transactionTie(LocalDateTime transactionTime) {
+        public Builder transactionTie(Instant transactionTime) {
             this.transactionTime = transactionTime;
             return this;
         }

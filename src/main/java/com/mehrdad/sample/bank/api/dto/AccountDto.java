@@ -1,6 +1,7 @@
 package com.mehrdad.sample.bank.api.dto;
 
 
+import com.mehrdad.sample.bank.core.entity.Status;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by Mehrdad Ghaderi
@@ -20,24 +22,21 @@ import java.util.List;
 public class AccountDto {
 
     @NotBlank
+    private UUID id;
+
+    @NotBlank
     private String number;
 
     @NotNull
-    private Boolean active;
+    private Status status;
 
     @NotNull
     private List<MoneyDto> moneys;
 
-    public AccountDto(String number, Boolean status) {
-        this.number = number;
-        this.active = status;
-    }
-
-
     @Override
     public String toString() {
-        return String.format("no='%s', balance=%s %s",
-                number, printMoneys(), active? "active" : "deactivated");
+        return String.format("number='%s', balance=%s, status=%s",
+                number, printMoneys(), status);
     }
 
     private String printMoneys() {

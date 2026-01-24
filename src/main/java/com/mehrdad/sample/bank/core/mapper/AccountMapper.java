@@ -26,7 +26,7 @@ public class AccountMapper {
         }
         AccountDto accountDto = new AccountDto();
         accountDto.setNumber(accountEntity.getNumber());
-        accountDto.setActive(accountEntity.getActive());
+        accountDto.setStatus(accountEntity.getStatus());
         accountDto.setMoneys(moneyMapper.toMoneyDtoList(accountEntity.getMoneys()));
 
         return accountDto;
@@ -36,7 +36,7 @@ public class AccountMapper {
         if (entityList == null) {
             return null;
         }
-        return entityList.parallelStream()
+        return entityList.stream()
                 .map(this::toAccountDto)
                 .collect(Collectors.toList());
     }
@@ -47,7 +47,7 @@ public class AccountMapper {
         }
         AccountEntity accountEntity = new AccountEntity();
         accountEntity.setNumber(accountDto.getNumber());
-        accountEntity.setActive(accountDto.getActive());
+        accountEntity.setStatus(accountDto.getStatus());
         accountEntity.setMoneys(moneyMapper.toMoneyEntityList(accountDto.getMoneys()));
         accountEntity.setCustomer(customerEntity);
 
@@ -58,7 +58,7 @@ public class AccountMapper {
         if (dtoList == null) {
             return null;
         }
-        return dtoList.parallelStream()
+        return dtoList.stream()
                 .map(dto -> toAccountEntity(dto, customerEntity))
                 .collect(Collectors.toList());
     }

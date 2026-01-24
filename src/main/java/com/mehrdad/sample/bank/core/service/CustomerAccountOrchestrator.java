@@ -1,6 +1,7 @@
 package com.mehrdad.sample.bank.core.service;
 
 import com.mehrdad.sample.bank.api.dto.AccountDto;
+import com.mehrdad.sample.bank.core.entity.Status;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,15 +21,15 @@ public class CustomerAccountOrchestrator {
     }
 
     @Transactional
-    public void updateCustomerAndAccountsStatus(UUID customerId, boolean activate) {
-        if (activate) {
+    public void updateCustomerAndAccountsStatus(UUID customerId, Status status) {
+        if (status == Status.ACTIVE) {
             customerService.activateCustomer(customerId);
         } else {
             customerService.DeactivateCustomerById(customerId);
         }
         List<AccountDto> accounts = accountService.getAccountsByCustomerId(customerId);
         for (AccountDto accountDto : accounts) {
-            accountService.freezeOrUnfreezeAccount(accountDto.getNumber(), activate);
+            accountService.freezeOrUnfreezeAccount(accountDto.getNumber(), status);
         }
     }
 }

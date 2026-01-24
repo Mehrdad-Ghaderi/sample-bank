@@ -66,7 +66,7 @@ public class CustomerService {
     }
 
     public void deactivateCustomer(UUID customerId) {
-        activateOrDeactivateCustomer(customerId, Status.INACTIVE);
+        activateOrDeactivateCustomer(customerId, Status.SUSPENDED);
     }
 
     private void activateOrDeactivateCustomer(UUID customerId, Status status) {
@@ -77,7 +77,7 @@ public class CustomerService {
             throw new CustomerAlreadyActiveException(customerId);
         }
 
-        if (status == Status.INACTIVE && foundCustomerEntity.getStatus() == Status.INACTIVE) {
+        if (status == Status.SUSPENDED && foundCustomerEntity.getStatus() == Status.SUSPENDED) {
             throw new CustomerAlreadyInactiveException(customerId);
         }
         foundCustomerEntity.setStatus(status);

@@ -1,15 +1,14 @@
 package com.mehrdad.sample.bank.core.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.persistence.Entity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,6 +16,25 @@ import java.util.UUID;
  * Created by Mehrdad Ghaderi
  */
 @Entity
+@Table(
+        name = "customer_entity",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_customer_external_ref",
+                        columnNames = "externalReference"
+                ),
+                @UniqueConstraint(
+                        name = "uk_customer_phone",
+                        columnNames = "phoneNumber"
+                )
+        },
+        indexes = {
+                @Index(
+                        name = "idx_customer_status",
+                        columnList = "status"
+                )
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,38 +46,43 @@ public class CustomerEntity {
     @Column(nullable = false, updatable = false)
     private UUID id;
 
-    @Column(length = 10, unique = true, nullable = false)
-    private String externalReference;
+    // Business-visible identifier
+    @Column(length = 6, unique = true, nullable = false, updatable = false)
+    private Integer businessId;
 
-    @NotBlank
-    @Size(max = 45, message = "Name cannot be longer than 45 characters")
     @Column(length = 45, nullable = false)
     private String name;
 
-    @NotBlank
-    @Size(max = 15, message = "Phone number cannot be longer than 15 characters")
-    @Column(length = 15, unique = true, nullable = false)
+    @Column(length = 13, unique = true, nullable = false)
     private String phoneNumber;
 
-    @JsonManagedReference
-    @OneToMany(mappedBy = "client", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private List<AccountEntity> accounts;
+    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AccountEntity> accounts = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status;
 
     @Column(nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
+    private Instant createdAt;
 
     @Column(nullable = false)
-    private Instant updatedAt = Instant.now();
+    private Instant updatedAt;
 
-    @Override
-    public String toString() {
-        return String.format(
-                "CustomerEntity{id=%s, name='%s', phoneNumber='%s', status=%s, createdAt=%s, updatedAt=%s}",
-                id, name, phoneNumber, status, createdAt, updatedAt
-        );
+    public void addAccount(AccountEntity account) {
+        accounts.add(account);
+        account.setCustomer(this);
+    }
+
+    @PrePersist
+    void onCreate() {
+        Instant now = Instant.now();
+        createdAt = now;
+        updatedAt = now;
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = Instant.now();
     }
 }

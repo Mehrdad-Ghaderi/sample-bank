@@ -2,20 +2,20 @@ package com.mehrdad.sample.bank.core.entity;
 
 import jakarta.persistence.*;
 import jakarta.persistence.Id;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 /**
  * Created by Mehrdad Ghaderi
  */
 @Entity
+@Table(name = "money_entity",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"account_id", "currency"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,30 +23,32 @@ import java.math.BigDecimal;
 public class MoneyEntity {
 
     @Id
-    @NotBlank
-    @Size(max = 10)
-    private String id;
+    @GeneratedValue
+    @Column(nullable = false, updatable = false)
+    private UUID id;
 
-    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 3)
     private Currency currency;
 
-    @NotNull
-    @JoinColumn(name = "amount")
+
+    @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal amount;
 
-    public MoneyEntity(Currency currency, BigDecimal amount, AccountEntity account) {
-        this.id = account.getNumber() + currency;
+
+    public MoneyEntity(Currency currency, BigDecimal value) {
         this.currency = currency;
-        this.amount = amount;
+        this.amount = value;
     }
 
-
-    @Override
-    public String toString() {
-        return "MoneyEntity{" +
-                ", currency='" + currency + '\'' +
-                ", balance=" + amount +
-                '}';
+    public void decrease(BigDecimal value) {
+        if (amount.compareTo(value) < 0) {
+            throw new IllegalStateException("Insufficient balance");
+        }
+        amount = amount.subtract(value);
     }
 
+    public void increase(BigDecimal value) {
+        amount = amount.add(value);
+    }
 }

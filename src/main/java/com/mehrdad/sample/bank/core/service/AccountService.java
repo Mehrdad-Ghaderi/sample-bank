@@ -3,8 +3,10 @@ package com.mehrdad.sample.bank.core.service;
 import com.mehrdad.sample.bank.api.dto.AccountDto;
 import com.mehrdad.sample.bank.api.dto.CustomerDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
+import com.mehrdad.sample.bank.core.entity.CustomerEntity;
 import com.mehrdad.sample.bank.core.entity.Status;
 import com.mehrdad.sample.bank.core.exception.AccountNotFoundException;
+import com.mehrdad.sample.bank.core.exception.CustomerNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.AccountMapper;
 import com.mehrdad.sample.bank.core.mapper.CustomerMapper;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
@@ -38,7 +40,7 @@ public class AccountService {
 
     public AccountDto getAccountByAccountNumber(String accountNumber){
 
-        return accountRepository.findById(accountNumber)
+        return accountRepository.findByNumber(accountNumber)
                 .map(accountMapper::toAccountDto)
                 .orElseThrow(() -> new AccountNotFoundException(accountNumber));
     }
@@ -48,7 +50,7 @@ public class AccountService {
     }
 
     public CustomerDto getCustomerByAccountNumber(String accountNumber) {
-        return accountRepository.findById(accountNumber)
+        return accountRepository.findByNumber(accountNumber)
                 .map(AccountEntity::getCustomer)
                 .map(clientMapper::toCustomerDto)
                 .orElseThrow(() -> new AccountNotFoundException(accountNumber));
@@ -62,17 +64,13 @@ public class AccountService {
                 .map(clientMapper::toCustomerDto)
                 .map(CustomerDto::getAccounts)
                 .flatMap(Collection::parallelStream)
-                .filter(AccountDto::getActive)
+                .filter(account -> account.getStatus() == Status.ACTIVE)
                 .collect(Collectors.toList());
-    }
-
-    public void save(AccountDto account, CustomerDto customerDto) {
-        accountRepository.save(accountMapper.toAccountEntity(account, clientMapper.toCustomerEntity(customerDto)));
     }
 
     public boolean createAccount(AccountDto account, CustomerDto customerDto) {
         try {
-            account.setActive(true);
+            account.setStatus(Status.ACTIVE);
             save(account, customerDto);
             return true;
         } catch (Exception e) {
@@ -81,19 +79,29 @@ public class AccountService {
         }
     }
 
+    public void save(AccountDto account, CustomerDto customerDto) {
+        CustomerEntity customerEntity = customerRepository.findById(customerDto.getId())
+                .orElseThrow(() -> new CustomerNotFoundException(customerDto.getId()));
+
+        AccountEntity accountEntity = accountMapper.toAccountEntity(account, customerEntity);
+
+        customerEntity.addAccount(accountEntity);
+        customerRepository.save(customerEntity);
+    }
+
     public void freezeAccount(String accountNumber) {
-        freezeOrUnfreezeAccount(accountNumber, false);
+        freezeOrUnfreezeAccount(accountNumber, Status.FROZEN);
     }
 
     public void unfreezeAccount(String accountNumber) {
-        freezeOrUnfreezeAccount(accountNumber, true);
+        freezeOrUnfreezeAccount(accountNumber, Status.ACTIVE);
     }
 
-    public void freezeOrUnfreezeAccount(String accountNumber, Boolean activate) {
-        AccountEntity foundAccount = accountRepository.findById(accountNumber)
+    public void freezeOrUnfreezeAccount(String accountNumber, Status status) {
+        AccountEntity foundAccount = accountRepository.findByNumber(accountNumber)
                 .orElseThrow(() -> new AccountNotFoundException(accountNumber));
 
-        foundAccount.setActive(activate);
+        foundAccount.setStatus(status);
         accountRepository.save(foundAccount);
     }
 }

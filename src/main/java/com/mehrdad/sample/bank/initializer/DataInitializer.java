@@ -5,9 +5,11 @@ import com.mehrdad.sample.bank.core.entity.CustomerEntity;
 import com.mehrdad.sample.bank.core.entity.Status;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
 import com.mehrdad.sample.bank.core.repository.CustomerRepository;
+import com.mehrdad.sample.bank.core.util.CustomerBusinessIdGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -19,6 +21,7 @@ import java.util.UUID;
  */
 @Component
 @RequiredArgsConstructor
+@Transactional
 public class DataInitializer implements CommandLineRunner {
 
     private final AccountRepository accountRepository;
@@ -26,39 +29,40 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        UUID id = UUID.randomUUID();
-        String defaultCustomerName = "BANK";
-        String defaultAccountId = "111.1";
+        String bankName = "BANK";
+        Integer businessId = CustomerBusinessIdGenerator.generate();
+        String bankAccountNumber = "1001-111-" + businessId;
+        String phoneNumber = "0011111111111";
 
-        // Step 1: Ensure the main bank(client and account exists
-        CustomerEntity bank = customerRepository.findByName(defaultCustomerName)
-                .orElseGet(() -> createBank(defaultCustomerName));
+        // Step 1: Ensure the BANK customer exist
+        CustomerEntity bank = customerRepository.findByName(bankName)
+                .orElseGet(() -> customerRepository.save(createBank(bankName, businessId)));
 
-        customerRepository.save(bank);
-        if (!accountRepository.existsById(defaultAccountId)) {
-            AccountEntity account = createBankAccount(defaultAccountId, bank);
-
-            bank.getAccounts().add(account);
-            accountRepository.save(account);
+        // Step 2: Ensure Bank account exists
+        if (!accountRepository.existsByNumber(bankAccountNumber)) {
+            AccountEntity account = createBankAccount(bankAccountNumber, bank);
+            bank.addAccount(account); // set both sides
+            account.setCustomer(bank);
             customerRepository.save(bank);
         }
     }
 
-    private static AccountEntity createBankAccount(String defaultAccountId, CustomerEntity bank) {
-        AccountEntity account = new AccountEntity();
-        account.setNumber(defaultAccountId);
-        account.setActive(true);
-        account.setCustomer(bank);
-        return account;
-    }
-
-    private static CustomerEntity createBank(String defaultCustomerId) {
+    private CustomerEntity createBank(String name, Integer businessId) {
         CustomerEntity client;
         client = new CustomerEntity();
-        client.setName("BANK");
-        client.setPhoneNumber("001111111111");
+        client.setName(name);
+        client.setBusinessId(businessId);
+        client.setPhoneNumber("0013432021911");
         client.setStatus(Status.ACTIVE);
         client.setAccounts(new ArrayList<>());
         return client;
+    }
+
+    private AccountEntity createBankAccount(String bankAccountNumber, CustomerEntity bank) {
+        AccountEntity account = new AccountEntity();
+        account.setNumber(bankAccountNumber);
+        account.setStatus(Status.ACTIVE);
+        account.setCustomer(bank);
+        return account;
     }
 }

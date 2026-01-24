@@ -3,69 +3,37 @@ package com.mehrdad.sample.bank.api.dto;
 import com.mehrdad.sample.bank.core.entity.Currency;
 
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.math.BigDecimal;
+import java.util.UUID;
 
 /**
  * Created by Mehrdad Ghaderi
  */
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class MoneyDto {
 
-    private String id;
-    private Currency currency;
-    private BigDecimal amount;
+    @NotNull
+    private UUID id;
 
-    public MoneyDto(Currency currency, BigDecimal amount, AccountDto account) {
-        this.id = account.getNumber() + currency;
-        this.currency = currency;
-        this.amount = amount;
-        //this.account = account;
-    }
+    @NotNull
+    private Currency currency;
+
+    @NotNull
+    private BigDecimal amount;
 
     public MoneyDto(Builder builder) {
         this.id = builder.id;
         this.currency = builder.currency;
         this.amount = builder.amount;
-        //this.account = builder.account;
     }
-
-    public MoneyDto() {
-
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    @NotNull
-    public Currency getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(Currency currency) {
-        this.currency = currency;
-    }
-
-    @NotNull
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public void setAmount(BigDecimal balance) {
-        this.amount = balance;
-    }
-
-    /*@NotNull
-    public AccountDto getAccount() {
-        return account;
-    }
-
-    public void setAccount(AccountDto account) {
-        this.account = account;
-    }*/
 
     @Override
     public String toString() {
@@ -73,15 +41,14 @@ public class MoneyDto {
     }
 
     public static class Builder {
-        private String id;
+        private UUID id;
         private Currency currency;
         private BigDecimal amount;
-        //private AccountDto account;
 
         public Builder() {
         }
 
-        public Builder id(String id) {
+        public Builder id(UUID id) {
             this.id = id;
             return this;
         }
@@ -95,11 +62,6 @@ public class MoneyDto {
             this.amount = amount;
             return this;
         }
-
-        /*public Builder account(AccountDto account) {
-            this.account = account;
-            return this;
-        }*/
 
         public MoneyDto build() {
             return new MoneyDto(this);

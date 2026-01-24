@@ -24,13 +24,20 @@ public class CustomerDto {
 
     @Size(max = 10)
     private UUID id;
+
     @NotBlank
     @Size(max = 45)
     private String name;
+
     @NotBlank
-    @Size(max = 15)
+    private Integer businessId;
+
+    @NotBlank
+    @Size(max = 13)
     private String phoneNumber;
+
     private List<AccountDto> accounts;
+
     @NotNull
     private Status status;
 
@@ -40,12 +47,6 @@ public class CustomerDto {
         this.phoneNumber = builder.phoneNumber;
         this.accounts = builder.accounts;
         this.status = builder.status;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%s, %s, %s, %s \n    accounts=%s",
-                id, name, phoneNumber, status, accounts);
     }
 
     public static class Builder {
