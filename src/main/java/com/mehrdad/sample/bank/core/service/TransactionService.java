@@ -13,6 +13,7 @@ import com.mehrdad.sample.bank.core.mapper.TransactionMapper;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
 import com.mehrdad.sample.bank.core.repository.MoneyRepository;
 import com.mehrdad.sample.bank.core.repository.TransactionRepository;
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -21,6 +22,7 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -36,7 +38,16 @@ public class TransactionService {
     }
 
 
-    private static final String BANK_ACCOUNT_NUMBER = "111.1";
+    private static final String BANK_ACCOUNT_NUMBER = "1001-111-111111";
+
+    private UUID bankAccountId;
+
+    @PostConstruct
+    void init() {
+        bankAccountId = accountRepository.findByNumber("1001-111-111111")
+                .orElseThrow()
+                .getId();
+    }
 
     private final MoneyRepository moneyRepository;
     private final MoneyMapper moneyMapper;
@@ -59,30 +70,30 @@ public class TransactionService {
     }
 
     /**
-     * Executes a money transfer from a sender account to a receiver account.
+     * Executes a money transfer from a senderAccNumber account to a receiverAccNumber account.
      *
      * <p>This method performs the following steps atomically:
      * <ul>
-     *     <li>Withdraws the amount from the sender's account</li>
-     *     <li>Changes the Money ID and account to match the receiver</li>
-     *     <li>Deposits the amount to the receiver's account</li>
+     *     <li>Withdraws the amount from the senderAccNumber's account</li>
+     *     <li>Changes the Money ID and account to match the receiverAccNumber</li>
+     *     <li>Deposits the amount to the receiverAccNumber's account</li>
      *     <li>Saves the transaction in the transaction history</li>
      * </ul>
      * </p>
      *
-     * @param sender   the sender account
-     * @param receiver the receiver account
+     * @param senderAccNumber   the senderAccNumber account
+     * @param receiverAccNumber the receiverAccNumber account
      * @param money    the money object containing the amount and currency
      * @return true if the transfer is successful
      * @throws Exception if withdrawal or deposit fails
      */
     @Transactional
-    public boolean transfer(AccountDto sender, AccountDto receiver, MoneyDto money) {
+    public boolean transfer(String senderAccNumber, String receiverAccNumber, MoneyDto money) {
         try {
-            withdraw(sender, money, false);
-            changeMoneyIdAndAccount(receiver, money);
-            deposit(receiver, money, false);
-            saveTransaction(sender, receiver, money);
+            withdraw(senderAccNumber, money, false);
+            changeMoneyIdAndAccount(receiverAccNumber, money);
+            deposit(receiverAccNumber, money, false);
+            saveTransaction(senderAccNumber, receiverAccNumber, money);
             return true;
         } catch (MoneyNotFoundException | IllegalStateException | IllegalArgumentException e) {
             throw e;

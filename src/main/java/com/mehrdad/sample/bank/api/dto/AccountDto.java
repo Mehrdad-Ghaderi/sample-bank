@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by Mehrdad Ghaderi
@@ -21,6 +22,9 @@ import java.util.List;
 public class AccountDto {
 
     @NotBlank
+    private UUID id;
+
+    @NotBlank
     private String number;
 
     @NotNull
@@ -28,12 +32,6 @@ public class AccountDto {
 
     @NotNull
     private List<MoneyDto> moneys;
-
-    public AccountDto(String number, Status status) {
-        this.number = number;
-        this.status = status;
-    }
-
 
     @Override
     public String toString() {

@@ -27,7 +27,7 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         String bankName = "BANK";
-        String bankAccountNumber = "0000000001";
+        String bankAccountNumber = "1001-111-111111";
 
         // Step 1: Ensure the BANK customer exist
         CustomerEntity bank = customerRepository.findByName(bankName)

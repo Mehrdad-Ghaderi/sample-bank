@@ -13,11 +13,31 @@ import java.util.UUID;
  */
 public interface TransactionRepository extends JpaRepository<TransactionEntity, UUID> {
 
-    @Query(value = "select tr.* from transaction_entity tr " +
-            "where tr.receiver_id = :accountNumber or tr.sender_id = :accountNumber\n" +
-            "order by tr.transaction_time desc\n" +
-            "limit :numberOfTransactions",
-            nativeQuery = true)
-    List<TransactionEntity> findLastTransactions(String accountNumber, int numberOfTransactions);
+    @Query(value = """
+    select tr.*
+    from transaction_entity tr
+    where tr.receiver_id = :accountId
+       or tr.sender_id = :accountId
+    order by tr.transaction_time desc
+    limit :limit
+""", nativeQuery = true)
+    List<TransactionEntity> findLastTransactions(UUID accountNumber, int numberOfTransactions);
+
+
+
+    @Query(value = """
+    select tr.*
+    from transaction_entity tr
+    join account_entity a1 on tr.sender_id = a1.id
+    join account_entity a2 on tr.receiver_id = a2.id
+    where a1.number = :accountNumber
+       or a2.number = :accountNumber
+    order by tr.transaction_time desc
+    limit :limit
+""", nativeQuery = true)
+    List<TransactionEntity> findLastTransactionsByAccountNumber(
+            String accountNumber,
+            int limit
+    );
 
 }
