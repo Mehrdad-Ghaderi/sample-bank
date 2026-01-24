@@ -9,9 +9,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -55,5 +57,19 @@ public class AccountEntity {
     @PreUpdate
     void onUpdate() {
         updatedAt = Instant.now();
+    }
+
+    public Optional<MoneyEntity> getMoney(Currency currency) {
+        return moneys.stream()
+                .filter(entity -> entity.getCurrency() == currency)
+                .findFirst();
+    }
+
+    public MoneyEntity getOrCreateMoney(Currency currency) {
+        return getMoney(currency).orElseGet(() -> {
+            MoneyEntity money = new MoneyEntity(currency, BigDecimal.ZERO);
+            moneys.add(money);
+            return money;
+        });
     }
 }

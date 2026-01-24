@@ -2,9 +2,6 @@ package com.mehrdad.sample.bank.core.entity;
 
 import jakarta.persistence.*;
 import jakarta.persistence.Id;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,15 +35,20 @@ public class MoneyEntity {
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal amount;
 
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
 
-    @Column(nullable = false)
-    private Instant updatedAt = Instant.now();
-
-    @PreUpdate
-    void onUpdate() {
-        updatedAt = Instant.now();
+    public MoneyEntity(Currency currency, BigDecimal value) {
+        this.currency = currency;
+        this.amount = value;
     }
 
+    public void decrease(BigDecimal value) {
+        if (amount.compareTo(value) < 0) {
+            throw new IllegalStateException("Insufficient balance");
+        }
+        amount = amount.subtract(value);
+    }
+
+    public void increase(BigDecimal value) {
+        amount = amount.add(value);
+    }
 }

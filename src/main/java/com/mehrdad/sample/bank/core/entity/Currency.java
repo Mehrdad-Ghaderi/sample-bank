@@ -11,7 +11,7 @@ import static java.util.stream.Collectors.toMap;
  */
 public enum Currency {
 
-    USD("$"), CAD("C$"), EURO("€"), RIAL("R");
+    USD("$"), CAD("CAD$"), EURO("€");
 
     private final String symbol;
 
