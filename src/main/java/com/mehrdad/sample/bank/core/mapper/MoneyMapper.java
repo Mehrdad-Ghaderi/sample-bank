@@ -46,7 +46,7 @@ public class MoneyMapper {
         if (moneyEntities == null) {
             return null;
         }
-        return moneyEntities.parallelStream()
+        return moneyEntities.stream()
                 .map(this::toMoneyDto)
                 .collect(Collectors.toList());
     }

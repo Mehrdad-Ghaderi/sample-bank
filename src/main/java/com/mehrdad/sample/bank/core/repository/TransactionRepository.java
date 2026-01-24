@@ -6,11 +6,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by Mehrdad Ghaderi
  */
-public interface TransactionRepository extends JpaRepository<TransactionEntity, String> {
+public interface TransactionRepository extends JpaRepository<TransactionEntity, UUID> {
 
     @Query(value = "select tr.* from transaction_entity tr " +
             "where tr.receiver_id = :accountNumber or tr.sender_id = :accountNumber\n" +

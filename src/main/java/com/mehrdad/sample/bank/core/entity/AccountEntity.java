@@ -1,18 +1,16 @@
 package com.mehrdad.sample.bank.core.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Entity;
 
 import jakarta.persistence.*;
 import jakarta.persistence.ManyToOne;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,6 +18,7 @@ import java.util.UUID;
  * Created by Mehrdad Ghaderi
  */
 @Entity
+@Table(name = "account_entity")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,27 +30,30 @@ public class AccountEntity {
     @Column(nullable = false, updatable = false)
     private UUID id;
 
-    @NotBlank
-    @Size(max = 10, message = "Account number cannot be longer than 10 characters")
+    // Business identifier (IBAN / account number)
+    @Column(length = 10, unique = true, nullable = false)
     private String number;
-
-    @JsonBackReference
-    @NotNull
-    @ManyToOne(fetch = FetchType.EAGER)
-    private CustomerEntity customer;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status;
 
-    @OneToMany(/*mappedBy = "account", */fetch = FetchType.EAGER)
-    @JoinColumn(name = "account_number")
-    private List<MoneyEntity> moneys;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private CustomerEntity customer;
 
-    @Override
-    public String toString() {
-        return String.format("%s , active=%s}",
-                number, status);
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "account_id", nullable = false)
+    private List<MoneyEntity> moneys = new ArrayList<>();
+
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt = Instant.now();
+
+    @Column(nullable = false)
+    private Instant updatedAt = Instant.now();
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = Instant.now();
     }
-
 }

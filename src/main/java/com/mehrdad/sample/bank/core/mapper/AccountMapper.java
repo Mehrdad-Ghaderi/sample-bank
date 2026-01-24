@@ -36,7 +36,7 @@ public class AccountMapper {
         if (entityList == null) {
             return null;
         }
-        return entityList.parallelStream()
+        return entityList.stream()
                 .map(this::toAccountDto)
                 .collect(Collectors.toList());
     }
@@ -58,7 +58,7 @@ public class AccountMapper {
         if (dtoList == null) {
             return null;
         }
-        return dtoList.parallelStream()
+        return dtoList.stream()
                 .map(dto -> toAccountEntity(dto, customerEntity))
                 .collect(Collectors.toList());
     }

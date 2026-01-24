@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,6 +18,7 @@ import java.util.UUID;
  * Created by Mehrdad Ghaderi
  */
 @Entity
+@Table(name = "customer_entity")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,22 +30,19 @@ public class CustomerEntity {
     @Column(nullable = false, updatable = false)
     private UUID id;
 
+    // Business-visible identifier
     @Column(length = 10, unique = true, nullable = false)
     private String externalReference;
 
-    @NotBlank
-    @Size(max = 45, message = "Name cannot be longer than 45 characters")
     @Column(length = 45, nullable = false)
     private String name;
 
-    @NotBlank
-    @Size(max = 15, message = "Phone number cannot be longer than 15 characters")
-    @Column(length = 15, unique = true, nullable = false)
+    @Column(length = 13, unique = true, nullable = false)
     private String phoneNumber;
 
-    @JsonManagedReference
-    @OneToMany(mappedBy = "client", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private List<AccountEntity> accounts;
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private List<AccountEntity> accounts = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -55,11 +54,8 @@ public class CustomerEntity {
     @Column(nullable = false)
     private Instant updatedAt = Instant.now();
 
-    @Override
-    public String toString() {
-        return String.format(
-                "CustomerEntity{id=%s, name='%s', phoneNumber='%s', status=%s, createdAt=%s, updatedAt=%s}",
-                id, name, phoneNumber, status, createdAt, updatedAt
-        );
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = Instant.now();
     }
 }

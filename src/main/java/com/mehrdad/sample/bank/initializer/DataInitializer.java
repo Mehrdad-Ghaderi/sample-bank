@@ -26,36 +26,33 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        String defaultCustomerName = "BANK";
-        String defaultAccountId = "111.1";
+        String bankName = "BANK";
+        String bankAccountNumber = "0000000001";
 
-        // Step 1: Ensure the main bank(client and account exists
-        CustomerEntity bank = customerRepository.findByName(defaultCustomerName)
-                .orElseGet(() -> createBank(defaultCustomerName));
+        // Step 1: Ensure the BANK customer exist
+        CustomerEntity bank = customerRepository.findByName(bankName)
+                .orElseGet(() -> createBank(bankName));
 
-        customerRepository.save(bank);
-        if (!accountRepository.existsById(defaultAccountId)) {
-            AccountEntity account = createBankAccount(defaultAccountId, bank);
-
-            bank.getAccounts().add(account);
+        // Step 2: Ensure Bank account exists
+        if (!accountRepository.existsByNumber(bankAccountNumber)) {
+            AccountEntity account = createBankAccount(bankAccountNumber, bank);
             accountRepository.save(account);
-            customerRepository.save(bank);
         }
     }
 
-    private static CustomerEntity createBank(String defaultCustomerId) {
+    private static CustomerEntity createBank(String name) {
         CustomerEntity client;
         client = new CustomerEntity();
-        client.setName("BANK");
-        client.setPhoneNumber("001111111111");
+        client.setName(name);
+        client.setPhoneNumber("0013432021911");
         client.setStatus(Status.ACTIVE);
         client.setAccounts(new ArrayList<>());
         return client;
     }
 
-    private static AccountEntity createBankAccount(String defaultAccountId, CustomerEntity bank) {
+    private static AccountEntity createBankAccount(String bankAccountNumber, CustomerEntity bank) {
         AccountEntity account = new AccountEntity();
-        account.setNumber(defaultAccountId);
+        account.setNumber(bankAccountNumber);
         account.setStatus(Status.ACTIVE);
         account.setCustomer(bank);
         return account;

@@ -11,11 +11,15 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.UUID;
 
 /**
  * Created by Mehrdad Ghaderi
  */
 @Entity
+@Table(name = "money_entity",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"account_id", "currency"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,30 +27,26 @@ import java.math.BigDecimal;
 public class MoneyEntity {
 
     @Id
-    @NotBlank
-    @Size(max = 10)
-    private String id;
+    @GeneratedValue
+    private UUID id;
 
-    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 3)
     private Currency currency;
 
-    @NotNull
-    @JoinColumn(name = "amount")
+
+    @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal amount;
 
-    public MoneyEntity(Currency currency, BigDecimal amount, AccountEntity account) {
-        this.id = account.getNumber() + currency;
-        this.currency = currency;
-        this.amount = amount;
-    }
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt = Instant.now();
 
+    @Column(nullable = false)
+    private Instant updatedAt = Instant.now();
 
-    @Override
-    public String toString() {
-        return "MoneyEntity{" +
-                ", currency='" + currency + '\'' +
-                ", balance=" + amount +
-                '}';
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = Instant.now();
     }
 
 }
