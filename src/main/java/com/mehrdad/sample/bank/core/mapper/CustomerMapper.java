@@ -23,6 +23,7 @@ public class CustomerMapper {
         CustomerDto customerDto = new CustomerDto();
         customerDto.setId(customerEntity.getId());
         customerDto.setName(customerEntity.getName());
+        customerDto.setBusinessId(customerEntity.getBusinessId());
         customerDto.setPhoneNumber(customerEntity.getPhoneNumber());
         customerDto.setStatus(customerEntity.getStatus());
         customerDto.setAccounts(accountMapper.toAccountDtoList(customerEntity.getAccounts()));
@@ -37,6 +38,7 @@ public class CustomerMapper {
         CustomerEntity customerEntity = new CustomerEntity();
         customerEntity.setId(customerDto.getId());
         customerEntity.setName(customerDto.getName());
+        customerEntity.setBusinessId(customerEntity.getBusinessId());
         customerEntity.setPhoneNumber(customerDto.getPhoneNumber());
         customerEntity.setStatus(customerDto.getStatus());
         customerEntity.setAccounts(accountMapper.toAccountEntityList(customerDto.getAccounts(), customerEntity));

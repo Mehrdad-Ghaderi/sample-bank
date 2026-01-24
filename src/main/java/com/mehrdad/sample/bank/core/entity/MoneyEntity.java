@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -25,6 +24,7 @@ public class MoneyEntity {
 
     @Id
     @GeneratedValue
+    @Column(nullable = false, updatable = false)
     private UUID id;
 
     @Enumerated(EnumType.STRING)

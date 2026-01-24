@@ -20,7 +20,19 @@ import java.util.UUID;
  * Created by Mehrdad Ghaderi
  */
 @Entity
-@Table(name = "account_entity")
+@Table(
+        name = "account_entity",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_account_number",
+                        columnNames = "number"
+                )
+        },
+        indexes = {
+                @Index(name = "idx_account_customer", columnList = "customer_id"),
+                @Index(name = "idx_account_status", columnList = "status")
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -33,7 +45,7 @@ public class AccountEntity {
     private UUID id;
 
     // Business identifier (IBAN / account number)
-    @Column(length = 10, unique = true, nullable = false)
+    @Column(length = 15, unique = true, nullable = false)
     private String number;
 
     @Enumerated(EnumType.STRING)
@@ -49,15 +61,11 @@ public class AccountEntity {
     private List<MoneyEntity> moneys = new ArrayList<>();
 
     @Column(nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
+    private Instant createdAt;
 
     @Column(nullable = false)
-    private Instant updatedAt = Instant.now();
+    private Instant updatedAt;
 
-    @PreUpdate
-    void onUpdate() {
-        updatedAt = Instant.now();
-    }
 
     public Optional<MoneyEntity> getMoney(Currency currency) {
         return moneys.stream()
@@ -71,5 +79,17 @@ public class AccountEntity {
             moneys.add(money);
             return money;
         });
+    }
+
+    @PrePersist
+    void onCreate() {
+        Instant now = Instant.now();
+        createdAt = now;
+        updatedAt = now;
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = Instant.now();
     }
 }

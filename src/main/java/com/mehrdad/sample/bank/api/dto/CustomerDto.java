@@ -24,13 +24,20 @@ public class CustomerDto {
 
     @Size(max = 10)
     private UUID id;
+
     @NotBlank
     @Size(max = 45)
     private String name;
+
+    @NotBlank
+    private Integer businessId;
+
     @NotBlank
     @Size(max = 13)
     private String phoneNumber;
+
     private List<AccountDto> accounts;
+
     @NotNull
     private Status status;
 

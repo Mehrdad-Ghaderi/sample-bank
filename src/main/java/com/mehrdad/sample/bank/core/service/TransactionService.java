@@ -1,7 +1,6 @@
 package com.mehrdad.sample.bank.core.service;
 
 import com.mehrdad.sample.bank.api.dto.AccountDto;
-import com.mehrdad.sample.bank.api.dto.MoneyDto;
 import com.mehrdad.sample.bank.api.dto.TransactionDto;
 import com.mehrdad.sample.bank.core.entity.*;
 import com.mehrdad.sample.bank.core.exception.*;
@@ -11,18 +10,10 @@ import com.mehrdad.sample.bank.core.mapper.TransactionMapper;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
 import com.mehrdad.sample.bank.core.repository.MoneyRepository;
 import com.mehrdad.sample.bank.core.repository.TransactionRepository;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.NotNull;
-
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Created by Mehrdad Ghaderi
@@ -39,11 +30,6 @@ public class TransactionService {
     private final MoneyMapper moneyMapper;
     private final AccountMapper accountMapper;
     private final TransactionMapper transactionMapper;
-
-
-    /* ==========================================================
-       TRANSFER
-       ========================================================== */
 
     /**
      * Transfers money from one account to another.
@@ -155,10 +141,6 @@ public class TransactionService {
         transactionRepository.save(transaction);
         return transaction;
     }
-
-    /* ==========================================================
-       INVARIANTS
-       ========================================================== */
 
     private void assertActive(AccountEntity account) {
         if (account.getStatus() != Status.ACTIVE) {

@@ -1,27 +1,44 @@
 package com.mehrdad.sample.bank.core.entity;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.toMap;
-
 /**
  * Created by Mehrdad Ghaderi
  */
 public enum Currency {
 
-    USD("$"), CAD("CAD$"), EURO("€");
+    USD,
+    CAD,
+    EUR
+
+   /* USD("USD", "$"),
+    CAD("CAD", "$"),
+    EUR("EUR", "€");
+
+    private final String code;   // ISO-4217
+    private final String symbol;
+
+    Currency(String code, String symbol) {
+        this.code = code;
+        this.symbol = symbol;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getSymbol() {
+        return symbol;
+    }
+
+    public static Currency fromCode(String code) {
+        return Currency.valueOf(code);
+    }*/
+
+    /*USD("$"), CAD("$"), EURO("€");
 
     private final String symbol;
 
     Currency(String symbol) {
         this.symbol = symbol;
-    }
-
-    @Override
-    public String toString() {
-        return symbol;
     }
 
     private static final Map<String, Currency> stringToEnum = Stream.of(values())
@@ -30,5 +47,5 @@ public enum Currency {
     public static Optional<Currency> fromString(String symbol) {
         return Optional.ofNullable(stringToEnum.get(symbol));
 
-    }
+    }*/
 }

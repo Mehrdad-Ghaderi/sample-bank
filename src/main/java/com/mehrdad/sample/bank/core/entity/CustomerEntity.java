@@ -1,9 +1,7 @@
 package com.mehrdad.sample.bank.core.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.persistence.Entity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,7 +16,25 @@ import java.util.UUID;
  * Created by Mehrdad Ghaderi
  */
 @Entity
-@Table(name = "customer_entity")
+@Table(
+        name = "customer_entity",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_customer_external_ref",
+                        columnNames = "externalReference"
+                ),
+                @UniqueConstraint(
+                        name = "uk_customer_phone",
+                        columnNames = "phoneNumber"
+                )
+        },
+        indexes = {
+                @Index(
+                        name = "idx_customer_status",
+                        columnList = "status"
+                )
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,8 +47,8 @@ public class CustomerEntity {
     private UUID id;
 
     // Business-visible identifier
-    @Column(length = 10, unique = true, nullable = false)
-    private String externalReference;
+    @Column(length = 6, unique = true, nullable = false, updatable = false)
+    private Integer businessId;
 
     @Column(length = 45, nullable = false)
     private String name;
@@ -40,8 +56,7 @@ public class CustomerEntity {
     @Column(length = 13, unique = true, nullable = false)
     private String phoneNumber;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "customer_id", nullable = false)
+    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AccountEntity> accounts = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
@@ -49,10 +64,22 @@ public class CustomerEntity {
     private Status status;
 
     @Column(nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
+    private Instant createdAt;
 
     @Column(nullable = false)
-    private Instant updatedAt = Instant.now();
+    private Instant updatedAt;
+
+    public void addAccount(AccountEntity account) {
+        accounts.add(account);
+        account.setCustomer(this);
+    }
+
+    @PrePersist
+    void onCreate() {
+        Instant now = Instant.now();
+        createdAt = now;
+        updatedAt = now;
+    }
 
     @PreUpdate
     void onUpdate() {
