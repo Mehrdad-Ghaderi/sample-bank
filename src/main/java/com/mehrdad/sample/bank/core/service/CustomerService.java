@@ -22,10 +22,12 @@ import java.util.stream.Stream;
 public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
+    private final CustomerBusinessIdGenerator customerBusinessIdGenerator;
 
-    public CustomerService(CustomerRepository customerRepository, CustomerMapper customerMapper) {
+    public CustomerService(CustomerRepository customerRepository, CustomerMapper customerMapper, CustomerBusinessIdGenerator customerBusinessIdGenerator) {
         this.customerRepository = customerRepository;
         this.customerMapper = customerMapper;
+        this.customerBusinessIdGenerator = customerBusinessIdGenerator;
     }
 
     public CustomerDto getCustomerById(UUID customerId) {
@@ -43,7 +45,7 @@ public class CustomerService {
             throw new CustomerAlreadyExistException(customer.getId());
         }
         CustomerEntity customerEntity = customerMapper.toCustomerEntity(customer);
-        customerEntity.setBusinessId(CustomerBusinessIdGenerator.generate());
+        customerEntity.setBusinessId(customerBusinessIdGenerator.getNextBusinessId());
         CustomerEntity savedCustomerEntity = customerRepository.save(customerEntity);
         return customerMapper.toCustomerDto(savedCustomerEntity);
     }

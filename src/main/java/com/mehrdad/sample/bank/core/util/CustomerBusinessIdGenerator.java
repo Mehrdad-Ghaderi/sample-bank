@@ -1,15 +1,22 @@
 package com.mehrdad.sample.bank.core.util;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import com.mehrdad.sample.bank.core.repository.CustomerRepository;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
+
+@Component
 public class CustomerBusinessIdGenerator {
 
-    private static final AtomicInteger sequence = new AtomicInteger(100000);
+    private final CustomerRepository customerRepository;
 
-    private CustomerBusinessIdGenerator() {} // utility class
-
-    public static Integer generate() {
-        return sequence.getAndIncrement(); // auto-increment safely
+    public CustomerBusinessIdGenerator(CustomerRepository customerRepository) {
+        this.customerRepository = customerRepository;
     }
 
+    @Transactional(readOnly = true)
+    public Integer getNextBusinessId() {
+        Integer last = customerRepository.findLastBusinessId();
+        return (last == null) ? 100000 : last + 1;
+    }
 }

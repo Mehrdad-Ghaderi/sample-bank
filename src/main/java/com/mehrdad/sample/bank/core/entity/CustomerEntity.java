@@ -1,5 +1,6 @@
 package com.mehrdad.sample.bank.core.entity;
 
+import com.mehrdad.sample.bank.core.util.CustomerBusinessIdGenerator;
 import jakarta.persistence.*;
 import jakarta.persistence.Entity;
 import lombok.AllArgsConstructor;
@@ -20,8 +21,8 @@ import java.util.UUID;
         name = "customer_entity",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "uk_customer_external_ref",
-                        columnNames = "externalReference"
+                        name = "uk_customer_business_id",
+                        columnNames = "businessId"
                 ),
                 @UniqueConstraint(
                         name = "uk_customer_phone",
@@ -47,13 +48,13 @@ public class CustomerEntity {
     private UUID id;
 
     // Business-visible identifier
-    @Column(length = 6, unique = true, nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false)
     private Integer businessId;
 
     @Column(length = 45, nullable = false)
     private String name;
 
-    @Column(length = 13, unique = true, nullable = false)
+    @Column(length = 13, nullable = false)
     private String phoneNumber;
 
     @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)

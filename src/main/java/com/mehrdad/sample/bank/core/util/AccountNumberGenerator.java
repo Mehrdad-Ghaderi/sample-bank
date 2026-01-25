@@ -5,11 +5,11 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class AccountNumberGenerator {
 
-    private static final String BANK_CODE = "111";
+    private static final String BANK_CODE = "101";
 
     private AccountNumberGenerator() {}
 
-    public static String generate(Integer branchCode, Integer businessId) {
+    public static String generate(Integer businessId) {
         String year = String.valueOf(Year.now().getValue());
 
         return String.format(
