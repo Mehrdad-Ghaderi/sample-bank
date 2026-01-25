@@ -25,7 +25,7 @@ public class CustomerAccountOrchestrator {
         if (status == Status.ACTIVE) {
             customerService.activateCustomer(customerId);
         } else {
-            customerService.DeactivateCustomerById(customerId);
+            customerService.deactivateCustomer(customerId);
         }
         List<AccountDto> accounts = accountService.getAccountsByCustomerId(customerId);
         for (AccountDto accountDto : accounts) {

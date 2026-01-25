@@ -54,7 +54,7 @@ public class CustomerController {
     @DeleteMapping(CLIENT_By_ID)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCustomerById(@PathVariable UUID customerId) {
-        customerService.DeactivateCustomerById(customerId);
+        customerService.deactivateCustomer(customerId);
     }
 
     @PostMapping(CLIENT_By_ID)

@@ -51,28 +51,24 @@ public class CustomerService {
         return customerMapper.toCustomerDto(savedCustomerEntity);
     }
 
-    public void DeactivateCustomerById(UUID businessId) {
-        deactivateCustomer(businessId);
+    public void activateCustomer(UUID id) {
+        activateOrDeactivateCustomer(id, Status.ACTIVE);
     }
 
-    public void activateCustomer(UUID businessId) {
-        activateOrDeactivateCustomer(businessId, Status.ACTIVE);
+    public void deactivateCustomer(UUID id) {
+        activateOrDeactivateCustomer(id, Status.SUSPENDED);
     }
 
-    public void deactivateCustomer(UUID businessId) {
-        activateOrDeactivateCustomer(businessId, Status.SUSPENDED);
-    }
-
-    private void activateOrDeactivateCustomer(UUID businessId, Status status) {
-        CustomerEntity foundCustomerEntity = customerRepository.findById(businessId)
-                .orElseThrow(() -> new CustomerNotFoundException(businessId));
+    private void activateOrDeactivateCustomer(UUID id, Status status) {
+        CustomerEntity foundCustomerEntity = customerRepository.findById(id)
+                .orElseThrow(() -> new CustomerNotFoundException(id));
 
         if (status == Status.ACTIVE && foundCustomerEntity.getStatus() == Status.ACTIVE) {
-            throw new CustomerAlreadyActiveException(businessId);
+            throw new CustomerAlreadyActiveException(id);
         }
 
         if (status == Status.SUSPENDED && foundCustomerEntity.getStatus() == Status.SUSPENDED) {
-            throw new CustomerAlreadyInactiveException(businessId);
+            throw new CustomerAlreadyInactiveException(id);
         }
         foundCustomerEntity.setStatus(status);
         customerRepository.save(foundCustomerEntity);
