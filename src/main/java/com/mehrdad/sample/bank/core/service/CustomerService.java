@@ -9,6 +9,7 @@ import com.mehrdad.sample.bank.core.exception.CustomerAlreadyInactiveException;
 import com.mehrdad.sample.bank.core.exception.CustomerNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.CustomerMapper;
 import com.mehrdad.sample.bank.core.repository.CustomerRepository;
+import com.mehrdad.sample.bank.core.util.CustomerBusinessIdGenerator;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -41,7 +42,9 @@ public class CustomerService {
         if (customerRepository.findById(customer.getId()).isPresent()) {
             throw new CustomerAlreadyExistException(customer.getId());
         }
-        CustomerEntity savedCustomerEntity = customerRepository.save(customerMapper.toCustomerEntity(customer));
+        CustomerEntity customerEntity = customerMapper.toCustomerEntity(customer);
+        customerEntity.setBusinessId(CustomerBusinessIdGenerator.generate());
+        CustomerEntity savedCustomerEntity = customerRepository.save(customerEntity);
         return customerMapper.toCustomerDto(savedCustomerEntity);
     }
 

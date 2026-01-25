@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,7 +23,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CustomerDto {
 
-    @Size(max = 10)
     private UUID id;
 
     @NotBlank
@@ -40,6 +40,9 @@ public class CustomerDto {
 
     @NotNull
     private Status status;
+
+    private Instant createdAt;
+    private Instant updatedAt;
 
     public CustomerDto(Builder builder) {
         this.id = builder.id;

@@ -1,22 +1,22 @@
 package com.mehrdad.sample.bank.core.util;
 
+import java.time.Year;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class AccountNumberGenerator {
 
-    private static final String BANK_CODE = "1001";
+    private static final String BANK_CODE = "111";
 
     private AccountNumberGenerator() {}
 
-    public static String generate() {
-        int branch = ThreadLocalRandom.current().nextInt(1000, 9999);
-        int sequence = ThreadLocalRandom.current().nextInt(0, 999999);
+    public static String generate(Integer branchCode, Integer businessId) {
+        String year = String.valueOf(Year.now().getValue());
 
         return String.format(
-                "%s-%04d-%06d",
+                "%s-%s-%06d",
+                year,
                 BANK_CODE,
-                branch,
-                sequence
+                businessId
         );
     }
 }
