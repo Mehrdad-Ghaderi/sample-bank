@@ -2,15 +2,14 @@ package com.mehrdad.sample.bank.core.service;
 
 import com.mehrdad.sample.bank.api.dto.CustomerCreateDto;
 import com.mehrdad.sample.bank.api.dto.CustomerDto;
+import com.mehrdad.sample.bank.api.dto.CustomerUpdateDto;
 import com.mehrdad.sample.bank.core.entity.CustomerEntity;
 import com.mehrdad.sample.bank.core.entity.Status;
-import com.mehrdad.sample.bank.core.exception.CustomerAlreadyActiveException;
-import com.mehrdad.sample.bank.core.exception.CustomerAlreadyExistException;
-import com.mehrdad.sample.bank.core.exception.CustomerAlreadyInactiveException;
-import com.mehrdad.sample.bank.core.exception.CustomerNotFoundException;
+import com.mehrdad.sample.bank.core.exception.*;
 import com.mehrdad.sample.bank.core.mapper.CustomerMapper;
 import com.mehrdad.sample.bank.core.repository.CustomerRepository;
 import com.mehrdad.sample.bank.core.util.CustomerBusinessIdGenerator;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -72,5 +71,30 @@ public class CustomerService {
         }
         foundCustomerEntity.setStatus(status);
         customerRepository.save(foundCustomerEntity);
+    }
+
+    public CustomerDto updateCustomer(UUID customerId, @Valid CustomerUpdateDto customerUpdateDto) {
+
+        CustomerEntity customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException(customerId));
+
+        // update update if value exists
+        if (customerUpdateDto.getName() != null) {
+            customer.setName(customerUpdateDto.getName());
+        }
+        // update phone number if value exists
+        if (customerUpdateDto.getPhoneNumber() != null) {
+            // uniqueness check
+            if (customerRepository.existsByPhoneNumber(customerUpdateDto.getPhoneNumber())) {
+                throw new PhoneNumberAlreadyExists(customerUpdateDto.getPhoneNumber());
+            }
+            customer.setPhoneNumber(customerUpdateDto.getPhoneNumber());
+        }
+        // update status if value exists
+        if (customerUpdateDto.getStatus() != null) {
+            customer.setStatus(customerUpdateDto.getStatus());
+        }
+
+        return customerMapper.toCustomerDto(customer);
     }
 }

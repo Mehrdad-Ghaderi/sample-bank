@@ -1,8 +1,11 @@
 package com.mehrdad.sample.bank.api.controllers;
 
+import com.mehrdad.sample.bank.api.dto.AccountDto;
 import com.mehrdad.sample.bank.api.dto.CustomerCreateDto;
 import com.mehrdad.sample.bank.api.dto.CustomerDto;
+import com.mehrdad.sample.bank.api.dto.CustomerUpdateDto;
 import com.mehrdad.sample.bank.core.service.CustomerService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -60,5 +63,12 @@ public class CustomerController {
     @PostMapping(CLIENT_By_ID)
     public void activateCustomer(@PathVariable UUID customerId) {
         customerService.activateCustomer(customerId);
+    }
+
+    @PatchMapping(CLIENT_By_ID)
+    public ResponseEntity<CustomerDto> updateCustomer(@PathVariable UUID customerId,
+                                                      @Valid @RequestBody CustomerUpdateDto customerUpdateDto) {
+        CustomerDto updated = customerService.updateCustomer(customerId, customerUpdateDto);
+        return ResponseEntity.ok(updated);
     }
 }

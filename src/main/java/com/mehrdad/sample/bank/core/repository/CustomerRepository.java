@@ -2,6 +2,7 @@ package com.mehrdad.sample.bank.core.repository;
 
 import com.mehrdad.sample.bank.core.entity.CustomerEntity;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -20,4 +21,6 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, UUID> 
     Integer findLastBusinessId();
 
     Optional<Object> findByPhoneNumber(@NotBlank String phoneNumber);
+
+    boolean existsByPhoneNumber(@Pattern(regexp = "^\\+?[0-9]{10,15}$") String phoneNumber);
 }
