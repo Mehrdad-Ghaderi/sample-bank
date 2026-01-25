@@ -31,18 +31,19 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         String bankName = "BANK";
-        Integer businessId = customerBusinessIdGenerator.getNextBusinessId();
-        String bankAccountNumber = AccountNumberGenerator.generate(businessId);
         String phoneNumber = "0011111111111";
 
-        // Step 1: Ensure the BANK customer exist
         CustomerEntity bank = customerRepository.findByName(bankName)
-                .orElseGet(() -> customerRepository.save(createBank(bankName, businessId, phoneNumber)));
+                .orElseGet(() -> {
+                    Integer businessId = customerBusinessIdGenerator.getNextBusinessId();
+                    return customerRepository.save(createBank(bankName, businessId, phoneNumber));
+                });
 
-        // Step 2: Ensure Bank account exists
+        String bankAccountNumber = AccountNumberGenerator.generate(bank.getBusinessId());
+
         if (!accountRepository.existsByNumber(bankAccountNumber)) {
             AccountEntity account = createBankAccount(bankAccountNumber, bank);
-            bank.addAccount(account); // set both sides
+            bank.addAccount(account);
             account.setCustomer(bank);
             customerRepository.save(bank);
         }

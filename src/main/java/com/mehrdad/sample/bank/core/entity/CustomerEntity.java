@@ -21,11 +21,11 @@ import java.util.UUID;
         uniqueConstraints = {
                 @UniqueConstraint(
                         name = "uk_customer_business_id",
-                        columnNames = "businessId"
+                        columnNames = "business_id"
                 ),
                 @UniqueConstraint(
                         name = "uk_customer_phone",
-                        columnNames = "phoneNumber"
+                        columnNames = "phone_number"
                 )
         },
         indexes = {
@@ -47,13 +47,13 @@ public class CustomerEntity {
     private UUID id;
 
     // Business-visible identifier
-    @Column(nullable = false, updatable = false)
+    @Column(name = "business_id", nullable = false, updatable = false)
     private Integer businessId;
 
     @Column(length = 45, nullable = false)
     private String name;
 
-    @Column(length = 13, nullable = false)
+    @Column(name = "phone_number", length = 13, nullable = false)
     private String phoneNumber;
 
     @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
@@ -63,10 +63,10 @@ public class CustomerEntity {
     @Column(nullable = false)
     private Status status;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
     public void addAccount(AccountEntity account) {
@@ -79,6 +79,10 @@ public class CustomerEntity {
         Instant now = Instant.now();
         createdAt = now;
         updatedAt = now;
+
+        if (status == null) {
+            status = Status.ACTIVE;
+        }
     }
 
     @PreUpdate

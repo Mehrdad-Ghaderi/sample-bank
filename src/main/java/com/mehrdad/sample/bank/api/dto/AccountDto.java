@@ -28,7 +28,6 @@ public class AccountDto {
     @NotBlank
     private String number;
 
-    @NotNull
     private Status status;
 
     @NotNull

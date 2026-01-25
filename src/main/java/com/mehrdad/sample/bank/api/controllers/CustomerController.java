@@ -1,5 +1,6 @@
 package com.mehrdad.sample.bank.api.controllers;
 
+import com.mehrdad.sample.bank.api.dto.CustomerCreateDto;
 import com.mehrdad.sample.bank.api.dto.CustomerDto;
 import com.mehrdad.sample.bank.core.service.CustomerService;
 import lombok.RequiredArgsConstructor;
@@ -40,8 +41,8 @@ public class CustomerController {
     }
 
     @PostMapping(CLIENTS)
-    public ResponseEntity<CustomerDto> createCustomer(@RequestBody CustomerDto customerDto) {
-        CustomerDto savedCustomerDto = customerService.createCustomer(customerDto);
+    public ResponseEntity<CustomerDto> createCustomer(@RequestBody CustomerCreateDto customerCreateDto) {
+        CustomerDto savedCustomerDto = customerService.createCustomer(customerCreateDto);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")

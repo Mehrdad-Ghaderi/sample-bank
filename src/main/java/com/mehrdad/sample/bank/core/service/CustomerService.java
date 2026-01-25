@@ -1,5 +1,6 @@
 package com.mehrdad.sample.bank.core.service;
 
+import com.mehrdad.sample.bank.api.dto.CustomerCreateDto;
 import com.mehrdad.sample.bank.api.dto.CustomerDto;
 import com.mehrdad.sample.bank.core.entity.CustomerEntity;
 import com.mehrdad.sample.bank.core.entity.Status;
@@ -40,11 +41,11 @@ public class CustomerService {
         return customerRepository.findAll().stream().map(customerMapper::toCustomerDto);
     }
 
-    public CustomerDto createCustomer(CustomerDto customer) {
-        if (customerRepository.findById(customer.getId()).isPresent()) {
-            throw new CustomerAlreadyExistException(customer.getId());
+    public CustomerDto createCustomer(CustomerCreateDto customerCreateDto) {
+        if (customerRepository.findByPhoneNumber(customerCreateDto.getPhoneNumber()).isPresent()) {
+            throw new CustomerAlreadyExistException(customerCreateDto.getPhoneNumber());
         }
-        CustomerEntity customerEntity = customerMapper.toCustomerEntity(customer);
+        CustomerEntity customerEntity = customerMapper.toCustomerEntity(customerCreateDto);
         customerEntity.setBusinessId(customerBusinessIdGenerator.getNextBusinessId());
         CustomerEntity savedCustomerEntity = customerRepository.save(customerEntity);
         return customerMapper.toCustomerDto(savedCustomerEntity);

@@ -1,6 +1,7 @@
 package com.mehrdad.sample.bank.core.repository;
 
 import com.mehrdad.sample.bank.core.entity.CustomerEntity;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -17,4 +18,6 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, UUID> 
 
     @Query("select max(c.businessId) from CustomerEntity c")
     Integer findLastBusinessId();
+
+    Optional<Object> findByPhoneNumber(@NotBlank String phoneNumber);
 }
