@@ -1,6 +1,5 @@
 package com.mehrdad.sample.bank.core.entity;
 
-import com.mehrdad.sample.bank.core.util.CustomerBusinessIdGenerator;
 import jakarta.persistence.*;
 import jakarta.persistence.Entity;
 import lombok.AllArgsConstructor;

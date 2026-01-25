@@ -1,7 +1,6 @@
 package com.mehrdad.sample.bank.core.util;
 
 import java.time.Year;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class AccountNumberGenerator {
 

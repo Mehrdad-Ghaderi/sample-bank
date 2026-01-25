@@ -30,10 +30,10 @@ public class CustomerService {
         this.customerBusinessIdGenerator = customerBusinessIdGenerator;
     }
 
-    public CustomerDto getCustomerById(UUID customerId) {
-        return customerRepository.findById(customerId)
+    public CustomerDto getCustomerById(UUID businessId) {
+        return customerRepository.findById(businessId)
                 .map(customerMapper::toCustomerDto)
-                .orElseThrow(() -> new CustomerNotFoundException(customerId));
+                .orElseThrow(() -> new CustomerNotFoundException(businessId));
     }
 
     public Stream<CustomerDto> getAllCustomers() {
@@ -50,40 +50,28 @@ public class CustomerService {
         return customerMapper.toCustomerDto(savedCustomerEntity);
     }
 
-    public void setCustomerPhoneNumber(UUID customerId, String phoneNumber) {
-        CustomerEntity foundCustomerEntity = customerRepository.findById(customerId)
-                .orElseThrow(() -> new CustomerNotFoundException(customerId));
-
-        foundCustomerEntity.setPhoneNumber(phoneNumber);
-        customerRepository.save(foundCustomerEntity);
+    public void DeactivateCustomerById(UUID businessId) {
+        deactivateCustomer(businessId);
     }
 
-    public void deactivateCustomer(CustomerDto customer) {
-        deactivateCustomer(customer.getId());
+    public void activateCustomer(UUID businessId) {
+        activateOrDeactivateCustomer(businessId, Status.ACTIVE);
     }
 
-    public void DeactivateCustomerById(UUID customerId) {
-        deactivateCustomer(customerId);
+    public void deactivateCustomer(UUID businessId) {
+        activateOrDeactivateCustomer(businessId, Status.SUSPENDED);
     }
 
-    public void activateCustomer(UUID customerId) {
-        activateOrDeactivateCustomer(customerId, Status.ACTIVE);
-    }
-
-    public void deactivateCustomer(UUID customerId) {
-        activateOrDeactivateCustomer(customerId, Status.SUSPENDED);
-    }
-
-    private void activateOrDeactivateCustomer(UUID customerId, Status status) {
-        CustomerEntity foundCustomerEntity = customerRepository.findById(customerId)
-                .orElseThrow(() -> new CustomerNotFoundException(customerId));
+    private void activateOrDeactivateCustomer(UUID businessId, Status status) {
+        CustomerEntity foundCustomerEntity = customerRepository.findById(businessId)
+                .orElseThrow(() -> new CustomerNotFoundException(businessId));
 
         if (status == Status.ACTIVE && foundCustomerEntity.getStatus() == Status.ACTIVE) {
-            throw new CustomerAlreadyActiveException(customerId);
+            throw new CustomerAlreadyActiveException(businessId);
         }
 
         if (status == Status.SUSPENDED && foundCustomerEntity.getStatus() == Status.SUSPENDED) {
-            throw new CustomerAlreadyInactiveException(customerId);
+            throw new CustomerAlreadyInactiveException(businessId);
         }
         foundCustomerEntity.setStatus(status);
         customerRepository.save(foundCustomerEntity);
