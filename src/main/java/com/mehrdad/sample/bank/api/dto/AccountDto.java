@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,24 +28,13 @@ public class AccountDto {
     @NotBlank
     private String number;
 
-    @NotNull
     private Status status;
 
     @NotNull
     private List<MoneyDto> moneys;
 
-    @Override
-    public String toString() {
-        return String.format("number='%s', balance=%s, status=%s",
-                number, printMoneys(), status);
-    }
+    private Instant createdAt;
 
-    private String printMoneys() {
-        StringBuilder sb = new StringBuilder();
-        for (MoneyDto money : moneys) {
-            sb.append(money.toString()).append(" ");
-        }
-        return sb.toString();
-    }
+    private Instant updatedAt;
 
 }

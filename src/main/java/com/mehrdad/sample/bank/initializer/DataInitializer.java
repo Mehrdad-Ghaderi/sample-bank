@@ -5,6 +5,7 @@ import com.mehrdad.sample.bank.core.entity.CustomerEntity;
 import com.mehrdad.sample.bank.core.entity.Status;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
 import com.mehrdad.sample.bank.core.repository.CustomerRepository;
+import com.mehrdad.sample.bank.core.util.AccountNumberGenerator;
 import com.mehrdad.sample.bank.core.util.CustomerBusinessIdGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -12,7 +13,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.UUID;
 
 /**
  * Created by Mehrdad Ghaderi, S&M
@@ -26,33 +26,35 @@ public class DataInitializer implements CommandLineRunner {
 
     private final AccountRepository accountRepository;
     private final CustomerRepository customerRepository;
+    private final CustomerBusinessIdGenerator customerBusinessIdGenerator;
 
     @Override
     public void run(String... args) {
         String bankName = "BANK";
-        Integer businessId = CustomerBusinessIdGenerator.generate();
-        String bankAccountNumber = "1001-111-" + businessId;
         String phoneNumber = "0011111111111";
 
-        // Step 1: Ensure the BANK customer exist
         CustomerEntity bank = customerRepository.findByName(bankName)
-                .orElseGet(() -> customerRepository.save(createBank(bankName, businessId)));
+                .orElseGet(() -> {
+                    Integer businessId = customerBusinessIdGenerator.getNextBusinessId();
+                    return customerRepository.save(createBank(bankName, businessId, phoneNumber));
+                });
 
-        // Step 2: Ensure Bank account exists
+        String bankAccountNumber = AccountNumberGenerator.generate(bank.getBusinessId());
+
         if (!accountRepository.existsByNumber(bankAccountNumber)) {
             AccountEntity account = createBankAccount(bankAccountNumber, bank);
-            bank.addAccount(account); // set both sides
+            bank.addAccount(account);
             account.setCustomer(bank);
             customerRepository.save(bank);
         }
     }
 
-    private CustomerEntity createBank(String name, Integer businessId) {
+    private CustomerEntity createBank(String name, Integer businessId, String phonenumber) {
         CustomerEntity client;
         client = new CustomerEntity();
         client.setName(name);
         client.setBusinessId(businessId);
-        client.setPhoneNumber("0013432021911");
+        client.setPhoneNumber(phonenumber);
         client.setStatus(Status.ACTIVE);
         client.setAccounts(new ArrayList<>());
         return client;

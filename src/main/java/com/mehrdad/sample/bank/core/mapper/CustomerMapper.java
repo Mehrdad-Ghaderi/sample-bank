@@ -1,52 +1,30 @@
 package com.mehrdad.sample.bank.core.mapper;
 
+import com.mehrdad.sample.bank.api.dto.CustomerCreateDto;
 import com.mehrdad.sample.bank.api.dto.CustomerDto;
 import com.mehrdad.sample.bank.core.entity.CustomerEntity;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+import java.util.List;
 
 /**
  * Created by Mehrdad Ghaderi
  */
-@Component
-public class CustomerMapper {
+@Mapper(componentModel = "spring", uses = {AccountMapper.class})
+public interface CustomerMapper {
 
-    private final AccountMapper accountMapper;
+    // DTO -> Entity for creation: ignore id and businessId
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "businessId", ignore = true)
+    CustomerEntity toCustomerEntity(CustomerCreateDto dto);
 
-    public CustomerMapper(AccountMapper accountMapper) {
-        this.accountMapper = accountMapper;
-    }
 
-    public CustomerDto toCustomerDto(CustomerEntity customerEntity) {
-        if (customerEntity == null) {
-            return null;
-        }
-        CustomerDto customerDto = new CustomerDto();
-        customerDto.setId(customerEntity.getId());
-        customerDto.setName(customerEntity.getName());
-        customerDto.setBusinessId(customerEntity.getBusinessId());
-        customerDto.setPhoneNumber(customerEntity.getPhoneNumber());
-        customerDto.setStatus(customerEntity.getStatus());
-        customerDto.setAccounts(accountMapper.toAccountDtoList(customerEntity.getAccounts()));
+    CustomerDto toCustomerDto(CustomerEntity entity);
 
-        return customerDto;
-    }
 
-    public CustomerEntity toCustomerEntity(CustomerDto customerDto) {
-        if (customerDto == null) {
-            return null;
-        }
-        CustomerEntity customerEntity = new CustomerEntity();
-        customerEntity.setId(customerDto.getId());
-        customerEntity.setName(customerDto.getName());
-        customerEntity.setBusinessId(customerEntity.getBusinessId());
-        customerEntity.setPhoneNumber(customerDto.getPhoneNumber());
-        customerEntity.setStatus(customerDto.getStatus());
-        customerEntity.setAccounts(accountMapper.toAccountEntityList(customerDto.getAccounts(), customerEntity));
+    List<CustomerDto> toCustomerDtoList(List<CustomerEntity> entities);
 
-        if (customerEntity.getAccounts() != null) {
-            customerEntity.getAccounts().forEach(account -> account.setCustomer(customerEntity));
-        }
+    List<CustomerEntity> toCustomerEntityList(List<CustomerDto> dtos);
 
-        return customerEntity;
-    }
 }
