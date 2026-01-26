@@ -17,7 +17,10 @@ public class CustomerUpdateDto {
     @Size(max = 45)
     private String name;
 
-    @Pattern(regexp = "^\\+?[0-9]{10,15}$")
+    @Pattern(
+            regexp = "^\\+?[0-9\\s\\-()]{10,20}$",
+            message = "Invalid phone number format"
+    )
     private String phoneNumber;
     private Status Status;
 }

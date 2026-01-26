@@ -2,6 +2,7 @@ package com.mehrdad.sample.bank.core.entity;
 
 import jakarta.persistence.*;
 import jakarta.persistence.Entity;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -50,10 +51,14 @@ public class CustomerEntity {
     @Column(name = "business_id", nullable = false, updatable = false)
     private Integer businessId;
 
-    @Column(length = 45, nullable = false)
+    @Column(length = 70, nullable = false)
     private String name;
 
-    @Column(name = "phone_number", length = 13, nullable = false)
+    @Pattern(
+            regexp = "^\\+[0-9]{10,15}$",
+            message = "Phone number must be stored in international format"
+    )
+    @Column(name = "phone_number", length = 16, nullable = false)
     private String phoneNumber;
 
     @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)

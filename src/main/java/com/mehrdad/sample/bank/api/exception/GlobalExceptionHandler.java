@@ -1,7 +1,7 @@
 package com.mehrdad.sample.bank.api.exception;
 
 
-import com.mehrdad.sample.bank.api.error.ApiError;
+import com.mehrdad.sample.bank.api.error.ApiErrorResponse;
 import com.mehrdad.sample.bank.core.exception.CustomerAlreadyActiveException;
 import com.mehrdad.sample.bank.core.exception.CustomerAlreadyExistException;
 import com.mehrdad.sample.bank.core.exception.CustomerAlreadyInactiveException;
@@ -9,26 +9,28 @@ import com.mehrdad.sample.bank.core.exception.CustomerNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomerAlreadyActiveException.class)
-    public ResponseEntity<ApiError> handleCustomerAlreadyActive(
+    public ResponseEntity<ApiErrorResponse> handleCustomerAlreadyActive(
             CustomerAlreadyActiveException ex,
             HttpServletRequest request) {
 
-        ApiError error = new ApiError(
-                Instant.now(),
+        ApiErrorResponse error = new ApiErrorResponse(
                 HttpStatus.CONFLICT.value(),
-                "Customer_ALREADY_ACTIVE",
+                "CUSTOMER_ALREADY_ACTIVE",
                 ex.getMessage(),
-                request.getRequestURI()
-        );
+                request.getRequestURI(),
+                OffsetDateTime.now()
+                );
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
@@ -36,17 +38,17 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(CustomerAlreadyInactiveException.class)
-    public ResponseEntity<ApiError> handleCustomerAlreadyInactive(
+    public ResponseEntity<ApiErrorResponse> handleCustomerAlreadyInactive(
             CustomerAlreadyInactiveException ex,
             HttpServletRequest request) {
 
-        ApiError error = new ApiError(
-                Instant.now(),
+        ApiErrorResponse error = new ApiErrorResponse(
                 HttpStatus.CONFLICT.value(),
-                "Customer_ALREADY_INACTIVE",
+                "CUSTOMER_ALREADY_INACTIVE",
                 ex.getMessage(),
-                request.getRequestURI()
-        );
+                request.getRequestURI(),
+                OffsetDateTime.now()
+                );
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
@@ -54,17 +56,17 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(CustomerNotFoundException.class)
-    public ResponseEntity<ApiError> handleCustomerNotFound(
+    public ResponseEntity<ApiErrorResponse> handleCustomerNotFound(
             CustomerNotFoundException ex,
             HttpServletRequest request) {
 
-        ApiError error = new ApiError(
-                Instant.now(),
-                HttpStatus.CONFLICT.value(),
-                "Customer_NOT_FOUND",
+        ApiErrorResponse error = new ApiErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "CUSTOMER_NOT_FOUND",
                 ex.getMessage(),
-                request.getRequestURI()
-        );
+                request.getRequestURI(),
+                OffsetDateTime.now()
+                );
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
@@ -72,20 +74,45 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(CustomerAlreadyExistException.class)
-    public ResponseEntity<ApiError> handleCustomerExist(
+    public ResponseEntity<ApiErrorResponse> handleCustomerExist(
             CustomerAlreadyExistException ex,
             HttpServletRequest request) {
 
-        ApiError error = new ApiError(
-                Instant.now(),
+        ApiErrorResponse error = new ApiErrorResponse(
                 HttpStatus.CONFLICT.value(),
-                "Customer_ALREADY_EXIST",
+                "CUSTOMER_ALREADY_EXIST",
                 ex.getMessage(),
-                request.getRequestURI()
-        );
+                request.getRequestURI(),
+                OffsetDateTime.now()
+                );
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
+                .body(error);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiErrorResponse> handleValidationException(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest request
+    ) {
+        String firstError = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .findFirst()
+                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .orElse("Validation failed");
+
+        ApiErrorResponse error = new ApiErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "VALIDATION_FAILED",
+                firstError,
+                request.getRequestURI(),
+                OffsetDateTime.now(ZoneOffset.UTC)
+                );
+
+        return ResponseEntity
+                .badRequest()
                 .body(error);
     }
 }

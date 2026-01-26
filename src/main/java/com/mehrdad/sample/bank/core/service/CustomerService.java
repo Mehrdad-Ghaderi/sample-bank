@@ -82,13 +82,17 @@ public class CustomerService {
         if (customerUpdateDto.getName() != null) {
             customer.setName(customerUpdateDto.getName());
         }
+
+
         // update phone number if value exists
         if (customerUpdateDto.getPhoneNumber() != null) {
+            String normalizedPhoneNumber = normalizePhoneNumber(customerUpdateDto.getPhoneNumber());
+            customer.setPhoneNumber(normalizedPhoneNumber);
             // uniqueness check
-            if (customerRepository.existsByPhoneNumber(customerUpdateDto.getPhoneNumber())) {
+            if (customerRepository.existsByPhoneNumber(normalizedPhoneNumber)) {
                 throw new PhoneNumberAlreadyExists(customerUpdateDto.getPhoneNumber());
             }
-            customer.setPhoneNumber(customerUpdateDto.getPhoneNumber());
+            customer.setPhoneNumber(normalizedPhoneNumber);
         }
         // update status if value exists
         if (customerUpdateDto.getStatus() != null) {
@@ -96,5 +100,12 @@ public class CustomerService {
         }
 
         return customerMapper.toCustomerDto(customer);
+    }
+
+    private String normalizePhoneNumber(String rawPhoneNumber) {
+        if (rawPhoneNumber == null) return null;
+
+        // remove spaces, dashes, parentheses
+        return rawPhoneNumber.replaceAll("[^0-9+]", "");
     }
 }

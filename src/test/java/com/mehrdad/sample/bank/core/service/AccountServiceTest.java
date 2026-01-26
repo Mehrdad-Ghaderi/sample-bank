@@ -127,7 +127,7 @@ class AccountServiceTest {
 //        AccountDto account = new AccountDto();
 //        CustomerDto customer = new CustomerDto();
 //
-//        // No need to stub anything; we just want save to run without error
+//        // No need to stub anything; we just want save to run without errorCode
 //
 //        // Act
 //        boolean result = accountService.createAccount(account, customer);
