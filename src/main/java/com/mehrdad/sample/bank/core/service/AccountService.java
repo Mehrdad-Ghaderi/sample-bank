@@ -59,11 +59,11 @@ public class AccountService {
 
     public List<AccountDto> getAllAccounts() {
 
-        return customerRepository.findAll().parallelStream()
+        return customerRepository.findAll().stream()
                 .filter(client -> client.getStatus() == Status.ACTIVE)
                 .map(clientMapper::toCustomerDto)
                 .map(CustomerDto::getAccounts)
-                .flatMap(Collection::parallelStream)
+                .flatMap(Collection::stream)
                 .filter(account -> account.getStatus() == Status.ACTIVE)
                 .collect(Collectors.toList());
     }

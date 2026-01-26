@@ -1,6 +1,5 @@
 package com.mehrdad.sample.bank.api.error;
 
-import java.time.Instant;
 import java.time.OffsetDateTime;
 
 public record ApiErrorResponse(
@@ -8,6 +7,5 @@ public record ApiErrorResponse(
         String errorCode,
         String message,
         String path,
-        OffsetDateTime timestamp
-        ) {
+        OffsetDateTime timestamp) {
 }
