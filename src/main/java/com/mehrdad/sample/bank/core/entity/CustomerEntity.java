@@ -51,11 +51,11 @@ public class CustomerEntity {
     @Column(name = "business_id", nullable = false, updatable = false)
     private Integer businessId;
 
-    @Column(length = 70, nullable = false)
+    @Column(length = 100, nullable = false)
     private String name;
 
     @Pattern(
-            regexp = "^\\+[0-9]{10,15}$",
+            regexp = "^\\+[0-9]{10,16}$",
             message = "Phone number must be stored in international format"
     )
     @Column(name = "phone_number", length = 16, nullable = false)

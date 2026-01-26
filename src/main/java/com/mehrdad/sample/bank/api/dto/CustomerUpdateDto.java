@@ -14,7 +14,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class CustomerUpdateDto {
 
-    @Size(max = 45)
+    @Size(max = 70)
     private String name;
 
     @Pattern(

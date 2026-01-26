@@ -80,14 +80,16 @@ public class CustomerService {
 
         // update update if value exists
         if (customerUpdateDto.getName() != null) {
+            if (customer.getName().equals(customerUpdateDto.getName())) {
+                throw new CustomerNameAlreadyExistsException(customer.getName());
+            }
             customer.setName(customerUpdateDto.getName());
         }
-
 
         // update phone number if value exists
         if (customerUpdateDto.getPhoneNumber() != null) {
             String normalizedPhoneNumber = normalizePhoneNumber(customerUpdateDto.getPhoneNumber());
-            customer.setPhoneNumber(normalizedPhoneNumber);
+            System.out.println(normalizedPhoneNumber);
             // uniqueness check
             if (customerRepository.existsByPhoneNumber(normalizedPhoneNumber)) {
                 throw new PhoneNumberAlreadyExists(customerUpdateDto.getPhoneNumber());
@@ -99,13 +101,35 @@ public class CustomerService {
             customer.setStatus(customerUpdateDto.getStatus());
         }
 
+        customerRepository.save(customer);
+
         return customerMapper.toCustomerDto(customer);
     }
 
-    private String normalizePhoneNumber(String rawPhoneNumber) {
-        if (rawPhoneNumber == null) return null;
+    private String normalizePhoneNumber(String raw) {
+        String countryCode = "+1";
+        if (raw == null || raw.isBlank()) {
+            throw new InvalidPhoneNumberException("Phone number is required");
+        }
 
-        // remove spaces, dashes, parentheses
-        return rawPhoneNumber.replaceAll("[^0-9+]", "");
+        // remove everything except digits
+        String digits = raw.replaceAll("\\D", "");
+
+
+        // reject if it starts with 0
+        if (digits.startsWith("0")) {
+            throw new InvalidPhoneNumberException(
+                    "Phone number must not start with leading zeros"
+            );
+        }
+
+        // must be exactly 10 digits (US/Canada)
+        if (digits.length() != 10) {
+            throw new InvalidPhoneNumberException(
+                    "Phone number must contain exactly 10 digits."
+            );
+        }
+
+        return countryCode + digits;
     }
 }

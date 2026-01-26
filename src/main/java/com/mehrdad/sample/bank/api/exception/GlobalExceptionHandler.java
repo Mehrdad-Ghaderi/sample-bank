@@ -2,10 +2,7 @@ package com.mehrdad.sample.bank.api.exception;
 
 
 import com.mehrdad.sample.bank.api.error.ApiErrorResponse;
-import com.mehrdad.sample.bank.core.exception.CustomerAlreadyActiveException;
-import com.mehrdad.sample.bank.core.exception.CustomerAlreadyExistException;
-import com.mehrdad.sample.bank.core.exception.CustomerAlreadyInactiveException;
-import com.mehrdad.sample.bank.core.exception.CustomerNotFoundException;
+import com.mehrdad.sample.bank.core.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -114,5 +111,39 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .badRequest()
                 .body(error);
+    }
+
+    @ExceptionHandler(PhoneNumberAlreadyExists.class)
+    public ResponseEntity<ApiErrorResponse> handlePhoneNumberAlreadyExists(
+            PhoneNumberAlreadyExists ex,
+            HttpServletRequest request
+    ) {
+        ApiErrorResponse error = new ApiErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "PHONE_NUMBER_ALREADY_EXISTS",
+                ex.getMessage(),
+                request.getRequestURI(),
+                OffsetDateTime.now()
+                );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(error);
+    }
+
+    @ExceptionHandler(CustomerNameAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleCustomerNameExists(
+            CustomerNameAlreadyExistsException ex,
+            HttpServletRequest request
+    ) {
+        ApiErrorResponse error = new ApiErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "CUSTOMER_NAME_ALREADY_EXISTS",
+                ex.getMessage(),
+                request.getRequestURI(),
+                OffsetDateTime.now()
+                );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 }
