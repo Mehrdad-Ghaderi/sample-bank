@@ -1,7 +1,7 @@
 package com.mehrdad.sample.bank.core.service;
 
-import com.mehrdad.sample.bank.api.dto.AccountDto;
-import com.mehrdad.sample.bank.api.dto.CustomerDto;
+import com.mehrdad.sample.bank.api.dto.account.AccountDto;
+import com.mehrdad.sample.bank.api.dto.customer.CustomerDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.CustomerEntity;
 import com.mehrdad.sample.bank.core.entity.Status;
@@ -11,6 +11,9 @@ import com.mehrdad.sample.bank.core.mapper.AccountMapper;
 import com.mehrdad.sample.bank.core.mapper.CustomerMapper;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
 import com.mehrdad.sample.bank.core.repository.CustomerRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -20,6 +23,7 @@ import java.util.stream.Collectors;
  * Created by Mehrdad Ghaderi
  */
 @Service
+@RequiredArgsConstructor
 public class AccountService {
 
     private final CustomerRepository customerRepository;
@@ -28,14 +32,9 @@ public class AccountService {
     private final CustomerMapper clientMapper;
     private final CustomerService clientService;
 
-    public AccountService(CustomerRepository customerRepository, AccountRepository accountRepository,
-                          AccountMapper accountMapper, CustomerMapper clientMapper, CustomerService clientService) {
 
-        this.customerRepository = customerRepository;
-        this.accountRepository = accountRepository;
-        this.accountMapper = accountMapper;
-        this.clientMapper = clientMapper;
-        this.clientService = clientService;
+    public Page<AccountDto> getAccounts(Pageable pageable) {
+        return accountRepository.findAll(pageable).map(accountMapper::toAccountDto);
     }
 
     public AccountDto getAccountByAccountNumber(String accountNumber){
@@ -60,33 +59,10 @@ public class AccountService {
     public List<AccountDto> getAllAccounts() {
 
         return customerRepository.findAll().stream()
-                .filter(client -> client.getStatus() == Status.ACTIVE)
                 .map(clientMapper::toCustomerDto)
                 .map(CustomerDto::getAccounts)
                 .flatMap(Collection::stream)
-                .filter(account -> account.getStatus() == Status.ACTIVE)
                 .collect(Collectors.toList());
-    }
-
-    public boolean createAccount(AccountDto account, CustomerDto customerDto) {
-        try {
-            account.setStatus(Status.ACTIVE);
-            save(account, customerDto);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    public void save(AccountDto account, CustomerDto customerDto) {
-        CustomerEntity customerEntity = customerRepository.findById(customerDto.getId())
-                .orElseThrow(() -> new CustomerNotFoundException(customerDto.getId()));
-
-        AccountEntity accountEntity = accountMapper.toAccountEntity(account, customerEntity);
-
-        customerEntity.addAccount(accountEntity);
-        customerRepository.save(customerEntity);
     }
 
     public void freezeAccount(String accountNumber) {

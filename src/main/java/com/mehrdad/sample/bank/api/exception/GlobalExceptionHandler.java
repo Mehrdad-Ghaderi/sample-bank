@@ -4,6 +4,7 @@ package com.mehrdad.sample.bank.api.exception;
 import com.mehrdad.sample.bank.api.error.ApiErrorResponse;
 import com.mehrdad.sample.bank.core.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,6 +16,27 @@ import java.time.ZoneOffset;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    //CUSTOMER ********************
+    //         ********************
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(
+            DataIntegrityViolationException ex,
+            HttpServletRequest request
+    ) {
+        Throwable root = ex.getMostSpecificCause();
+
+        ApiErrorResponse error = new ApiErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "DATA_INTEGRITY_VIOLATION",
+                root != null ? root.getMessage() : ex.getMessage(),
+                request.getRequestURI(),
+                OffsetDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
 
     @ExceptionHandler(CustomerAlreadyActiveException.class)
     public ResponseEntity<ApiErrorResponse> handleCustomerAlreadyActive(
@@ -146,4 +168,9 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
+
+    // ACCOUNT ********************
+    //         ********************
+
+
 }

@@ -1,6 +1,7 @@
 package com.mehrdad.sample.bank.api.dto;
 
 
+import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.core.entity.Currency;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

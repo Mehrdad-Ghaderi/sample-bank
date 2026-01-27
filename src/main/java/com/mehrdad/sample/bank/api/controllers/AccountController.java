@@ -1,14 +1,13 @@
 package com.mehrdad.sample.bank.api.controllers;
 
-import com.mehrdad.sample.bank.api.dto.AccountDto;
+import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.core.service.AccountService;
-import com.mehrdad.sample.bank.core.service.CustomerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 
 /**
@@ -21,56 +20,26 @@ public class AccountController {
     public static final String API_V1 = "/api/v1";
 
     public static final String ACCOUNTS = API_V1 + "/accounts";
-    public static final String ACCOUNT_BY_ID = ACCOUNTS + "/{accountNumber}";
-
-    public static final String CLIENTS = API_V1 + "/customers";
-    public static final String CLIENT_ACCOUNTS = CLIENTS + "/{customerId}/accounts";
-
+    public static final String ACCOUNTS_ID = ACCOUNTS + "/{accountNumber}";
 
     private final AccountService accountService;
-    private final CustomerService customerService;
 
     @GetMapping(ACCOUNTS)
-    public List<AccountDto> getAccounts() {
-        return accountService.getAllAccounts();
+    public ResponseEntity<Page<AccountDto>> getAccounts(
+            @PageableDefault(size = 5, sort = "createdAt") Pageable pageable) {
+
+        return ResponseEntity.ok(accountService.getAccounts(pageable));
     }
+
 
     /**
      * Get a single account by its account number
      */
-    @GetMapping(ACCOUNT_BY_ID)
+    @GetMapping(ACCOUNTS_ID)
     public ResponseEntity<AccountDto> getAccountByAccountNumber(@PathVariable String accountNumber) {
         AccountDto account = accountService.getAccountByAccountNumber(accountNumber);
         return ResponseEntity.ok(account);
     }
-
-    @GetMapping(CLIENT_ACCOUNTS)
-    public ResponseEntity<List<AccountDto>> getAccountsByCustomerId(@PathVariable UUID customerId) {
-
-        List<AccountDto> accounts = accountService.getAccountsByCustomerId(customerId);
-        return ResponseEntity.ok(accounts);
-    }
-
-    /**
-     * Get all accounts belonging to a customer
-     */
-  /*  @PostMapping(CLIENT_ACCOUNTS)
-    public ResponseEntity<Object> createAccountByCustomerId(@PathVariable("customerId") UUID customerID,
-                                                          @RequestBody AccountDto accountDto) {
-
-        CustomerDto foundCustomer = customerService.getCustomerById(customerID);
-
-        accountService.createAccount(accountDto, foundCustomer);
-        AccountDto savedAccountDto = accountService.getAccountByAccountNumber(accountDto.getNumber());
-
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(savedAccountDto.getNumber())
-                .toUri();
-
-        return ResponseEntity.created(location).build();
-    }*/
-
 
     /*
     *//**

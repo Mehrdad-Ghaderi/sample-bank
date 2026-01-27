@@ -1,8 +1,8 @@
-package com.mehrdad.sample.bank.api.dto;
+package com.mehrdad.sample.bank.api.dto.customer;
 
 import com.mehrdad.sample.bank.core.entity.Status;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,17 +12,15 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CustomerCreateDto {
-    @NotBlank
+public class CustomerUpdateDto {
+
+    @Size(max = 70)
     private String name;
 
-    @NotBlank
     @Pattern(
             regexp = "^\\+?[0-9\\s\\-()]{10,20}$",
             message = "Invalid phone number format"
     )
     private String phoneNumber;
-
-    private Status status;
+    private Status Status;
 }
-

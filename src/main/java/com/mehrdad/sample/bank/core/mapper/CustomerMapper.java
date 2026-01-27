@@ -1,7 +1,7 @@
 package com.mehrdad.sample.bank.core.mapper;
 
-import com.mehrdad.sample.bank.api.dto.CustomerCreateDto;
-import com.mehrdad.sample.bank.api.dto.CustomerDto;
+import com.mehrdad.sample.bank.api.dto.customer.CustomerCreateDto;
+import com.mehrdad.sample.bank.api.dto.customer.CustomerDto;
 import com.mehrdad.sample.bank.core.entity.CustomerEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

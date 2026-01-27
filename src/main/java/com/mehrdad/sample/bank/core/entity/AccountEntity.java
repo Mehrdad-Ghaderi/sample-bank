@@ -44,8 +44,8 @@ public class AccountEntity {
     @Column(nullable = false, updatable = false)
     private UUID id;
 
-    // Business identifier (IBAN / account number)
-    @Column(length = 15, unique = true, nullable = false)
+    // Business identifier (year-bankCode-customerBusinessId number)
+    @Column(length = 19, unique = true, nullable = false)
     private String number;
 
     @Enumerated(EnumType.STRING)
@@ -86,6 +86,10 @@ public class AccountEntity {
         Instant now = Instant.now();
         createdAt = now;
         updatedAt = now;
+
+        if (status == null) {
+            status = Status.ACTIVE;
+        }
     }
 
     @PreUpdate

@@ -20,7 +20,7 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, UUID> 
     @Query("select max(c.businessId) from CustomerEntity c")
     Integer findLastBusinessId();
 
-    Optional<Object> findByPhoneNumber(@NotBlank String phoneNumber);
+    Optional<CustomerEntity> findByPhoneNumber(@NotBlank String phoneNumber);
 
     boolean existsByPhoneNumber(@Pattern(regexp = "^\\+?[0-9]{10,15}$") String phoneNumber);
 }

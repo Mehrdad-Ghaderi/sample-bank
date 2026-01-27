@@ -1,6 +1,7 @@
-package com.mehrdad.sample.bank.api.dto;
+package com.mehrdad.sample.bank.api.dto.customer;
 
 
+import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.core.entity.Status;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Null;

@@ -1,6 +1,6 @@
 package com.mehrdad.sample.bank.core.service;
 
-import com.mehrdad.sample.bank.api.dto.AccountDto;
+import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.core.entity.Status;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
