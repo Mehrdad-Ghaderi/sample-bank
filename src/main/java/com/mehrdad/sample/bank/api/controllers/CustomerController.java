@@ -16,7 +16,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Created by Mehrdad Ghaderi
@@ -28,24 +27,24 @@ public class CustomerController {
 
     public static final String API_V1 = "/api/v1";
 
-    public static final String CUSTOMERS = API_V1 + "/customers";
-    public static final String CUSTOMERS_ID = CUSTOMERS + "/{customerId}";
+    public static final String CUSTOMERS_PATH = API_V1 + "/customers";
+    public static final String CUSTOMERS_ID_PATH = CUSTOMERS_PATH + "/{customerId}";
 
-    public static final String CLIENT_ACCOUNTS = CUSTOMERS + "/{customerId}/accounts";
+    public static final String CLIENTS_ID_ACCOUNTS_PATH = CUSTOMERS_PATH + "/{customerId}/accounts";
 
     private final CustomerService customerService;
 
-    @GetMapping(CUSTOMERS)
+    @GetMapping(CUSTOMERS_PATH)
     public List<CustomerDto> getAllCustomers() {
-        return customerService.getAllCustomers().collect(Collectors.toList());
+        return customerService.getCustomers();
     }
 
-    @GetMapping(CUSTOMERS_ID)
+    @GetMapping(CUSTOMERS_ID_PATH)
     public CustomerDto getCustomerById(@PathVariable UUID customerId) {
         return customerService.getCustomerById(customerId);
     }
 
-    @PostMapping(CUSTOMERS)
+    @PostMapping(CUSTOMERS_PATH)
     public ResponseEntity<CustomerDto> createCustomer(@RequestBody CustomerCreateDto customerCreateDto) {
         CustomerDto savedCustomerDto = customerService.createCustomer(customerCreateDto);
 
@@ -56,18 +55,18 @@ public class CustomerController {
         return ResponseEntity.created(location).body(savedCustomerDto);
     }
 
-    @DeleteMapping(CUSTOMERS_ID)
+    @DeleteMapping(CUSTOMERS_ID_PATH)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCustomerById(@PathVariable UUID customerId) {
         customerService.deactivateCustomer(customerId);
     }
 
-    @PostMapping(CUSTOMERS_ID)
+    @PostMapping(CUSTOMERS_ID_PATH)
     public void activateCustomer(@PathVariable UUID customerId) {
         customerService.activateCustomer(customerId);
     }
 
-    @PatchMapping(CUSTOMERS_ID)
+    @PatchMapping(CUSTOMERS_ID_PATH)
     public ResponseEntity<CustomerDto> updateCustomer(@PathVariable UUID customerId,
                                                       @Valid @RequestBody CustomerUpdateDto customerUpdateDto) {
         CustomerDto updated = customerService.updateCustomer(customerId, customerUpdateDto);
@@ -77,7 +76,7 @@ public class CustomerController {
     /**
      * create an accounts belonging to a customer
      */
-    @PostMapping(CLIENT_ACCOUNTS)
+    @PostMapping(CLIENTS_ID_ACCOUNTS_PATH)
     public ResponseEntity<AccountDto> createAccountByCustomerId(@PathVariable("customerId") UUID customerID) {
 
         AccountDto createdAccount = customerService.createAccount(customerID);

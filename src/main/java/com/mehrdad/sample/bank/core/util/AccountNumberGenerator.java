@@ -26,7 +26,7 @@ public class AccountNumberGenerator {
                     .map(number -> {
                         try {
                             return Integer.parseInt(number.split("-")[3]);
-                        } catch (NumberFormatException e) {
+                        } catch (Exception e) {
                             return 0;
                         }
                     })

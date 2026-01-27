@@ -13,34 +13,40 @@ import com.mehrdad.sample.bank.core.mapper.CustomerMapper;
 import com.mehrdad.sample.bank.core.repository.CustomerRepository;
 import com.mehrdad.sample.bank.core.util.AccountNumberGenerator;
 import com.mehrdad.sample.bank.core.util.CustomerBusinessIdGenerator;
+import com.mehrdad.sample.bank.core.util.PhoneNumberNormalizer;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 /**
  * Created by Mehrdad Ghaderi
  */
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
     private final CustomerBusinessIdGenerator customerBusinessIdGenerator;
     private final AccountMapper accountMapper;
 
-
+    @Transactional(readOnly = true)
     public CustomerDto getCustomerById(UUID businessId) {
         return customerRepository.findById(businessId)
                 .map(customerMapper::toCustomerDto)
                 .orElseThrow(() -> new CustomerNotFoundException(businessId));
     }
 
-    public Stream<CustomerDto> getAllCustomers() {
-        return customerRepository.findAll().stream().map(customerMapper::toCustomerDto);
+    @Transactional(readOnly = true)
+    public List<CustomerDto> getCustomers() {
+        return customerRepository.findAll()
+                .stream()
+                .map(customerMapper::toCustomerDto)
+                .toList();
     }
 
     public CustomerDto createCustomer(CustomerCreateDto customerCreateDto) {
@@ -91,8 +97,7 @@ public class CustomerService {
 
         // update phone number if value exists
         if (customerUpdateDto.getPhoneNumber() != null) {
-            String normalizedPhoneNumber = normalizePhoneNumber(customerUpdateDto.getPhoneNumber());
-            System.out.println(normalizedPhoneNumber);
+            String normalizedPhoneNumber = PhoneNumberNormalizer.normalizePhoneNumber(customerUpdateDto.getPhoneNumber());
             // uniqueness check
             if (customerRepository.existsByPhoneNumber(normalizedPhoneNumber)) {
                 throw new PhoneNumberAlreadyExists(customerUpdateDto.getPhoneNumber());
@@ -111,7 +116,6 @@ public class CustomerService {
 
     // ACCOUNT ***************************************
 
-    @Transactional
     public AccountDto createAccount(UUID customerId) {
         CustomerEntity foundCustomer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException(customerId));
@@ -124,30 +128,4 @@ public class CustomerService {
         return accountMapper.toAccountDto(newAccount);
     }
 
-    private String normalizePhoneNumber(String raw) {
-        String countryCode = "+1";
-        if (raw == null || raw.isBlank()) {
-            throw new InvalidPhoneNumberException("Phone number is required");
-        }
-
-        // remove everything except digits
-        String digits = raw.replaceAll("\\D", "");
-
-
-        // reject if it starts with 0
-        if (digits.startsWith("0")) {
-            throw new InvalidPhoneNumberException(
-                    "Phone number must not start with leading zeros"
-            );
-        }
-
-        // must be exactly 10 digits (US/Canada)
-        if (digits.length() != 10) {
-            throw new InvalidPhoneNumberException(
-                    "Phone number must contain exactly 10 digits."
-            );
-        }
-
-        return countryCode + digits;
-    }
 }
