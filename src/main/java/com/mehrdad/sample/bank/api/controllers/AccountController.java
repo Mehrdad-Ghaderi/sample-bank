@@ -2,7 +2,6 @@ package com.mehrdad.sample.bank.api.controllers;
 
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.core.service.AccountService;
-import com.mehrdad.sample.bank.core.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

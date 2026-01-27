@@ -8,13 +8,15 @@ import com.mehrdad.sample.bank.core.service.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -30,13 +32,13 @@ public class CustomerController {
     public static final String CUSTOMERS_PATH = API_V1 + "/customers";
     public static final String CUSTOMERS_ID_PATH = CUSTOMERS_PATH + "/{customerId}";
 
-    public static final String CLIENTS_ID_ACCOUNTS_PATH = CUSTOMERS_PATH + "/{customerId}/accounts";
+    public static final String CUSTOMERS_ID_ACCOUNTS_PATH = CUSTOMERS_PATH + "/{customerId}/accounts";
 
     private final CustomerService customerService;
 
     @GetMapping(CUSTOMERS_PATH)
-    public List<CustomerDto> getAllCustomers() {
-        return customerService.getCustomers();
+    public ResponseEntity<Page<CustomerDto>> getCustomers(@PageableDefault(size = 5, sort = "createdAt") Pageable pageable) {
+        return ResponseEntity.ok(customerService.getCustomers(pageable));
     }
 
     @GetMapping(CUSTOMERS_ID_PATH)
@@ -76,7 +78,7 @@ public class CustomerController {
     /**
      * create an accounts belonging to a customer
      */
-    @PostMapping(CLIENTS_ID_ACCOUNTS_PATH)
+    @PostMapping(CUSTOMERS_ID_ACCOUNTS_PATH)
     public ResponseEntity<AccountDto> createAccountByCustomerId(@PathVariable("customerId") UUID customerID) {
 
         AccountDto createdAccount = customerService.createAccount(customerID);

@@ -16,6 +16,8 @@ import com.mehrdad.sample.bank.core.util.CustomerBusinessIdGenerator;
 import com.mehrdad.sample.bank.core.util.PhoneNumberNormalizer;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,18 +37,15 @@ public class CustomerService {
     private final AccountMapper accountMapper;
 
     @Transactional(readOnly = true)
+    public Page<CustomerDto> getCustomers(Pageable pageable) {
+        return customerRepository.findAll(pageable).map(customerMapper::toCustomerDto);
+    }
+
+    @Transactional(readOnly = true)
     public CustomerDto getCustomerById(UUID businessId) {
         return customerRepository.findById(businessId)
                 .map(customerMapper::toCustomerDto)
                 .orElseThrow(() -> new CustomerNotFoundException(businessId));
-    }
-
-    @Transactional(readOnly = true)
-    public List<CustomerDto> getCustomers() {
-        return customerRepository.findAll()
-                .stream()
-                .map(customerMapper::toCustomerDto)
-                .toList();
     }
 
     public CustomerDto createCustomer(CustomerCreateDto customerCreateDto) {
@@ -55,7 +54,6 @@ public class CustomerService {
         String normalizedPhoneNumber = PhoneNumberNormalizer.normalizePhoneNumber(
                 customerCreateDto.getPhoneNumber()
         );
-        System.out.println(normalizedPhoneNumber);
 
         if (customerRepository.findByPhoneNumber(normalizedPhoneNumber).isPresent()) {
             throw new CustomerAlreadyExistException(normalizedPhoneNumber);
