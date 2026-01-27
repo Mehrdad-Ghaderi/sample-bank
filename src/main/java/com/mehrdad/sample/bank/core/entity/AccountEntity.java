@@ -45,7 +45,7 @@ public class AccountEntity {
     private UUID id;
 
     // Business identifier (year-bankCode-customerBusinessId number)
-    @Column(length = 15, unique = true, nullable = false)
+    @Column(length = 19, unique = true, nullable = false)
     private String number;
 
     @Enumerated(EnumType.STRING)

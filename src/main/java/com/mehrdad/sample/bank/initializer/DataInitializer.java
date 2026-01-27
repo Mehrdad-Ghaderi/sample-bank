@@ -39,7 +39,7 @@ public class DataInitializer implements CommandLineRunner {
                     return customerRepository.save(createBank(BANK_NAME, businessId, phoneNumber));
                 });
 
-        String bankAccountNumber = AccountNumberGenerator.generate(bank.getBusinessId());
+        String bankAccountNumber = AccountNumberGenerator.generate(bank);
 
         if (!accountRepository.existsByNumber(bankAccountNumber)) {
             AccountEntity account = createBankAccount(bankAccountNumber, bank);

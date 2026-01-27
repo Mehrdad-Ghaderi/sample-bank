@@ -117,7 +117,7 @@ public class CustomerService {
                 .orElseThrow(() -> new CustomerNotFoundException(customerId));
 
         AccountEntity newAccount = new AccountEntity();
-        newAccount.setNumber(AccountNumberGenerator.generate(foundCustomer.getBusinessId()));
+        newAccount.setNumber(AccountNumberGenerator.generate(foundCustomer));
         foundCustomer.addAccount(newAccount);
         customerRepository.saveAndFlush(foundCustomer);
 
