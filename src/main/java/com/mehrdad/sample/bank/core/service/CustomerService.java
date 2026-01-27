@@ -50,12 +50,21 @@ public class CustomerService {
     }
 
     public CustomerDto createCustomer(CustomerCreateDto customerCreateDto) {
-        if (customerRepository.findByPhoneNumber(customerCreateDto.getPhoneNumber()).isPresent()) {
-            throw new CustomerAlreadyExistException(customerCreateDto.getPhoneNumber());
+
+        // normalize phone number
+        String normalizedPhoneNumber = PhoneNumberNormalizer.normalizePhoneNumber(
+                customerCreateDto.getPhoneNumber()
+        );
+        System.out.println(normalizedPhoneNumber);
+
+        if (customerRepository.findByPhoneNumber(normalizedPhoneNumber).isPresent()) {
+            throw new CustomerAlreadyExistException(normalizedPhoneNumber);
         }
+
         CustomerEntity customerEntity = customerMapper.toCustomerEntity(customerCreateDto);
+        customerEntity.setPhoneNumber(normalizedPhoneNumber);
         customerEntity.setBusinessId(customerBusinessIdGenerator.getNextBusinessId());
-        CustomerEntity savedCustomerEntity = customerRepository.save(customerEntity);
+        CustomerEntity savedCustomerEntity = customerRepository.saveAndFlush(customerEntity);
         return customerMapper.toCustomerDto(savedCustomerEntity);
     }
 
