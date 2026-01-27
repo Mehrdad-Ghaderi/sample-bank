@@ -30,13 +30,13 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        String bankName = "BANK";
+        String BANK_NAME = "BANK";
         String phoneNumber = "0011111111111";
 
-        CustomerEntity bank = customerRepository.findByName(bankName)
+        CustomerEntity bank = customerRepository.findByName(BANK_NAME)
                 .orElseGet(() -> {
                     Integer businessId = customerBusinessIdGenerator.getNextBusinessId();
-                    return customerRepository.save(createBank(bankName, businessId, phoneNumber));
+                    return customerRepository.save(createBank(BANK_NAME, businessId, phoneNumber));
                 });
 
         String bankAccountNumber = AccountNumberGenerator.generate(bank.getBusinessId());
@@ -49,12 +49,12 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
-    private CustomerEntity createBank(String name, Integer businessId, String phonenumber) {
+    private CustomerEntity createBank(String name, Integer businessId, String phoneNumber) {
         CustomerEntity client;
         client = new CustomerEntity();
         client.setName(name);
         client.setBusinessId(businessId);
-        client.setPhoneNumber(phonenumber);
+        client.setPhoneNumber(phoneNumber);
         client.setStatus(Status.ACTIVE);
         client.setAccounts(new ArrayList<>());
         return client;

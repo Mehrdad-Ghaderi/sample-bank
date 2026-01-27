@@ -1,9 +1,8 @@
-package com.mehrdad.sample.bank.api.dto;
+package com.mehrdad.sample.bank.api.dto.account;
 
 
+import com.mehrdad.sample.bank.api.dto.MoneyDto;
 import com.mehrdad.sample.bank.core.entity.Status;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,15 +21,12 @@ import java.util.UUID;
 @AllArgsConstructor
 public class AccountDto {
 
-    @NotBlank
     private UUID id;
 
-    @NotBlank
     private String number;
 
     private Status status;
 
-    @NotNull
     private List<MoneyDto> moneys;
 
     private Instant createdAt;

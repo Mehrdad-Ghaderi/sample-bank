@@ -8,14 +8,14 @@ public class AccountNumberGenerator {
 
     private AccountNumberGenerator() {}
 
-    public static String generate(Integer businessId) {
+    public static String generate(Integer customerBusinessId) {
         String year = String.valueOf(Year.now().getValue());
 
         return String.format(
                 "%s-%s-%06d",
                 year,
                 BANK_CODE,
-                businessId
+                customerBusinessId
         );
     }
 }

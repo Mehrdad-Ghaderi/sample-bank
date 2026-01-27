@@ -1,16 +1,22 @@
 package com.mehrdad.sample.bank.core.service;
 
-import com.mehrdad.sample.bank.api.dto.CustomerCreateDto;
-import com.mehrdad.sample.bank.api.dto.CustomerDto;
-import com.mehrdad.sample.bank.api.dto.CustomerUpdateDto;
+import com.mehrdad.sample.bank.api.dto.account.AccountDto;
+import com.mehrdad.sample.bank.api.dto.customer.CustomerCreateDto;
+import com.mehrdad.sample.bank.api.dto.customer.CustomerDto;
+import com.mehrdad.sample.bank.api.dto.customer.CustomerUpdateDto;
+import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.CustomerEntity;
 import com.mehrdad.sample.bank.core.entity.Status;
 import com.mehrdad.sample.bank.core.exception.*;
+import com.mehrdad.sample.bank.core.mapper.AccountMapper;
 import com.mehrdad.sample.bank.core.mapper.CustomerMapper;
 import com.mehrdad.sample.bank.core.repository.CustomerRepository;
+import com.mehrdad.sample.bank.core.util.AccountNumberGenerator;
 import com.mehrdad.sample.bank.core.util.CustomerBusinessIdGenerator;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -19,16 +25,13 @@ import java.util.stream.Stream;
  * Created by Mehrdad Ghaderi
  */
 @Service
+@RequiredArgsConstructor
 public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
     private final CustomerBusinessIdGenerator customerBusinessIdGenerator;
+    private final AccountMapper accountMapper;
 
-    public CustomerService(CustomerRepository customerRepository, CustomerMapper customerMapper, CustomerBusinessIdGenerator customerBusinessIdGenerator) {
-        this.customerRepository = customerRepository;
-        this.customerMapper = customerMapper;
-        this.customerBusinessIdGenerator = customerBusinessIdGenerator;
-    }
 
     public CustomerDto getCustomerById(UUID businessId) {
         return customerRepository.findById(businessId)
@@ -104,6 +107,21 @@ public class CustomerService {
         customerRepository.save(customer);
 
         return customerMapper.toCustomerDto(customer);
+    }
+
+    // ACCOUNT ***************************************
+
+    @Transactional
+    public AccountDto createAccount(UUID customerId) {
+        CustomerEntity foundCustomer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException(customerId));
+
+        AccountEntity newAccount = new AccountEntity();
+        newAccount.setNumber(AccountNumberGenerator.generate(foundCustomer.getBusinessId()));
+        foundCustomer.addAccount(newAccount);
+        customerRepository.saveAndFlush(foundCustomer);
+
+        return accountMapper.toAccountDto(newAccount);
     }
 
     private String normalizePhoneNumber(String raw) {

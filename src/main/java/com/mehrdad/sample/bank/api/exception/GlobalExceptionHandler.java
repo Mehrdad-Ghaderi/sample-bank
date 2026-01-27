@@ -16,6 +16,8 @@ import java.time.ZoneOffset;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    //CUSTOMER ********************
+    //         ********************
     @ExceptionHandler(CustomerAlreadyActiveException.class)
     public ResponseEntity<ApiErrorResponse> handleCustomerAlreadyActive(
             CustomerAlreadyActiveException ex,
@@ -146,4 +148,9 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
+
+    // ACCOUNT ********************
+    //         ********************
+
+
 }

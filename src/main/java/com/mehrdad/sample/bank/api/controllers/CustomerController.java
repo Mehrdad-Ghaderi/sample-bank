@@ -1,9 +1,9 @@
 package com.mehrdad.sample.bank.api.controllers;
 
-import com.mehrdad.sample.bank.api.dto.AccountDto;
-import com.mehrdad.sample.bank.api.dto.CustomerCreateDto;
-import com.mehrdad.sample.bank.api.dto.CustomerDto;
-import com.mehrdad.sample.bank.api.dto.CustomerUpdateDto;
+import com.mehrdad.sample.bank.api.dto.account.AccountDto;
+import com.mehrdad.sample.bank.api.dto.customer.CustomerCreateDto;
+import com.mehrdad.sample.bank.api.dto.customer.CustomerDto;
+import com.mehrdad.sample.bank.api.dto.customer.CustomerUpdateDto;
 import com.mehrdad.sample.bank.core.service.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,22 +28,24 @@ public class CustomerController {
 
     public static final String API_V1 = "/api/v1";
 
-    public static final String CLIENTS = API_V1 + "/customers";
-    public static final String CLIENT_By_ID = CLIENTS + "/{customerId}";
+    public static final String CUSTOMERS = API_V1 + "/customers";
+    public static final String CUSTOMERS_ID = CUSTOMERS + "/{customerId}";
+
+    public static final String CLIENT_ACCOUNTS = CUSTOMERS + "/{customerId}/accounts";
 
     private final CustomerService customerService;
 
-    @GetMapping(CLIENTS)
+    @GetMapping(CUSTOMERS)
     public List<CustomerDto> getAllCustomers() {
         return customerService.getAllCustomers().collect(Collectors.toList());
     }
 
-    @GetMapping(CLIENT_By_ID)
+    @GetMapping(CUSTOMERS_ID)
     public CustomerDto getCustomerById(@PathVariable UUID customerId) {
         return customerService.getCustomerById(customerId);
     }
 
-    @PostMapping(CLIENTS)
+    @PostMapping(CUSTOMERS)
     public ResponseEntity<CustomerDto> createCustomer(@RequestBody CustomerCreateDto customerCreateDto) {
         CustomerDto savedCustomerDto = customerService.createCustomer(customerCreateDto);
 
@@ -54,21 +56,41 @@ public class CustomerController {
         return ResponseEntity.created(location).body(savedCustomerDto);
     }
 
-    @DeleteMapping(CLIENT_By_ID)
+    @DeleteMapping(CUSTOMERS_ID)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCustomerById(@PathVariable UUID customerId) {
         customerService.deactivateCustomer(customerId);
     }
 
-    @PostMapping(CLIENT_By_ID)
+    @PostMapping(CUSTOMERS_ID)
     public void activateCustomer(@PathVariable UUID customerId) {
         customerService.activateCustomer(customerId);
     }
 
-    @PatchMapping(CLIENT_By_ID)
+    @PatchMapping(CUSTOMERS_ID)
     public ResponseEntity<CustomerDto> updateCustomer(@PathVariable UUID customerId,
                                                       @Valid @RequestBody CustomerUpdateDto customerUpdateDto) {
         CustomerDto updated = customerService.updateCustomer(customerId, customerUpdateDto);
         return ResponseEntity.ok(updated);
     }
+
+    /**
+     * create an accounts belonging to a customer
+     */
+    @PostMapping(CLIENT_ACCOUNTS)
+    public ResponseEntity<AccountDto> createAccountByCustomerId(@PathVariable("customerId") UUID customerID) {
+
+        AccountDto createdAccount = customerService.createAccount(customerID);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path(AccountController.ACCOUNTS_ID)
+                .buildAndExpand(createdAccount.getNumber())
+                .toUri();
+
+        return ResponseEntity
+                .created(location)
+                .body(createdAccount);
+    }
+
 }
