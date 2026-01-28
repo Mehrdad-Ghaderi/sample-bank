@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -85,7 +86,7 @@ public class CustomerController {
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
-                .path(AccountController.ACCOUNTS_ID)
+                .path(AccountController.ACCOUNTS_ID_PATH)
                 .buildAndExpand(createdAccount.getNumber())
                 .toUri();
 
@@ -94,4 +95,9 @@ public class CustomerController {
                 .body(createdAccount);
     }
 
+    @GetMapping(CUSTOMERS_ID_ACCOUNTS_PATH)
+    public ResponseEntity<List<AccountDto>> getAccountByCustomerId(@PathVariable UUID customerId) {
+        List<AccountDto> account = customerService.getAccountByCustomerId(customerId);
+        return ResponseEntity.ok(account);
+    }
 }

@@ -135,4 +135,20 @@ public class CustomerService {
         return accountMapper.toAccountDto(newAccount);
     }
 
+    @Transactional(readOnly = true)
+    public List<AccountDto> getAccountByCustomerId(UUID customerId) {
+
+        CustomerEntity foundCustomer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException(customerId));
+
+        List<AccountDto> accounts = foundCustomer.getAccounts().stream()
+                .map(accountMapper::toAccountDto)
+                .toList();
+
+        if (accounts.isEmpty()) {
+            throw new AccountNotFoundException(customerId);
+        }
+
+        return accounts;
+    }
 }

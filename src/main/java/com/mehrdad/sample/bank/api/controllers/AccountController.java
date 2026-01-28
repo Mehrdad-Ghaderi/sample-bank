@@ -19,12 +19,12 @@ public class AccountController {
 
     public static final String API_V1 = "/api/v1";
 
-    public static final String ACCOUNTS = API_V1 + "/accounts";
-    public static final String ACCOUNTS_ID = ACCOUNTS + "/{accountNumber}";
+    public static final String ACCOUNTS_PATH = API_V1 + "/accounts";
+    public static final String ACCOUNTS_ID_PATH = ACCOUNTS_PATH + "/{accountNumber}";
 
     private final AccountService accountService;
 
-    @GetMapping(ACCOUNTS)
+    @GetMapping(ACCOUNTS_PATH)
     public ResponseEntity<Page<AccountDto>> getAccounts(
             @PageableDefault(size = 5, sort = "createdAt") Pageable pageable) {
 
@@ -35,7 +35,7 @@ public class AccountController {
     /**
      * Get a single account by its account number
      */
-    @GetMapping(ACCOUNTS_ID)
+    @GetMapping(ACCOUNTS_ID_PATH)
     public ResponseEntity<AccountDto> getAccountByAccountNumber(@PathVariable String accountNumber) {
         AccountDto account = accountService.getAccountByAccountNumber(accountNumber);
         return ResponseEntity.ok(account);
