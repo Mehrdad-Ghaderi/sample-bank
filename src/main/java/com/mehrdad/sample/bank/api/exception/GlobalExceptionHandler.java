@@ -172,7 +172,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidPhoneNumberException.class)
     public ResponseEntity<ApiErrorResponse> handleInvalidPhoneNumber(
 
-            CustomerNameAlreadyExistsException ex,
+            InvalidPhoneNumberException ex,
             HttpServletRequest request
     ) {
         ApiErrorResponse error = new ApiErrorResponse(
@@ -200,6 +200,20 @@ public class GlobalExceptionHandler {
                 OffsetDateTime.now()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(apiErrorResponse);
+    }
+
+    @ExceptionHandler(AccountStatusAlreadySetException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccountAlreadyHasThatStatus(AccountStatusAlreadySetException ex,
+                                                                              HttpServletRequest request) {
+        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "ACCOUNT_STATUS_ALREADY_SET",
+                ex.getMessage(),
+                request.getRequestURI(),
+                OffsetDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(apiErrorResponse);
     }
 }

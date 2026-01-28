@@ -1,12 +1,12 @@
 package com.mehrdad.sample.bank.core.service;
 
+import com.mehrdad.sample.bank.api.dto.StatusUpdateDto;
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.api.dto.customer.CustomerDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
-import com.mehrdad.sample.bank.core.entity.CustomerEntity;
 import com.mehrdad.sample.bank.core.entity.Status;
+import com.mehrdad.sample.bank.core.exception.AccountStatusAlreadySetException;
 import com.mehrdad.sample.bank.core.exception.AccountNotFoundException;
-import com.mehrdad.sample.bank.core.exception.CustomerNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.AccountMapper;
 import com.mehrdad.sample.bank.core.mapper.CustomerMapper;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
@@ -46,6 +46,19 @@ public class AccountService {
 
     public List<AccountDto> getAccountsByCustomerId(UUID clientId) {
         return clientService.getCustomerById(clientId).getAccounts();
+    }
+
+    public AccountDto updateStatus(UUID id, StatusUpdateDto statusUpdateDto) {
+        AccountEntity foundAccount = accountRepository.findById(id)
+                .orElseThrow(() -> new AccountNotFoundException(id));
+
+        if (foundAccount.getStatus().equals(statusUpdateDto.getStatus())) {
+            throw new AccountStatusAlreadySetException(statusUpdateDto.getStatus());
+        }
+
+        foundAccount.setStatus(statusUpdateDto.getStatus());
+        accountRepository.saveAndFlush(foundAccount);
+        return accountMapper.toAccountDto(foundAccount);
     }
 
     public CustomerDto getCustomerByAccountNumber(String accountNumber) {
