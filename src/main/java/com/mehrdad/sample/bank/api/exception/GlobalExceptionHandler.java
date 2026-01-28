@@ -3,6 +3,9 @@ package com.mehrdad.sample.bank.api.exception;
 
 import com.mehrdad.sample.bank.api.error.ApiErrorResponse;
 import com.mehrdad.sample.bank.core.exception.*;
+import com.mehrdad.sample.bank.core.exception.account.AccountNotFoundException;
+import com.mehrdad.sample.bank.core.exception.account.AccountStatusAlreadySetException;
+import com.mehrdad.sample.bank.core.exception.customer.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;

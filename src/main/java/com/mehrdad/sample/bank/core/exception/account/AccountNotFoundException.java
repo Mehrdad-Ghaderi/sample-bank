@@ -1,4 +1,4 @@
-package com.mehrdad.sample.bank.core.exception;
+package com.mehrdad.sample.bank.core.exception.account;
 
 
 import java.util.UUID;
