@@ -41,27 +41,7 @@ public class AccountController {
         return ResponseEntity.ok(account);
     }
 
-    /*
-    *//**
-     * Create a new account for a customer
-     *//*
-    @PostMapping(CLIENT_ACCOUNTS)
-    public ResponseEntity<AccountDto> createAccountForCustomer(
-            @PathVariable String customerId,
-            @RequestBody @Valid CreateAccountRequest request) {
-
-        AccountDto created = accountService.createAccountForCustomer(customerId, request);
-
-        URI location = URI.create(
-                "/api/v1/accounts/" + created.getAccountNumber()
-        );
-
-        return ResponseEntity
-                .created(location)
-                .body(created);
-    }
-
-    *//**
+    /**
      * Freeze an account
      *//*
     @PatchMapping(ACCOUNT_BY_ID + "/freeze")

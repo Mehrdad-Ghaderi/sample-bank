@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI(),
                 OffsetDateTime.now()
-                );
+        );
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
@@ -67,7 +67,7 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI(),
                 OffsetDateTime.now()
-                );
+        );
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
@@ -85,7 +85,7 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI(),
                 OffsetDateTime.now()
-                );
+        );
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
@@ -103,7 +103,7 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI(),
                 OffsetDateTime.now()
-                );
+        );
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
@@ -128,7 +128,7 @@ public class GlobalExceptionHandler {
                 firstError,
                 request.getRequestURI(),
                 OffsetDateTime.now(ZoneOffset.UTC)
-                );
+        );
 
         return ResponseEntity
                 .badRequest()
@@ -146,7 +146,7 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI(),
                 OffsetDateTime.now()
-                );
+        );
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
@@ -164,7 +164,24 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI(),
                 OffsetDateTime.now()
-                );
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(InvalidPhoneNumberException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidPhoneNumber(
+
+            CustomerNameAlreadyExistsException ex,
+            HttpServletRequest request
+    ) {
+        ApiErrorResponse error = new ApiErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "INVALID_PHONE_NUMBER",
+                ex.getMessage(),
+                request.getRequestURI(),
+                OffsetDateTime.now()
+        );
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
