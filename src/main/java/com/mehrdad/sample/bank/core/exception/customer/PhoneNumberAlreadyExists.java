@@ -1,6 +1,4 @@
-package com.mehrdad.sample.bank.core.exception;
-
-import jakarta.validation.constraints.Pattern;
+package com.mehrdad.sample.bank.core.exception.customer;
 
 public class PhoneNumberAlreadyExists extends RuntimeException {
 

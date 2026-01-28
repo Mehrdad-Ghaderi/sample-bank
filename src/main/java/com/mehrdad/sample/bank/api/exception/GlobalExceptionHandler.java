@@ -3,6 +3,9 @@ package com.mehrdad.sample.bank.api.exception;
 
 import com.mehrdad.sample.bank.api.error.ApiErrorResponse;
 import com.mehrdad.sample.bank.core.exception.*;
+import com.mehrdad.sample.bank.core.exception.account.AccountNotFoundException;
+import com.mehrdad.sample.bank.core.exception.account.AccountStatusAlreadySetException;
+import com.mehrdad.sample.bank.core.exception.customer.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -49,7 +52,7 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI(),
                 OffsetDateTime.now()
-                );
+        );
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
@@ -67,7 +70,7 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI(),
                 OffsetDateTime.now()
-                );
+        );
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
@@ -85,7 +88,7 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI(),
                 OffsetDateTime.now()
-                );
+        );
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
@@ -103,7 +106,7 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI(),
                 OffsetDateTime.now()
-                );
+        );
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
@@ -128,7 +131,7 @@ public class GlobalExceptionHandler {
                 firstError,
                 request.getRequestURI(),
                 OffsetDateTime.now(ZoneOffset.UTC)
-                );
+        );
 
         return ResponseEntity
                 .badRequest()
@@ -146,7 +149,7 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI(),
                 OffsetDateTime.now()
-                );
+        );
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
@@ -164,7 +167,24 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI(),
                 OffsetDateTime.now()
-                );
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(InvalidPhoneNumberException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidPhoneNumber(
+
+            InvalidPhoneNumberException ex,
+            HttpServletRequest request
+    ) {
+        ApiErrorResponse error = new ApiErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "INVALID_PHONE_NUMBER",
+                ex.getMessage(),
+                request.getRequestURI(),
+                OffsetDateTime.now()
+        );
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
@@ -172,5 +192,31 @@ public class GlobalExceptionHandler {
     // ACCOUNT ********************
     //         ********************
 
+    @ExceptionHandler(AccountNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccountNotFound(AccountNotFoundException ex,
+                                                                  HttpServletRequest request) {
+        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "ACCOUNT_NOT_FOUND",
+                ex.getMessage(),
+                request.getRequestURI(),
+                OffsetDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(apiErrorResponse);
+    }
 
+    @ExceptionHandler(AccountStatusAlreadySetException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccountAlreadyHasThatStatus(AccountStatusAlreadySetException ex,
+                                                                              HttpServletRequest request) {
+        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "ACCOUNT_STATUS_ALREADY_SET",
+                ex.getMessage(),
+                request.getRequestURI(),
+                OffsetDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(apiErrorResponse);
+    }
 }

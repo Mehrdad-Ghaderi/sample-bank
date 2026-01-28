@@ -1,5 +1,6 @@
 package com.mehrdad.sample.bank.api.controllers;
 
+import com.mehrdad.sample.bank.api.dto.StatusUpdateDto;
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.core.service.AccountService;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 
 /**
@@ -19,73 +22,40 @@ public class AccountController {
 
     public static final String API_V1 = "/api/v1";
 
-    public static final String ACCOUNTS = API_V1 + "/accounts";
-    public static final String ACCOUNTS_ID = ACCOUNTS + "/{accountNumber}";
+    public static final String ACCOUNTS_PATH = API_V1 + "/accounts";
+    public static final String ACCOUNTS_ID_PATH = ACCOUNTS_PATH + "/{id}";
+    public static final String ACCOUNTS_NUMBER_PATH = ACCOUNTS_PATH + "/{accountNumber}";
 
     private final AccountService accountService;
 
-    @GetMapping(ACCOUNTS)
+    /**
+     * get all accounts default page size 5
+     */
+    @GetMapping(ACCOUNTS_PATH)
     public ResponseEntity<Page<AccountDto>> getAccounts(
             @PageableDefault(size = 5, sort = "createdAt") Pageable pageable) {
 
         return ResponseEntity.ok(accountService.getAccounts(pageable));
     }
 
-
     /**
      * Get a single account by its account number
      */
-    @GetMapping(ACCOUNTS_ID)
+    @GetMapping(ACCOUNTS_NUMBER_PATH)
     public ResponseEntity<AccountDto> getAccountByAccountNumber(@PathVariable String accountNumber) {
         AccountDto account = accountService.getAccountByAccountNumber(accountNumber);
         return ResponseEntity.ok(account);
     }
 
-    /*
-    *//**
-     * Create a new account for a customer
-     *//*
-    @PostMapping(CLIENT_ACCOUNTS)
-    public ResponseEntity<AccountDto> createAccountForCustomer(
-            @PathVariable String customerId,
-            @RequestBody @Valid CreateAccountRequest request) {
+    /**
+     * update the status of an account
+     */
+    @PatchMapping(ACCOUNTS_ID_PATH)
+    public ResponseEntity<AccountDto> updateStatus(@PathVariable UUID id,
+                             @RequestBody StatusUpdateDto statusUpdateDto) {
+        AccountDto accountDto = accountService.updateStatus(id, statusUpdateDto);
 
-        AccountDto created = accountService.createAccountForCustomer(customerId, request);
-
-        URI location = URI.create(
-                "/api/v1/accounts/" + created.getAccountNumber()
-        );
-
-        return ResponseEntity
-                .created(location)
-                .body(created);
+        return ResponseEntity.ok(accountDto);
     }
 
-    *//**
-     * Freeze an account
-     *//*
-    @PatchMapping(ACCOUNT_BY_ID + "/freeze")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void freezeAccount(@PathVariable String accountNumber) {
-        accountService.freezeAccount(accountNumber);
-    }
-
-    *//**
-     * Unfreeze an account
-     *//*
-    @PatchMapping(ACCOUNT_BY_ID + "/unfreeze")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void unfreezeAccount(@PathVariable String accountNumber) {
-        accountService.unfreezeAccount(accountNumber);
-    }
-
-    *//**
-     * Close an account permanently
-     *//*
-    @DeleteMapping(ACCOUNT_BY_ID)
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void closeAccount(@PathVariable String accountNumber) {
-        accountService.closeAccount(accountNumber);
-    }
-    */
 }

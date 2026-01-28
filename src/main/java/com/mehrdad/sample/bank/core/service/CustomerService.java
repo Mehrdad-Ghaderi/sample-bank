@@ -7,7 +7,8 @@ import com.mehrdad.sample.bank.api.dto.customer.CustomerUpdateDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.CustomerEntity;
 import com.mehrdad.sample.bank.core.entity.Status;
-import com.mehrdad.sample.bank.core.exception.*;
+import com.mehrdad.sample.bank.core.exception.account.AccountNotFoundException;
+import com.mehrdad.sample.bank.core.exception.customer.*;
 import com.mehrdad.sample.bank.core.mapper.AccountMapper;
 import com.mehrdad.sample.bank.core.mapper.CustomerMapper;
 import com.mehrdad.sample.bank.core.repository.CustomerRepository;
@@ -135,4 +136,20 @@ public class CustomerService {
         return accountMapper.toAccountDto(newAccount);
     }
 
+    @Transactional(readOnly = true)
+    public List<AccountDto> getAccountByCustomerId(UUID customerId) {
+
+        CustomerEntity foundCustomer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException(customerId));
+
+        List<AccountDto> accounts = foundCustomer.getAccounts().stream()
+                .map(accountMapper::toAccountDto)
+                .toList();
+
+        if (accounts.isEmpty()) {
+            throw new AccountNotFoundException(customerId);
+        }
+
+        return accounts;
+    }
 }
