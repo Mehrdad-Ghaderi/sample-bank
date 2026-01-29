@@ -1,10 +1,10 @@
 package com.mehrdad.sample.bank.api.dto;
 
 
-import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.core.entity.Currency;
 import com.mehrdad.sample.bank.core.entity.TransactionType;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,10 +23,22 @@ import java.util.UUID;
 @AllArgsConstructor
 public class TransactionDto {
     private UUID id;
-    private AccountDto sender;
-    private AccountDto receiver;
+
+    @NotNull
+    private UUID senderAccountId;
+
+    @NotNull
+    private UUID receiverAccountId;
+
+    @NotNull
+    @Positive
     private BigDecimal amount;
+
+    @NotNull
     private Currency currency;
+
+    @NotNull
     private TransactionType type;
+
     private Instant transactionTime;
 }

@@ -14,7 +14,7 @@ import java.util.UUID;
 /**
  * Created by Mehrdad Ghaderi
  */
-
+@Embeddable
 @Getter
 @Setter
 @NoArgsConstructor
