@@ -1,5 +1,6 @@
 package com.mehrdad.sample.bank.core.entity;
 
+import com.mehrdad.sample.bank.core.exception.InsufficientBalanceException;
 import jakarta.persistence.*;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
@@ -13,37 +14,24 @@ import java.util.UUID;
 /**
  * Created by Mehrdad Ghaderi
  */
-@Entity
-@Table(name = "money_entity",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"account_id", "currency"}))
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class MoneyEntity {
+public class Balance {
 
-    @Id
-    @GeneratedValue
-    @Column(nullable = false, updatable = false)
-    private UUID id;
+    @Column(name="amount", nullable = false, precision = 19, scale = 4)
+    private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 3)
+    @Column(name="currency", nullable = false, length = 3)
     private Currency currency;
 
 
-    @Column(nullable = false, precision = 19, scale = 4)
-    private BigDecimal amount;
-
-
-    public MoneyEntity(Currency currency, BigDecimal value) {
-        this.currency = currency;
-        this.amount = value;
-    }
-
     public void decrease(BigDecimal value) {
         if (amount.compareTo(value) < 0) {
-            throw new IllegalStateException("Insufficient balance");
+            throw new InsufficientBalanceException();
         }
         amount = amount.subtract(value);
     }

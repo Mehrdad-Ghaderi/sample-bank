@@ -17,7 +17,7 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     @PostMapping("/transfer")
-    public ResponseEntity<Void> transfer(@RequestBody TransactionDto dto) {
+    public ResponseEntity<Void> depositMoney(@RequestBody TransactionDto dto) {
 
         return ResponseEntity.ok().build();
     }

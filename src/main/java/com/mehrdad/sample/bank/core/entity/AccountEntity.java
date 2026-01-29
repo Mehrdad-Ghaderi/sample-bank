@@ -11,10 +11,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Created by Mehrdad Ghaderi
@@ -56,9 +53,15 @@ public class AccountEntity {
     @JoinColumn(name = "customer_id", nullable = false)
     private CustomerEntity customer;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "account_id", nullable = false)
-    private List<MoneyEntity> moneys = new ArrayList<>();
+    @ElementCollection
+    @CollectionTable(
+            name = "account_balance",
+            joinColumns = @JoinColumn(name = "account_id")
+    )
+    @MapKeyEnumerated(EnumType.STRING)
+    @MapKeyColumn(name = "currency")
+    @Column(name = "amount", precision = 19, scale = 4, nullable = false)
+    private Map<Currency, BigDecimal> balances = new HashMap<>();
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -67,18 +70,20 @@ public class AccountEntity {
     private Instant updatedAt;
 
 
-    public Optional<MoneyEntity> getMoney(Currency currency) {
-        return moneys.stream()
-                .filter(entity -> entity.getCurrency() == currency)
-                .findFirst();
+    public BigDecimal getBalance(Currency currency) {
+        return balances.getOrDefault(currency, BigDecimal.ZERO);
     }
 
-    public MoneyEntity getOrCreateMoney(Currency currency) {
-        return getMoney(currency).orElseGet(() -> {
-            MoneyEntity money = new MoneyEntity(currency, BigDecimal.ZERO);
-            moneys.add(money);
-            return money;
-        });
+    public void increaseBalance(Currency currency, BigDecimal amount) {
+        balances.merge(currency, amount, BigDecimal::add);
+    }
+
+    public void decreaseBalance(Currency currency, BigDecimal amount) {
+        BigDecimal current = balances.getOrDefault(currency, BigDecimal.ZERO);
+        if (current.compareTo(amount) < 0) {
+            throw new IllegalStateException("Insufficient balance");
+        }
+        balances.put(currency, current.subtract(amount));
     }
 
     @PrePersist

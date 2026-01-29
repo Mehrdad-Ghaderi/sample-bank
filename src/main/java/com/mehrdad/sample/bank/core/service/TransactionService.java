@@ -7,10 +7,8 @@ import com.mehrdad.sample.bank.core.exception.*;
 import com.mehrdad.sample.bank.core.exception.account.AccountNotActiveException;
 import com.mehrdad.sample.bank.core.exception.account.AccountNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.AccountMapper;
-import com.mehrdad.sample.bank.core.mapper.MoneyMapper;
 import com.mehrdad.sample.bank.core.mapper.TransactionMapper;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
-import com.mehrdad.sample.bank.core.repository.MoneyRepository;
 import com.mehrdad.sample.bank.core.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,20 +22,21 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class TransactionService {
 
+/*
     private static final String BANK_ACCOUNT_NUMBER = "1001-111-111111";
 
     private final AccountRepository accountRepository;
-    private final MoneyRepository moneyRepository;
     private final TransactionRepository transactionRepository;
-    private final MoneyMapper moneyMapper;
     private final AccountMapper accountMapper;
     private final TransactionMapper transactionMapper;
 
-    /**
-     * Transfers money from one account to another.
+    */
+/**
+     * Transfers balance from one account to another.
      * <p>
      * Atomic, consistent, and fully domain-driven.
-     */
+     *//*
+
     public void transfer(
             TransactionDto dto
     ) {
@@ -49,17 +48,17 @@ public class TransactionService {
         assertActive(receiver);
         assertPositive(dto.getAmount());
 
-        MoneyEntity senderMoney = sender.getMoney(dto.getCurrency())
+        Balance senderBalance = sender.getBalance(dto.getCurrency())
                 .orElseThrow(() ->
-                        new MoneyNotFoundException(sender, dto.getCurrency()));
+                        new BalanceNotFoundException(sender, dto.getCurrency()));
 
-        assertSufficientBalance(sender, senderMoney, dto.getAmount());
+        assertSufficientBalance(sender, senderBalance, dto.getAmount());
 
-        MoneyEntity receiverMoney = receiver.getOrCreateMoney(dto.getCurrency());
+        Balance receiverBalance = receiver.getOrCreateBalance(dto.getCurrency());
 
         // ---- domain mutations ----
-        senderMoney.decrease(dto.getAmount());
-        receiverMoney.increase(dto.getAmount());
+        senderBalance.decrease(dto.getAmount());
+        receiverBalance.increase(dto.getAmount());
 
         TransactionEntity transaction = recordTransaction(
                 sender,
@@ -69,9 +68,11 @@ public class TransactionService {
         );
     }
 
-    /**
-     * Withdraws money from an account.
-     */
+    */
+/**
+     * Withdraws balance from an account.
+     *//*
+
     public TransactionDto withdraw(AccountDto accountDto, BigDecimal amount, Currency currency) {
 
         AccountEntity account = loadAccount(accountDto);
@@ -79,13 +80,13 @@ public class TransactionService {
         assertActive(account);
         assertPositive(amount);
 
-        MoneyEntity money = account.getMoney(currency)
+        Balance balance = account.getBalance(currency)
                 .orElseThrow(() ->
-                        new MoneyNotFoundException(account, currency));
+                        new BalanceNotFoundException(account, currency));
 
-        assertSufficientBalance(account, money, amount);
+        assertSufficientBalance(account, balance, amount);
 
-        money.decrease(amount);
+        balance.decrease(amount);
 
         TransactionEntity transaction = recordTransaction(
                 account,
@@ -98,9 +99,11 @@ public class TransactionService {
     }
 
 
-    /**
-     * Deposits money into an account.
-     */
+    */
+/**
+     * Deposits balance into an account.
+     *//*
+
     public TransactionDto deposit(AccountDto accountDto, BigDecimal amount, Currency currency) {
 
         AccountEntity account = loadAccount(accountDto);
@@ -108,8 +111,8 @@ public class TransactionService {
         assertActive(account);
         assertPositive(amount);
 
-        MoneyEntity money = account.getOrCreateMoney(currency);
-        money.increase(amount);
+        Balance balance = account.getOrCreateBalance(currency);
+        balance.increase(amount);
 
         TransactionEntity transaction = recordTransaction(
                 null,
@@ -137,8 +140,8 @@ public class TransactionService {
         TransactionEntity transaction = new TransactionEntity();
         transaction.setSender(sender);
         transaction.setReceiver(receiver);
-        transaction.setCurrency(currency);
-        transaction.setAmount(amount);
+        Balance balance = new Balance(amount, currency);
+        transaction.setBalance(balance);
 
         transactionRepository.save(transaction);
         return transaction;
@@ -158,10 +161,11 @@ public class TransactionService {
 
     private void assertSufficientBalance(
             AccountEntity accountEntity,
-            MoneyEntity money,
+            Balance balance,
             BigDecimal amount) {
-        if (money.getAmount().compareTo(amount) < 0) {
-            throw new InsufficientBalanceException(accountEntity, money);
+        if (balance.getAmount().compareTo(amount) < 0) {
+            throw new InsufficientBalanceException();
         }
     }
+*/
 }
