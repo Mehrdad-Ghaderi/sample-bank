@@ -4,6 +4,7 @@ package com.mehrdad.sample.bank.api.exception;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.mehrdad.sample.bank.api.error.ApiErrorResponse;
 import com.mehrdad.sample.bank.core.exception.*;
+import com.mehrdad.sample.bank.core.exception.account.AccountNotActiveException;
 import com.mehrdad.sample.bank.core.exception.account.AccountNotFoundException;
 import com.mehrdad.sample.bank.core.exception.account.AccountStatusAlreadySetException;
 import com.mehrdad.sample.bank.core.exception.customer.*;
@@ -19,7 +20,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -193,8 +193,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
-    // ACCOUNT ********************
-    //         ********************
+    /* ===================
+           ACCOUNT
+       =================== */
 
     @ExceptionHandler(AccountNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleAccountNotFound(AccountNotFoundException ex,
@@ -207,6 +208,21 @@ public class GlobalExceptionHandler {
                 OffsetDateTime.now()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(apiErrorResponse);
+    }
+
+
+    @ExceptionHandler(AccountNotActiveException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccountNotFound(AccountNotActiveException ex,
+                                                                  HttpServletRequest request) {
+        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                "ACCOUNT_NOT_ACTIVE",
+                ex.getMessage(),
+                request.getRequestURI(),
+                OffsetDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(apiErrorResponse);
     }
 
