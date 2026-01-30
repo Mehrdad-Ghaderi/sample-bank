@@ -44,6 +44,10 @@ public class AccountEntity {
     @Column(nullable = false, updatable = false)
     private UUID id;
 
+    @Version
+    @Column(nullable = false)
+    private Long version;
+
     // Business identifier
     @Column(length = 19, nullable = false, unique = true)
     private String number;
