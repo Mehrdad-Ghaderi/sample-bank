@@ -40,6 +40,10 @@ public class TransactionEntity {
     @Column(nullable = false, length = 3)
     private Currency currency;
 
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private TransactionType type;
+
+    @Column(nullable = false, updatable = false)
     private Instant transactionTime = Instant.now();
 }

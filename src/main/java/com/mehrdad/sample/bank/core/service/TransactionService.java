@@ -1,21 +1,19 @@
 package com.mehrdad.sample.bank.core.service;
 
-import com.mehrdad.sample.bank.api.dto.account.AccountDto;
+import com.mehrdad.sample.bank.api.dto.CreateTransactionRequest;
 import com.mehrdad.sample.bank.api.dto.TransactionDto;
 import com.mehrdad.sample.bank.core.entity.*;
-import com.mehrdad.sample.bank.core.exception.*;
-import com.mehrdad.sample.bank.core.exception.account.AccountNotActiveException;
+import com.mehrdad.sample.bank.core.exception.CurrencyMismatchException;
+import com.mehrdad.sample.bank.core.exception.IllegalTransactionTypeException;
 import com.mehrdad.sample.bank.core.exception.account.AccountNotFoundException;
-import com.mehrdad.sample.bank.core.mapper.AccountMapper;
-import com.mehrdad.sample.bank.core.mapper.MoneyMapper;
 import com.mehrdad.sample.bank.core.mapper.TransactionMapper;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
-import com.mehrdad.sample.bank.core.repository.MoneyRepository;
 import com.mehrdad.sample.bank.core.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Created by Mehrdad Ghaderi
@@ -23,145 +21,72 @@ import java.math.BigDecimal;
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
-
-    private static final String BANK_ACCOUNT_NUMBER = "1001-111-111111";
-
-    private final AccountRepository accountRepository;
-    private final MoneyRepository moneyRepository;
     private final TransactionRepository transactionRepository;
-    private final MoneyMapper moneyMapper;
-    private final AccountMapper accountMapper;
+    private final AccountRepository accountRepository;
     private final TransactionMapper transactionMapper;
 
-    /**
-     * Transfers money from one account to another.
-     * <p>
-     * Atomic, consistent, and fully domain-driven.
-     */
-    public void transfer(
-            TransactionDto dto
-    ) {
-
-        AccountEntity sender = loadAccount(dto.getSender());
-        AccountEntity receiver = loadAccount(dto.getReceiver());
-
-        assertActive(sender);
-        assertActive(receiver);
-        assertPositive(dto.getAmount());
-
-        MoneyEntity senderMoney = sender.getMoney(dto.getCurrency())
-                .orElseThrow(() ->
-                        new MoneyNotFoundException(sender, dto.getCurrency()));
-
-        assertSufficientBalance(sender, senderMoney, dto.getAmount());
-
-        MoneyEntity receiverMoney = receiver.getOrCreateMoney(dto.getCurrency());
-
-        // ---- domain mutations ----
-        senderMoney.decrease(dto.getAmount());
-        receiverMoney.increase(dto.getAmount());
-
-        TransactionEntity transaction = recordTransaction(
-                sender,
-                receiver,
-                dto.getCurrency(),
-                dto.getAmount()
-        );
+    public Page<TransactionDto> getTransactions(Pageable pageable) {
+        System.out.println("hi");
+        return transactionRepository.findAll(pageable).map(transactionMapper::toTransactionDto);
     }
 
-    /**
-     * Withdraws money from an account.
-     */
-    public TransactionDto withdraw(AccountDto accountDto, BigDecimal amount, Currency currency) {
+    @Transactional
+    public TransactionDto createTransaction(CreateTransactionRequest transactionRequestDto) {
+        AccountEntity senderAccount = accountRepository.findById(transactionRequestDto.getSenderAccountId())
+                .orElseThrow(() -> new AccountNotFoundException(transactionRequestDto.getSenderAccountId()));
 
-        AccountEntity account = loadAccount(accountDto);
+        AccountEntity receiverAccount = accountRepository.findById(transactionRequestDto.getReceiverAccountId())
+                .orElseThrow(() -> new AccountNotFoundException(transactionRequestDto.getReceiverAccountId()));
 
-        assertActive(account);
-        assertPositive(amount);
+        validateTransaction(transactionRequestDto, senderAccount, receiverAccount);
 
-        MoneyEntity money = account.getMoney(currency)
-                .orElseThrow(() ->
-                        new MoneyNotFoundException(account, currency));
+        senderAccount.decreaseBalance(transactionRequestDto.getAmount());
+        receiverAccount.increaseBalance(transactionRequestDto.getAmount());
 
-        assertSufficientBalance(account, money, amount);
+        TransactionEntity tx = new TransactionEntity();
+        tx.setSender(senderAccount);
+        tx.setReceiver(receiverAccount);
+        tx.setAmount(transactionRequestDto.getAmount());
+        tx.setCurrency(transactionRequestDto.getCurrency());
+        tx.setType(transactionRequestDto.getType());
 
-        money.decrease(amount);
-
-        TransactionEntity transaction = recordTransaction(
-                account,
-                null,
-                currency,
-                amount
-        );
-
-        return transactionMapper.toTransactionDto(transaction);
+        TransactionEntity savedTransaction = transactionRepository.save(tx);
+        return transactionMapper.toTransactionDto(savedTransaction);
     }
 
-
-    /**
-     * Deposits money into an account.
-     */
-    public TransactionDto deposit(AccountDto accountDto, BigDecimal amount, Currency currency) {
-
-        AccountEntity account = loadAccount(accountDto);
-
-        assertActive(account);
-        assertPositive(amount);
-
-        MoneyEntity money = account.getOrCreateMoney(currency);
-        money.increase(amount);
-
-        TransactionEntity transaction = recordTransaction(
-                null,
-                account,
-                currency,
-                amount
-        );
-
-        return transactionMapper.toTransactionDto(transaction);
-    }
-
-    private AccountEntity loadAccount(AccountDto dto) {
-
-        return accountRepository.findById(dto.getId())
-                .orElseThrow(() ->
-                        new AccountNotFoundException(dto.getNumber()));
-    }
-
-    private TransactionEntity recordTransaction(
+    private void validateTransaction(
+            CreateTransactionRequest req,
             AccountEntity sender,
-            AccountEntity receiver,
-            Currency currency,
-            BigDecimal amount
+            AccountEntity receiver
     ) {
-        TransactionEntity transaction = new TransactionEntity();
-        transaction.setSender(sender);
-        transaction.setReceiver(receiver);
-        transaction.setCurrency(currency);
-        transaction.setAmount(amount);
+        if (!sender.getCurrency().equals(req.getCurrency())
+                || !receiver.getCurrency().equals(req.getCurrency())) {
+            throw new CurrencyMismatchException();
+        }
 
-        transactionRepository.save(transaction);
-        return transaction;
-    }
+        switch (req.getType()) {
 
-    private void assertActive(AccountEntity account) {
-        if (account.getStatus() != Status.ACTIVE) {
-            throw new AccountNotActiveException(account);
+            case TRANSFER -> {
+                if (sender.getId().equals(receiver.getId())) {
+                    throw new IllegalTransactionTypeException("Sender and receiver must differ");
+                }
+            }
+
+            case DEPOSIT -> {
+                if (!isBankAccount(sender)) {
+                    throw new IllegalTransactionTypeException("Deposit's sender must be the bank");
+                }
+            }
+
+            case WITHDRAW -> {
+                if (!isBankAccount(receiver)) {
+                    throw new IllegalTransactionTypeException("Withdrawal's receiver must be the bank");
+                }
+            }
         }
     }
 
-    private void assertPositive(BigDecimal amount) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidAmountException(amount);
-        }
-    }
-
-    private void assertSufficientBalance(
-            AccountEntity accountEntity,
-            MoneyEntity money,
-            BigDecimal amount) {
-        if (money.getAmount().compareTo(amount) < 0) {
-            throw new InsufficientBalanceException(accountEntity, money);
-        }
+    private boolean isBankAccount(AccountEntity account) {
+        return "BANK".equals(account.getCustomer().getName());
     }
 }

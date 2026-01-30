@@ -5,6 +5,7 @@ import com.mehrdad.sample.bank.api.dto.customer.CustomerCreateDto;
 import com.mehrdad.sample.bank.api.dto.customer.CustomerDto;
 import com.mehrdad.sample.bank.api.dto.customer.CustomerUpdateDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
+import com.mehrdad.sample.bank.core.entity.Currency;
 import com.mehrdad.sample.bank.core.entity.CustomerEntity;
 import com.mehrdad.sample.bank.core.entity.Status;
 import com.mehrdad.sample.bank.core.exception.account.AccountNotFoundException;
@@ -22,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -124,12 +126,23 @@ public class CustomerService {
 
     // ACCOUNT ***************************************
 
-    public AccountDto createAccount(UUID customerId) {
+    public AccountDto createAccount(UUID customerId, AccountDto accountDto) {
         CustomerEntity foundCustomer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException(customerId));
 
         AccountEntity newAccount = new AccountEntity();
         newAccount.setNumber(AccountNumberGenerator.generate(foundCustomer));
+
+        // Set currency (default CAD)
+        Currency currency = accountDto.getCurrency() != null ? accountDto.getCurrency() : Currency.CAD;
+        newAccount.setCurrency(currency);
+
+        //Set balance (default 0, or provided positive value)
+        BigDecimal balance = accountDto.getBalance() != null && accountDto.getBalance().signum() > 0
+                ? accountDto.getBalance()
+                : BigDecimal.ZERO;
+        newAccount.setBalance(balance);
+
         foundCustomer.addAccount(newAccount);
         customerRepository.saveAndFlush(foundCustomer);
 

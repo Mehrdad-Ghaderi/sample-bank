@@ -1,5 +1,7 @@
 package com.mehrdad.sample.bank.core.entity;
 
+import com.mehrdad.sample.bank.core.exception.InsufficientBalanceException;
+import com.mehrdad.sample.bank.core.exception.InvalidAmountException;
 import jakarta.persistence.Entity;
 
 import jakarta.persistence.*;
@@ -11,10 +13,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Created by Mehrdad Ghaderi
@@ -30,7 +29,8 @@ import java.util.UUID;
         },
         indexes = {
                 @Index(name = "idx_account_customer", columnList = "customer_id"),
-                @Index(name = "idx_account_status", columnList = "status")
+                @Index(name = "idx_account_status", columnList = "status"),
+                @Index(name = "idx_account_currency", columnList = "currency")
         }
 )
 @Getter
@@ -44,21 +44,24 @@ public class AccountEntity {
     @Column(nullable = false, updatable = false)
     private UUID id;
 
-    // Business identifier (year-bankCode-customerBusinessId number)
-    @Column(length = 19, unique = true, nullable = false)
+    // Business identifier
+    @Column(length = 19, nullable = false, unique = true)
     private String number;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, updatable = false)
+    private Currency currency;
+
+    @Column(nullable = false, precision = 19, scale = 4)
+    private BigDecimal balance;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "customer_id", nullable = false)
     private CustomerEntity customer;
-
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "account_id", nullable = false)
-    private List<MoneyEntity> moneys = new ArrayList<>();
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -66,19 +69,24 @@ public class AccountEntity {
     @Column(nullable = false)
     private Instant updatedAt;
 
-
-    public Optional<MoneyEntity> getMoney(Currency currency) {
-        return moneys.stream()
-                .filter(entity -> entity.getCurrency() == currency)
-                .findFirst();
+    public void increaseBalance(BigDecimal amount) {
+        validateAmount(amount);
+        this.balance = this.balance.add(amount);
     }
 
-    public MoneyEntity getOrCreateMoney(Currency currency) {
-        return getMoney(currency).orElseGet(() -> {
-            MoneyEntity money = new MoneyEntity(currency, BigDecimal.ZERO);
-            moneys.add(money);
-            return money;
-        });
+    public void decreaseBalance(BigDecimal amount) {
+        validateAmount(amount);
+
+        if (this.balance.compareTo(amount) < 0) {
+            throw new InsufficientBalanceException();
+        }
+        this.balance = this.balance.subtract(amount);
+    }
+
+    private void validateAmount(BigDecimal amount) {
+        if (amount == null || amount.signum() <= 0) {
+            throw new InvalidAmountException(amount);
+        }
     }
 
     @PrePersist
@@ -90,6 +98,14 @@ public class AccountEntity {
         if (status == null) {
             status = Status.ACTIVE;
         }
+
+        if (currency == null) {
+            currency = Currency.CAD;
+        }
+
+        if (balance == null) {
+            balance = BigDecimal.ZERO;
+        }
     }
 
     @PreUpdate
@@ -97,3 +113,4 @@ public class AccountEntity {
         updatedAt = Instant.now();
     }
 }
+

@@ -1,15 +1,18 @@
 package com.mehrdad.sample.bank.api.dto.account;
 
 
-import com.mehrdad.sample.bank.api.dto.MoneyDto;
+import com.mehrdad.sample.bank.core.entity.Currency;
 import com.mehrdad.sample.bank.core.entity.Status;
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -27,7 +30,9 @@ public class AccountDto {
 
     private Status status;
 
-    private List<MoneyDto> moneys;
+    private Currency currency;
+
+    private BigDecimal balance;
 
     private Instant createdAt;
 

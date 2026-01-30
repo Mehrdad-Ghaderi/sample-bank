@@ -11,7 +11,7 @@ import java.util.List;
  * Created by Mehrdad Ghaderi
  */
 
-@Mapper(componentModel = "spring", uses = {MoneyMapper.class})
+@Mapper(componentModel = "spring")
 public interface AccountMapper {
 
     // DTO -> Entity

@@ -2,34 +2,19 @@ package com.mehrdad.sample.bank.core.mapper;
 
 import com.mehrdad.sample.bank.api.dto.TransactionDto;
 import com.mehrdad.sample.bank.core.entity.TransactionEntity;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+import java.util.List;
 
 /**
  * Created by Mehrdad Ghaderi
  */
-@Component
-public class TransactionMapper {
+@Mapper(componentModel = "spring")
+public interface TransactionMapper {
+    @Mapping(source = "sender.id", target = "senderAccountId")
+    @Mapping(source = "receiver.id", target = "receiverAccountId")
+    TransactionDto toTransactionDto(TransactionEntity transaction);
 
-    private final AccountMapper accountMapper;
-
-    public TransactionMapper(AccountMapper accountMapper) {
-
-        this.accountMapper = accountMapper;
-    }
-
-    public TransactionDto toTransactionDto(TransactionEntity transaction) {
-        if (transaction == null) {
-            return null;
-        }
-
-        TransactionDto transactionDto = new TransactionDto();
-        transactionDto.setId(transaction.getId());
-        transactionDto.setSender(accountMapper.toAccountDto(transaction.getSender()));
-        transactionDto.setReceiver(accountMapper.toAccountDto(transaction.getReceiver()));
-        transactionDto.setAmount(transaction.getAmount());
-        transactionDto.setCurrency(transaction.getCurrency());
-        transactionDto.setTransactionTime(transaction.getTransactionTime());
-
-        return transactionDto;
-    }
+    List<TransactionDto> toTransactionDtoList(List<TransactionEntity> transactions);
 }
