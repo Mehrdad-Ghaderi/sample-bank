@@ -80,9 +80,10 @@ public class CustomerController {
      * create an accounts belonging to a customer
      */
     @PostMapping(CUSTOMERS_ID_ACCOUNTS_PATH)
-    public ResponseEntity<AccountDto> createAccountByCustomerId(@PathVariable("customerId") UUID customerID) {
+    public ResponseEntity<AccountDto> createAccountByCustomerId(@PathVariable("customerId") UUID customerID,
+                                                                @RequestBody(required = false) AccountDto accountDto) {
 
-        AccountDto createdAccount = customerService.createAccount(customerID);
+        AccountDto createdAccount = customerService.createAccount(customerID, accountDto);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
