@@ -11,7 +11,7 @@ public class AccountNotFoundException extends RuntimeException {
     public AccountNotFoundException(String accountNumber) {
         super("Account number " + accountNumber + " was not found.");
     }
-    public AccountNotFoundException(UUID customerId) {
-        super("No account is associated with customer: " + customerId + ".");
+    public AccountNotFoundException(UUID id) {
+        super(id + " was not found.");
     }
 }

@@ -1,22 +1,30 @@
 package com.mehrdad.sample.bank.api.dto;
 
 import com.mehrdad.sample.bank.core.entity.Currency;
+import com.mehrdad.sample.bank.core.entity.TransactionType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
+@Getter
+@Setter
 public class CreateTransactionRequest {
     @NotNull
-    UUID senderAccountId;
+    private UUID senderAccountId;
 
     @NotNull
-    UUID receiverAccountId;
+    private UUID receiverAccountId;
 
     @NotNull @Positive
-    BigDecimal amount;
+    private BigDecimal amount;
 
     @NotNull
-    Currency currency;
+    private Currency currency;
+
+    @NotNull
+    private TransactionType type;
 }

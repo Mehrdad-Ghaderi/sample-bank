@@ -1,5 +1,7 @@
 package com.mehrdad.sample.bank.core.entity;
 
+import com.mehrdad.sample.bank.core.exception.InsufficientBalanceException;
+import com.mehrdad.sample.bank.core.exception.InvalidAmountException;
 import jakarta.persistence.Entity;
 
 import jakarta.persistence.*;
@@ -76,14 +78,14 @@ public class AccountEntity {
         validateAmount(amount);
 
         if (this.balance.compareTo(amount) < 0) {
-            throw new IllegalStateException("Insufficient balance");
+            throw new InsufficientBalanceException();
         }
         this.balance = this.balance.subtract(amount);
     }
 
     private void validateAmount(BigDecimal amount) {
         if (amount == null || amount.signum() <= 0) {
-            throw new IllegalArgumentException("Amount must be positive");
+            throw new InvalidAmountException(amount);
         }
     }
 
