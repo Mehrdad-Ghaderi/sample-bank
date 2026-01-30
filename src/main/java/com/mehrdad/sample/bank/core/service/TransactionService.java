@@ -5,6 +5,7 @@ import com.mehrdad.sample.bank.api.dto.TransactionDto;
 import com.mehrdad.sample.bank.core.entity.*;
 import com.mehrdad.sample.bank.core.exception.CurrencyMismatchException;
 import com.mehrdad.sample.bank.core.exception.IllegalTransactionTypeException;
+import com.mehrdad.sample.bank.core.exception.account.AccountNotActiveException;
 import com.mehrdad.sample.bank.core.exception.account.AccountNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.TransactionMapper;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.UUID;
 
 /**
  * Created by Mehrdad Ghaderi
@@ -35,11 +37,9 @@ public class TransactionService {
     @Transactional
     public TransactionDto createTransaction(CreateTransactionRequest request) {
 
-        AccountEntity sender = accountRepository.findById(request.getSenderAccountId())
-                .orElseThrow(() -> new AccountNotFoundException(request.getSenderAccountId()));
+        AccountEntity sender = loadAccountById(request.getSenderAccountId());
 
-        AccountEntity receiver = accountRepository.findById(request.getReceiverAccountId())
-                .orElseThrow(() -> new AccountNotFoundException(request.getReceiverAccountId()));
+        AccountEntity receiver = loadAccountById(request.getReceiverAccountId());
 
         validateTransaction(request, sender, receiver);
 
@@ -64,13 +64,25 @@ public class TransactionService {
         return transactionMapper.toTransactionDto(savedTransaction);
     }
 
+    private AccountEntity loadAccountById(UUID accountId) {
+        return accountRepository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
+    }
+
     private void validateTransaction(
             CreateTransactionRequest request,
             AccountEntity sender,
             AccountEntity receiver) {
+        validateStatus(sender);
+        validateStatus(receiver);
         validateCurrency(request, sender, receiver);
-
         validateTransactionType(request, sender, receiver);
+    }
+
+    private void validateStatus(AccountEntity account) {
+        if (account.getStatus() != Status.ACTIVE) {
+            throw new AccountNotActiveException(account);
+        }
     }
 
     private static void validateCurrency(CreateTransactionRequest request, AccountEntity sender, AccountEntity receiver) {
