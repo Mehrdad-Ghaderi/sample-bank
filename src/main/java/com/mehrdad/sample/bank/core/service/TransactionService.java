@@ -102,20 +102,20 @@ public class TransactionService {
             }
 
             case DEPOSIT -> {
-                if (!isBank(sender)) {
+                if (!isSystemAccount(sender)) {
                     throw new IllegalTransactionTypeException("Deposit's sender must be the bank");
                 }
             }
 
             case WITHDRAW -> {
-                if (!isBank(receiver)) {
+                if (!isSystemAccount(receiver)) {
                     throw new IllegalTransactionTypeException("Withdrawal's receiver must be the bank");
                 }
             }
         }
     }
 
-    private boolean isBank(AccountEntity account) {
+    private boolean isSystemAccount(AccountEntity account) {
         return "BANK".equals(account.getCustomer().getName());
     }
 }

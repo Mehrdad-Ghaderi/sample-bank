@@ -10,7 +10,6 @@ import com.mehrdad.sample.bank.core.exception.account.AccountNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.AccountMapper;
 import com.mehrdad.sample.bank.core.mapper.CustomerMapper;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
-import com.mehrdad.sample.bank.core.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Created by Mehrdad Ghaderi
@@ -27,7 +25,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AccountService {
 
-    private final CustomerRepository customerRepository;
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
     private final CustomerMapper clientMapper;
@@ -74,12 +71,5 @@ public class AccountService {
 
     public List<AccountDto> getAccountsByCustomerId(UUID clientId) {
         return clientService.getCustomerById(clientId).getAccounts();
-    }
-
-    public CustomerDto getCustomerByAccountNumber(String accountNumber) {
-        return accountRepository.findByNumber(accountNumber)
-                .map(AccountEntity::getCustomer)
-                .map(clientMapper::toCustomerDto)
-                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
     }
 }
