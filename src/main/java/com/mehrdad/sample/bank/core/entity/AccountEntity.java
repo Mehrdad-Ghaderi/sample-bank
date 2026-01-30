@@ -27,7 +27,8 @@ import java.util.*;
         },
         indexes = {
                 @Index(name = "idx_account_customer", columnList = "customer_id"),
-                @Index(name = "idx_account_status", columnList = "status")
+                @Index(name = "idx_account_status", columnList = "status"),
+                @Index(name = "idx_account_currency", columnList = "currency")
         }
 )
 @Getter
@@ -41,27 +42,24 @@ public class AccountEntity {
     @Column(nullable = false, updatable = false)
     private UUID id;
 
-    // Business identifier (year-bankCode-customerBusinessId number)
-    @Column(length = 19, unique = true, nullable = false)
+    // Business identifier
+    @Column(length = 19, nullable = false, unique = true)
     private String number;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, updatable = false)
+    private Currency currency;
+
+    @Column(nullable = false, precision = 19, scale = 4)
+    private BigDecimal balance;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "customer_id", nullable = false)
     private CustomerEntity customer;
-
-    @ElementCollection
-    @CollectionTable(
-            name = "account_balance",
-            joinColumns = @JoinColumn(name = "account_id")
-    )
-    @MapKeyEnumerated(EnumType.STRING)
-    @MapKeyColumn(name = "currency")
-    @Column(name = "amount", precision = 19, scale = 4, nullable = false)
-    private Map<Currency, BigDecimal> balances = new HashMap<>();
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -69,21 +67,24 @@ public class AccountEntity {
     @Column(nullable = false)
     private Instant updatedAt;
 
-
-    public BigDecimal getBalance(Currency currency) {
-        return balances.getOrDefault(currency, BigDecimal.ZERO);
+    public void increaseBalance(BigDecimal amount) {
+        validateAmount(amount);
+        this.balance = this.balance.add(amount);
     }
 
-    public void increaseBalance(Currency currency, BigDecimal amount) {
-        balances.merge(currency, amount, BigDecimal::add);
-    }
+    public void decreaseBalance(BigDecimal amount) {
+        validateAmount(amount);
 
-    public void decreaseBalance(Currency currency, BigDecimal amount) {
-        BigDecimal current = balances.getOrDefault(currency, BigDecimal.ZERO);
-        if (current.compareTo(amount) < 0) {
+        if (this.balance.compareTo(amount) < 0) {
             throw new IllegalStateException("Insufficient balance");
         }
-        balances.put(currency, current.subtract(amount));
+        this.balance = this.balance.subtract(amount);
+    }
+
+    private void validateAmount(BigDecimal amount) {
+        if (amount == null || amount.signum() <= 0) {
+            throw new IllegalArgumentException("Amount must be positive");
+        }
     }
 
     @PrePersist
@@ -95,6 +96,14 @@ public class AccountEntity {
         if (status == null) {
             status = Status.ACTIVE;
         }
+
+        if (currency == null) {
+            currency = Currency.CAD;
+        }
+
+        if (balance == null) {
+            balance = BigDecimal.ZERO;
+        }
     }
 
     @PreUpdate
@@ -102,3 +111,4 @@ public class AccountEntity {
         updatedAt = Instant.now();
     }
 }
+

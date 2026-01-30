@@ -33,12 +33,12 @@ public class TransactionEntity {
     @JoinColumn(name = "receiver_account_id", nullable = false)
     private AccountEntity receiver;
 
-    @Embedded
-    @AttributeOverrides({
-            @AttributeOverride(name = "amount", column = @Column(name = "amount", precision = 19, scale = 4, nullable = false)),
-            @AttributeOverride(name = "currency", column = @Column(name = "currency", length = 3, nullable = false))
-    })
-    private Balance balance;
+    @Column(nullable = false, precision = 19, scale = 4)
+    private BigDecimal amount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 3)
+    private Currency currency;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

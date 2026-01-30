@@ -3,6 +3,7 @@ package com.mehrdad.sample.bank.api.dto.account;
 
 import com.mehrdad.sample.bank.core.entity.Currency;
 import com.mehrdad.sample.bank.core.entity.Status;
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,7 +30,9 @@ public class AccountDto {
 
     private Status status;
 
-    private Map<Currency, BigDecimal> balances = new HashMap<>();
+    private Currency currency;
+
+    private BigDecimal balance;
 
     private Instant createdAt;
 
