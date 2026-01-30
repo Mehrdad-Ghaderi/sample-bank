@@ -43,6 +43,7 @@ public class TransactionService {
 
         validateTransaction(request, sender, receiver);
 
+        // avoid deadlock
         if (sender.getId().compareTo(receiver.getId()) < 0) {
             sender.decreaseBalance(request.getAmount());
             receiver.increaseBalance(request.getAmount());
@@ -66,13 +67,20 @@ public class TransactionService {
     private void validateTransaction(
             CreateTransactionRequest request,
             AccountEntity sender,
-            AccountEntity receiver
-    ) {
+            AccountEntity receiver) {
+        validateCurrency(request, sender, receiver);
+
+        validateTransactionType(request, sender, receiver);
+    }
+
+    private static void validateCurrency(CreateTransactionRequest request, AccountEntity sender, AccountEntity receiver) {
         if (!sender.getCurrency().equals(request.getCurrency())
                 || !receiver.getCurrency().equals(request.getCurrency())) {
             throw new CurrencyMismatchException();
         }
+    }
 
+    private void validateTransactionType(CreateTransactionRequest request, AccountEntity sender, AccountEntity receiver) {
         switch (request.getType()) {
 
             case TRANSFER -> {

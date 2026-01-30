@@ -10,9 +10,17 @@ public class AccountNumberGenerator {
 
     private static final String BANK_CODE = "101";
 
-    private AccountNumberGenerator() {}
+    private AccountNumberGenerator() {
+    }
 
     public static String generate(CustomerEntity customer) {
+        //Threads for different customers run in parallel, but are locked on the same customer
+        synchronized (customer) {
+            return generateNextAccountNumber(customer);
+        }
+    }
+
+    private static String generateNextAccountNumber(CustomerEntity customer) {
         String year = String.valueOf(Year.now().getValue());
         String bankCode = "101";
         int customerId = customer.getBusinessId();
