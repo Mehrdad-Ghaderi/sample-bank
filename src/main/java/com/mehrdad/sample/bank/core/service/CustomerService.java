@@ -8,6 +8,7 @@ import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.Currency;
 import com.mehrdad.sample.bank.core.entity.CustomerEntity;
 import com.mehrdad.sample.bank.core.entity.Status;
+import com.mehrdad.sample.bank.core.exception.ConcurrentUpdateException;
 import com.mehrdad.sample.bank.core.exception.account.AccountNotFoundException;
 import com.mehrdad.sample.bank.core.exception.customer.*;
 import com.mehrdad.sample.bank.core.mapper.AccountMapper;
@@ -18,6 +19,8 @@ import com.mehrdad.sample.bank.core.util.CustomerBusinessIdGenerator;
 import com.mehrdad.sample.bank.core.util.PhoneNumberNormalizer;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -92,40 +96,45 @@ public class CustomerService {
         customerRepository.save(foundCustomerEntity);
     }
 
+    @Transactional
     public CustomerDto updateCustomer(UUID customerId, @Valid CustomerUpdateDto customerUpdateDto) {
-
-        CustomerEntity customer = customerRepository.findById(customerId)
+        try {
+        CustomerEntity foundCustomer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException(customerId));
 
         // update update if value exists
         if (customerUpdateDto.getName() != null) {
-            if (customer.getName().equals(customerUpdateDto.getName())) {
-                throw new CustomerNameAlreadyExistsException(customer.getName());
+            if (foundCustomer.getName().equals(customerUpdateDto.getName())) {
+                throw new CustomerNameAlreadyExistsException(foundCustomer.getName());
             }
-            customer.setName(customerUpdateDto.getName());
+            foundCustomer.setName(customerUpdateDto.getName());
         }
 
-        // update phone number if value exists
+        // update phone number if value provided
         if (customerUpdateDto.getPhoneNumber() != null) {
             String normalizedPhoneNumber = PhoneNumberNormalizer.normalizePhoneNumber(customerUpdateDto.getPhoneNumber());
             // uniqueness check
             if (customerRepository.existsByPhoneNumber(normalizedPhoneNumber)) {
                 throw new PhoneNumberAlreadyExists(customerUpdateDto.getPhoneNumber());
             }
-            customer.setPhoneNumber(normalizedPhoneNumber);
+            foundCustomer.setPhoneNumber(normalizedPhoneNumber);
         }
-        // update status if value exists
+        // update status if value provided
         if (customerUpdateDto.getStatus() != null) {
-            customer.setStatus(customerUpdateDto.getStatus());
+            foundCustomer.setStatus(customerUpdateDto.getStatus());
         }
 
-        customerRepository.save(customer);
-
-        return customerMapper.toCustomerDto(customer);
+        return customerMapper.toCustomerDto(foundCustomer);
+        } catch (OptimisticLockingFailureException ex) {
+            throw new ConcurrentUpdateException("Customer was updated concurrently. Please retry.", ex);
+        } catch (DataIntegrityViolationException ex) {
+            throw new PhoneNumberAlreadyExists("Phone number already exists");
+        }
     }
 
     // ACCOUNT ***************************************
 
+    @Transactional
     public AccountDto createAccount(UUID customerId, AccountDto accountDto) {
         CustomerEntity foundCustomer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException(customerId));
@@ -134,17 +143,17 @@ public class CustomerService {
         newAccount.setNumber(AccountNumberGenerator.generate(foundCustomer));
 
         // Set currency (default CAD)
-        Currency currency = accountDto.getCurrency() != null ? accountDto.getCurrency() : Currency.CAD;
-        newAccount.setCurrency(currency);
+        newAccount.setCurrency(Optional.ofNullable(accountDto.getCurrency()).orElse(Currency.CAD));
 
         //Set balance (default 0, or provided positive value)
-        BigDecimal balance = accountDto.getBalance() != null && accountDto.getBalance().signum() > 0
-                ? accountDto.getBalance()
-                : BigDecimal.ZERO;
-        newAccount.setBalance(balance);
+        newAccount.setBalance(
+                Optional.ofNullable(accountDto.getBalance())
+                        .filter(b -> b.signum() > 0)
+                        .orElse(BigDecimal.ZERO)
+        );
 
         foundCustomer.addAccount(newAccount);
-        customerRepository.saveAndFlush(foundCustomer);
+        customerRepository.save(foundCustomer);
 
         return accountMapper.toAccountDto(newAccount);
     }

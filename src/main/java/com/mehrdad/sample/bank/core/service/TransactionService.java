@@ -15,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+
 /**
  * Created by Mehrdad Ghaderi
  */
@@ -31,40 +33,55 @@ public class TransactionService {
     }
 
     @Transactional
-    public TransactionDto createTransaction(CreateTransactionRequest transactionRequestDto) {
-        AccountEntity senderAccount = accountRepository.findById(transactionRequestDto.getSenderAccountId())
-                .orElseThrow(() -> new AccountNotFoundException(transactionRequestDto.getSenderAccountId()));
+    public TransactionDto createTransaction(CreateTransactionRequest request) {
 
-        AccountEntity receiverAccount = accountRepository.findById(transactionRequestDto.getReceiverAccountId())
-                .orElseThrow(() -> new AccountNotFoundException(transactionRequestDto.getReceiverAccountId()));
+        AccountEntity sender = accountRepository.findById(request.getSenderAccountId())
+                .orElseThrow(() -> new AccountNotFoundException(request.getSenderAccountId()));
 
-        validateTransaction(transactionRequestDto, senderAccount, receiverAccount);
+        AccountEntity receiver = accountRepository.findById(request.getReceiverAccountId())
+                .orElseThrow(() -> new AccountNotFoundException(request.getReceiverAccountId()));
 
-        senderAccount.decreaseBalance(transactionRequestDto.getAmount());
-        receiverAccount.increaseBalance(transactionRequestDto.getAmount());
+        validateTransaction(request, sender, receiver);
+
+        // avoid deadlock
+        if (sender.getId().compareTo(receiver.getId()) < 0) {
+            sender.decreaseBalance(request.getAmount());
+            receiver.increaseBalance(request.getAmount());
+        } else {
+            receiver.increaseBalance(request.getAmount());
+            sender.decreaseBalance(request.getAmount());
+        }
 
         TransactionEntity tx = new TransactionEntity();
-        tx.setSender(senderAccount);
-        tx.setReceiver(receiverAccount);
-        tx.setAmount(transactionRequestDto.getAmount());
-        tx.setCurrency(transactionRequestDto.getCurrency());
-        tx.setType(transactionRequestDto.getType());
+        tx.setSender(sender);
+        tx.setReceiver(receiver);
+        tx.setAmount(request.getAmount());
+        tx.setCurrency(request.getCurrency());
+        tx.setType(request.getType());
+        tx.setTransactionTime(Instant.now());
 
         TransactionEntity savedTransaction = transactionRepository.save(tx);
         return transactionMapper.toTransactionDto(savedTransaction);
     }
 
     private void validateTransaction(
-            CreateTransactionRequest req,
+            CreateTransactionRequest request,
             AccountEntity sender,
-            AccountEntity receiver
-    ) {
-        if (!sender.getCurrency().equals(req.getCurrency())
-                || !receiver.getCurrency().equals(req.getCurrency())) {
+            AccountEntity receiver) {
+        validateCurrency(request, sender, receiver);
+
+        validateTransactionType(request, sender, receiver);
+    }
+
+    private static void validateCurrency(CreateTransactionRequest request, AccountEntity sender, AccountEntity receiver) {
+        if (!sender.getCurrency().equals(request.getCurrency())
+                || !receiver.getCurrency().equals(request.getCurrency())) {
             throw new CurrencyMismatchException();
         }
+    }
 
-        switch (req.getType()) {
+    private void validateTransactionType(CreateTransactionRequest request, AccountEntity sender, AccountEntity receiver) {
+        switch (request.getType()) {
 
             case TRANSFER -> {
                 if (sender.getId().equals(receiver.getId())) {
@@ -73,20 +90,20 @@ public class TransactionService {
             }
 
             case DEPOSIT -> {
-                if (!isBankAccount(sender)) {
+                if (!isBank(sender)) {
                     throw new IllegalTransactionTypeException("Deposit's sender must be the bank");
                 }
             }
 
             case WITHDRAW -> {
-                if (!isBankAccount(receiver)) {
+                if (!isBank(receiver)) {
                     throw new IllegalTransactionTypeException("Withdrawal's receiver must be the bank");
                 }
             }
         }
     }
 
-    private boolean isBankAccount(AccountEntity account) {
+    private boolean isBank(AccountEntity account) {
         return "BANK".equals(account.getCustomer().getName());
     }
 }

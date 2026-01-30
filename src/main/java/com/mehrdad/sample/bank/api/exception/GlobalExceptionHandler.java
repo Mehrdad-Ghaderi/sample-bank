@@ -313,4 +313,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(response);
     }
 
+    /* ===================
+           CONCURRENCY
+       =================== */
+
+    /*@ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleOptimisticLock() {
+        return new ErrorResponse(
+                "CONCURRENT_MODIFICATION",
+                "Account was modified concurrently. Please retry."
+        );
+    }*/
 }

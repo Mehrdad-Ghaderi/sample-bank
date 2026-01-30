@@ -47,6 +47,9 @@ public class CustomerEntity {
     @Column(nullable = false, updatable = false)
     private UUID id;
 
+    @Version
+    private Long version;
+
     // Business-visible identifier
     @Column(name = "business_id", nullable = false, updatable = false)
     private Integer businessId;
