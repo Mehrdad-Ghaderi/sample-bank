@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,6 +38,33 @@ public class AccountService {
         return accountRepository.findAll(pageable).map(accountMapper::toAccountDto);
     }
 
+    @Transactional
+    public AccountDto updateStatus(UUID id, StatusUpdateDto statusUpdateDto) {
+        AccountEntity foundAccount = loadAccountById(id);
+
+        Status newStatus = statusUpdateDto.getStatus();
+        Status currentStatus = foundAccount.getStatus();
+        if (currentStatus.equals(newStatus)) {
+            throw new AccountStatusAlreadySetException(newStatus);
+        }
+
+        foundAccount.setStatus(newStatus);
+        accountRepository.save(foundAccount);
+        return accountMapper.toAccountDto(foundAccount);
+    }
+
+    private AccountEntity loadAccountById(UUID id) {
+        return accountRepository.findById(id)
+                .orElseThrow(() -> new AccountNotFoundException(id));
+    }
+
+    public void setAccountStatus(UUID accountId, Status status) {
+        AccountEntity foundAccount = loadAccountById(accountId);
+
+        foundAccount.setStatus(status);
+        accountRepository.save(foundAccount);
+    }
+
     public AccountDto getAccountByAccountNumber(String accountNumber){
 
         return accountRepository.findByNumber(accountNumber)
@@ -48,49 +76,10 @@ public class AccountService {
         return clientService.getCustomerById(clientId).getAccounts();
     }
 
-    public AccountDto updateStatus(UUID id, StatusUpdateDto statusUpdateDto) {
-        AccountEntity foundAccount = accountRepository.findById(id)
-                .orElseThrow(() -> new AccountNotFoundException(id));
-
-        if (foundAccount.getStatus().equals(statusUpdateDto.getStatus())) {
-            throw new AccountStatusAlreadySetException(statusUpdateDto.getStatus());
-        }
-
-        foundAccount.setStatus(statusUpdateDto.getStatus());
-        accountRepository.saveAndFlush(foundAccount);
-        return accountMapper.toAccountDto(foundAccount);
-    }
-
     public CustomerDto getCustomerByAccountNumber(String accountNumber) {
         return accountRepository.findByNumber(accountNumber)
                 .map(AccountEntity::getCustomer)
                 .map(clientMapper::toCustomerDto)
                 .orElseThrow(() -> new AccountNotFoundException(accountNumber));
-    }
-
-
-    public List<AccountDto> getAllAccounts() {
-
-        return customerRepository.findAll().stream()
-                .map(clientMapper::toCustomerDto)
-                .map(CustomerDto::getAccounts)
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-    }
-
-    public void freezeAccount(String accountNumber) {
-        freezeOrUnfreezeAccount(accountNumber, Status.FROZEN);
-    }
-
-    public void unfreezeAccount(String accountNumber) {
-        freezeOrUnfreezeAccount(accountNumber, Status.ACTIVE);
-    }
-
-    public void freezeOrUnfreezeAccount(String accountNumber, Status status) {
-        AccountEntity foundAccount = accountRepository.findByNumber(accountNumber)
-                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
-
-        foundAccount.setStatus(status);
-        accountRepository.save(foundAccount);
     }
 }
