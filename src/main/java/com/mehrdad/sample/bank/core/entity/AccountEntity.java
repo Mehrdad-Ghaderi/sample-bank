@@ -1,7 +1,7 @@
 package com.mehrdad.sample.bank.core.entity;
 
-import com.mehrdad.sample.bank.core.exception.InsufficientBalanceException;
-import com.mehrdad.sample.bank.core.exception.InvalidAmountException;
+import com.mehrdad.sample.bank.core.exception.transaction.InsufficientBalanceException;
+import com.mehrdad.sample.bank.core.exception.transaction.InvalidAmountException;
 import jakarta.persistence.Entity;
 
 import jakarta.persistence.*;

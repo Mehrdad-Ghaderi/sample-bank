@@ -2,7 +2,6 @@ package com.mehrdad.sample.bank.core.service;
 
 import com.mehrdad.sample.bank.api.dto.StatusUpdateDto;
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
-import com.mehrdad.sample.bank.api.dto.customer.CustomerDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.Status;
 import com.mehrdad.sample.bank.core.exception.account.AccountStatusAlreadySetException;
@@ -27,7 +26,6 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
-    private final CustomerMapper clientMapper;
     private final CustomerService clientService;
 
 

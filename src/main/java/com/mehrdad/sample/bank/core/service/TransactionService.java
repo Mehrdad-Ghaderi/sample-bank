@@ -3,9 +3,9 @@ package com.mehrdad.sample.bank.core.service;
 import com.mehrdad.sample.bank.api.dto.CreateTransactionRequest;
 import com.mehrdad.sample.bank.api.dto.TransactionDto;
 import com.mehrdad.sample.bank.core.entity.*;
-import com.mehrdad.sample.bank.core.exception.CurrencyMismatchException;
-import com.mehrdad.sample.bank.core.exception.IllegalTransactionTypeException;
-import com.mehrdad.sample.bank.core.exception.InvalidAmountException;
+import com.mehrdad.sample.bank.core.exception.transaction.CurrencyMismatchException;
+import com.mehrdad.sample.bank.core.exception.transaction.IllegalTransactionTypeException;
+import com.mehrdad.sample.bank.core.exception.transaction.InvalidAmountException;
 import com.mehrdad.sample.bank.core.exception.account.AccountNotActiveException;
 import com.mehrdad.sample.bank.core.exception.account.AccountNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.TransactionMapper;
@@ -17,7 +17,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 

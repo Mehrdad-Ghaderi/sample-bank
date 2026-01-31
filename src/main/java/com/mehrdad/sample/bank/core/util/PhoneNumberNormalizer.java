@@ -1,6 +1,6 @@
 package com.mehrdad.sample.bank.core.util;
 
-import com.mehrdad.sample.bank.core.exception.InvalidPhoneNumberException;
+import com.mehrdad.sample.bank.core.exception.customer.InvalidPhoneNumberException;
 
 public final class PhoneNumberNormalizer {
 

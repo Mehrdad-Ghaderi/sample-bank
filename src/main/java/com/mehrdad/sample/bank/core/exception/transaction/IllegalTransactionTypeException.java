@@ -1,4 +1,4 @@
-package com.mehrdad.sample.bank.core.exception;
+package com.mehrdad.sample.bank.core.exception.transaction;
 
 public class IllegalTransactionTypeException extends RuntimeException {
     public IllegalTransactionTypeException(String senderAndReceiverMustDiffer) {

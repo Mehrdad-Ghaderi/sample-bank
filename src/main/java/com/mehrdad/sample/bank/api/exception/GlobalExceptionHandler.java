@@ -3,11 +3,15 @@ package com.mehrdad.sample.bank.api.exception;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.mehrdad.sample.bank.api.error.ApiErrorResponse;
-import com.mehrdad.sample.bank.core.exception.*;
+import com.mehrdad.sample.bank.core.exception.ConcurrentUpdateException;
 import com.mehrdad.sample.bank.core.exception.account.AccountNotActiveException;
 import com.mehrdad.sample.bank.core.exception.account.AccountNotFoundException;
 import com.mehrdad.sample.bank.core.exception.account.AccountStatusAlreadySetException;
 import com.mehrdad.sample.bank.core.exception.customer.*;
+import com.mehrdad.sample.bank.core.exception.transaction.CurrencyMismatchException;
+import com.mehrdad.sample.bank.core.exception.transaction.IllegalTransactionTypeException;
+import com.mehrdad.sample.bank.core.exception.transaction.InsufficientBalanceException;
+import com.mehrdad.sample.bank.core.exception.transaction.InvalidAmountException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -333,12 +337,18 @@ public class GlobalExceptionHandler {
            CONCURRENCY
        =================== */
 
-    /*@ExceptionHandler(ObjectOptimisticLockingFailureException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleOptimisticLock() {
-        return new ErrorResponse(
+    @ExceptionHandler(ConcurrentUpdateException.class)
+    public ResponseEntity<ApiErrorResponse> handleOptimisticLock(ConcurrentUpdateException ex,
+                                                 HttpServletRequest request) {
+
+        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
+                HttpStatus.CONFLICT.value(),
                 "CONCURRENT_MODIFICATION",
-                "Account was modified concurrently. Please retry."
+                ex.getMessage(),
+                request.getRequestURI(),
+                OffsetDateTime.now()
         );
-    }*/
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(apiErrorResponse);
+    }
 }
