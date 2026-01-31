@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
         ApiErrorResponse error = new ApiErrorResponse(
                 HttpStatus.CONFLICT.value(),
                 "DATA_INTEGRITY_VIOLATION",
-                root != null ? root.getMessage() : ex.getMessage(),
+                root.getMessage(),
                 request.getRequestURI(),
                 OffsetDateTime.now()
         );
