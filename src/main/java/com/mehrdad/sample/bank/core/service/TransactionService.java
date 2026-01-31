@@ -3,8 +3,10 @@ package com.mehrdad.sample.bank.core.service;
 import com.mehrdad.sample.bank.api.dto.CreateTransactionRequest;
 import com.mehrdad.sample.bank.api.dto.TransactionDto;
 import com.mehrdad.sample.bank.core.entity.*;
-import com.mehrdad.sample.bank.core.exception.CurrencyMismatchException;
-import com.mehrdad.sample.bank.core.exception.IllegalTransactionTypeException;
+import com.mehrdad.sample.bank.core.exception.transaction.CurrencyMismatchException;
+import com.mehrdad.sample.bank.core.exception.transaction.IllegalTransactionTypeException;
+import com.mehrdad.sample.bank.core.exception.transaction.InvalidAmountException;
+import com.mehrdad.sample.bank.core.exception.account.AccountNotActiveException;
 import com.mehrdad.sample.bank.core.exception.account.AccountNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.TransactionMapper;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.UUID;
 
 /**
  * Created by Mehrdad Ghaderi
@@ -28,49 +31,76 @@ public class TransactionService {
     private final TransactionMapper transactionMapper;
 
     public Page<TransactionDto> getTransactions(Pageable pageable) {
-        System.out.println("hi");
         return transactionRepository.findAll(pageable).map(transactionMapper::toTransactionDto);
     }
 
     @Transactional
     public TransactionDto createTransaction(CreateTransactionRequest request) {
 
-        AccountEntity sender = accountRepository.findById(request.getSenderAccountId())
-                .orElseThrow(() -> new AccountNotFoundException(request.getSenderAccountId()));
+        validateAmount(request);
 
-        AccountEntity receiver = accountRepository.findById(request.getReceiverAccountId())
-                .orElseThrow(() -> new AccountNotFoundException(request.getReceiverAccountId()));
+        UUID senderId = request.getSenderAccountId();
+        UUID receiverId = request.getReceiverAccountId();
 
-        validateTransaction(request, sender, receiver);
 
-        // avoid deadlock
-        if (sender.getId().compareTo(receiver.getId()) < 0) {
-            sender.decreaseBalance(request.getAmount());
-            receiver.increaseBalance(request.getAmount());
+        AccountEntity first;
+        AccountEntity second;
+
+        // deterministic lock order → deadlock-free
+        if (senderId.compareTo(receiverId) < 0) {
+            first = loadAccountByIdForUpdate(senderId);
+            second = loadAccountByIdForUpdate(receiverId);
         } else {
-            receiver.increaseBalance(request.getAmount());
-            sender.decreaseBalance(request.getAmount());
+            first = loadAccountByIdForUpdate(receiverId);
+            second = loadAccountByIdForUpdate(senderId);
         }
 
-        TransactionEntity tx = new TransactionEntity();
-        tx.setSender(sender);
-        tx.setReceiver(receiver);
-        tx.setAmount(request.getAmount());
-        tx.setCurrency(request.getCurrency());
-        tx.setType(request.getType());
-        tx.setTransactionTime(Instant.now());
+        AccountEntity sender = senderId.equals(first.getId()) ? first : second;
+        AccountEntity receiver = receiverId.equals(first.getId()) ? first : second;
 
-        TransactionEntity savedTransaction = transactionRepository.save(tx);
+        //stateful validation under lock
+        validateTransaction(request, sender, receiver);
+
+        sender.decreaseBalance(request.getAmount());
+        receiver.increaseBalance(request.getAmount());
+
+        TransactionEntity transaction = new TransactionEntity();
+        transaction.setSender(sender);
+        transaction.setReceiver(receiver);
+        transaction.setAmount(request.getAmount());
+        transaction.setCurrency(request.getCurrency());
+        transaction.setType(request.getType());
+        transaction.setTransactionTime(Instant.now());
+
+        TransactionEntity savedTransaction = transactionRepository.save(transaction);
         return transactionMapper.toTransactionDto(savedTransaction);
+    }
+
+    private void validateAmount(CreateTransactionRequest request) {
+        if (request.getAmount().signum() <= 0) {
+            throw new InvalidAmountException(request.getAmount());
+        }
+    }
+
+    private AccountEntity loadAccountByIdForUpdate(UUID accountId) {
+        return accountRepository.findByIdForUpdate(accountId)
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
     }
 
     private void validateTransaction(
             CreateTransactionRequest request,
             AccountEntity sender,
             AccountEntity receiver) {
+        validateStatus(sender);
+        validateStatus(receiver);
         validateCurrency(request, sender, receiver);
-
         validateTransactionType(request, sender, receiver);
+    }
+
+    private void validateStatus(AccountEntity account) {
+        if (account.getStatus() != Status.ACTIVE) {
+            throw new AccountNotActiveException(account);
+        }
     }
 
     private static void validateCurrency(CreateTransactionRequest request, AccountEntity sender, AccountEntity receiver) {
@@ -90,20 +120,20 @@ public class TransactionService {
             }
 
             case DEPOSIT -> {
-                if (!isBank(sender)) {
+                if (!isSystemAccount(sender)) {
                     throw new IllegalTransactionTypeException("Deposit's sender must be the bank");
                 }
             }
 
             case WITHDRAW -> {
-                if (!isBank(receiver)) {
+                if (!isSystemAccount(receiver)) {
                     throw new IllegalTransactionTypeException("Withdrawal's receiver must be the bank");
                 }
             }
         }
     }
 
-    private boolean isBank(AccountEntity account) {
+    private boolean isSystemAccount(AccountEntity account) {
         return "BANK".equals(account.getCustomer().getName());
     }
 }

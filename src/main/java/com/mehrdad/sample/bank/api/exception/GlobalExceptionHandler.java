@@ -3,10 +3,15 @@ package com.mehrdad.sample.bank.api.exception;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.mehrdad.sample.bank.api.error.ApiErrorResponse;
-import com.mehrdad.sample.bank.core.exception.*;
+import com.mehrdad.sample.bank.core.exception.ConcurrentUpdateException;
+import com.mehrdad.sample.bank.core.exception.account.AccountNotActiveException;
 import com.mehrdad.sample.bank.core.exception.account.AccountNotFoundException;
 import com.mehrdad.sample.bank.core.exception.account.AccountStatusAlreadySetException;
 import com.mehrdad.sample.bank.core.exception.customer.*;
+import com.mehrdad.sample.bank.core.exception.transaction.CurrencyMismatchException;
+import com.mehrdad.sample.bank.core.exception.transaction.IllegalTransactionTypeException;
+import com.mehrdad.sample.bank.core.exception.transaction.InsufficientBalanceException;
+import com.mehrdad.sample.bank.core.exception.transaction.InvalidAmountException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -19,7 +24,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -37,7 +41,7 @@ public class GlobalExceptionHandler {
         ApiErrorResponse error = new ApiErrorResponse(
                 HttpStatus.CONFLICT.value(),
                 "DATA_INTEGRITY_VIOLATION",
-                root != null ? root.getMessage() : ex.getMessage(),
+                root.getMessage(),
                 request.getRequestURI(),
                 OffsetDateTime.now()
         );
@@ -193,8 +197,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
-    // ACCOUNT ********************
-    //         ********************
+    /* ===================
+           ACCOUNT
+       =================== */
 
     @ExceptionHandler(AccountNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleAccountNotFound(AccountNotFoundException ex,
@@ -207,6 +212,21 @@ public class GlobalExceptionHandler {
                 OffsetDateTime.now()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(apiErrorResponse);
+    }
+
+
+    @ExceptionHandler(AccountNotActiveException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccountNotFound(AccountNotActiveException ex,
+                                                                  HttpServletRequest request) {
+        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                "ACCOUNT_NOT_ACTIVE",
+                ex.getMessage(),
+                request.getRequestURI(),
+                OffsetDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(apiErrorResponse);
     }
 
@@ -317,12 +337,18 @@ public class GlobalExceptionHandler {
            CONCURRENCY
        =================== */
 
-    /*@ExceptionHandler(ObjectOptimisticLockingFailureException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleOptimisticLock() {
-        return new ErrorResponse(
+    @ExceptionHandler(ConcurrentUpdateException.class)
+    public ResponseEntity<ApiErrorResponse> handleOptimisticLock(ConcurrentUpdateException ex,
+                                                 HttpServletRequest request) {
+
+        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
+                HttpStatus.CONFLICT.value(),
                 "CONCURRENT_MODIFICATION",
-                "Account was modified concurrently. Please retry."
+                ex.getMessage(),
+                request.getRequestURI(),
+                OffsetDateTime.now()
         );
-    }*/
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(apiErrorResponse);
+    }
 }

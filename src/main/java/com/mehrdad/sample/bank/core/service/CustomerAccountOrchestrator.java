@@ -2,6 +2,7 @@ package com.mehrdad.sample.bank.core.service;
 
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.core.entity.Status;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,16 +10,11 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class CustomerAccountOrchestrator {
 
     private final CustomerService customerService;
     private final AccountService accountService;
-
-    public CustomerAccountOrchestrator(CustomerService customerService,
-                                       AccountService accountService) {
-        this.customerService = customerService;
-        this.accountService = accountService;
-    }
 
     @Transactional
     public void updateCustomerAndAccountsStatus(UUID customerId, Status status) {
@@ -29,7 +25,7 @@ public class CustomerAccountOrchestrator {
         }
         List<AccountDto> accounts = accountService.getAccountsByCustomerId(customerId);
         for (AccountDto accountDto : accounts) {
-            accountService.freezeOrUnfreezeAccount(accountDto.getNumber(), status);
+            accountService.setAccountStatus(accountDto.getId(), status);
         }
     }
 }

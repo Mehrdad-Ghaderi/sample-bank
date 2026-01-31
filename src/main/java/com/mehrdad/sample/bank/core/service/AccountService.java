@@ -2,22 +2,19 @@ package com.mehrdad.sample.bank.core.service;
 
 import com.mehrdad.sample.bank.api.dto.StatusUpdateDto;
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
-import com.mehrdad.sample.bank.api.dto.customer.CustomerDto;
 import com.mehrdad.sample.bank.core.entity.AccountEntity;
 import com.mehrdad.sample.bank.core.entity.Status;
 import com.mehrdad.sample.bank.core.exception.account.AccountStatusAlreadySetException;
 import com.mehrdad.sample.bank.core.exception.account.AccountNotFoundException;
 import com.mehrdad.sample.bank.core.mapper.AccountMapper;
-import com.mehrdad.sample.bank.core.mapper.CustomerMapper;
 import com.mehrdad.sample.bank.core.repository.AccountRepository;
-import com.mehrdad.sample.bank.core.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Created by Mehrdad Ghaderi
@@ -26,15 +23,40 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AccountService {
 
-    private final CustomerRepository customerRepository;
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
-    private final CustomerMapper clientMapper;
     private final CustomerService clientService;
 
 
     public Page<AccountDto> getAccounts(Pageable pageable) {
         return accountRepository.findAll(pageable).map(accountMapper::toAccountDto);
+    }
+
+    @Transactional
+    public AccountDto updateStatus(UUID id, StatusUpdateDto statusUpdateDto) {
+        AccountEntity foundAccount = loadAccountById(id);
+
+        Status newStatus = statusUpdateDto.getStatus();
+        Status currentStatus = foundAccount.getStatus();
+        if (currentStatus.equals(newStatus)) {
+            throw new AccountStatusAlreadySetException(newStatus);
+        }
+
+        foundAccount.setStatus(newStatus);
+        accountRepository.save(foundAccount);
+        return accountMapper.toAccountDto(foundAccount);
+    }
+
+    private AccountEntity loadAccountById(UUID id) {
+        return accountRepository.findById(id)
+                .orElseThrow(() -> new AccountNotFoundException(id));
+    }
+
+    public void setAccountStatus(UUID accountId, Status status) {
+        AccountEntity foundAccount = loadAccountById(accountId);
+
+        foundAccount.setStatus(status);
+        accountRepository.save(foundAccount);
     }
 
     public AccountDto getAccountByAccountNumber(String accountNumber){
@@ -46,51 +68,5 @@ public class AccountService {
 
     public List<AccountDto> getAccountsByCustomerId(UUID clientId) {
         return clientService.getCustomerById(clientId).getAccounts();
-    }
-
-    public AccountDto updateStatus(UUID id, StatusUpdateDto statusUpdateDto) {
-        AccountEntity foundAccount = accountRepository.findById(id)
-                .orElseThrow(() -> new AccountNotFoundException(id));
-
-        if (foundAccount.getStatus().equals(statusUpdateDto.getStatus())) {
-            throw new AccountStatusAlreadySetException(statusUpdateDto.getStatus());
-        }
-
-        foundAccount.setStatus(statusUpdateDto.getStatus());
-        accountRepository.saveAndFlush(foundAccount);
-        return accountMapper.toAccountDto(foundAccount);
-    }
-
-    public CustomerDto getCustomerByAccountNumber(String accountNumber) {
-        return accountRepository.findByNumber(accountNumber)
-                .map(AccountEntity::getCustomer)
-                .map(clientMapper::toCustomerDto)
-                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
-    }
-
-
-    public List<AccountDto> getAllAccounts() {
-
-        return customerRepository.findAll().stream()
-                .map(clientMapper::toCustomerDto)
-                .map(CustomerDto::getAccounts)
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-    }
-
-    public void freezeAccount(String accountNumber) {
-        freezeOrUnfreezeAccount(accountNumber, Status.FROZEN);
-    }
-
-    public void unfreezeAccount(String accountNumber) {
-        freezeOrUnfreezeAccount(accountNumber, Status.ACTIVE);
-    }
-
-    public void freezeOrUnfreezeAccount(String accountNumber, Status status) {
-        AccountEntity foundAccount = accountRepository.findByNumber(accountNumber)
-                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
-
-        foundAccount.setStatus(status);
-        accountRepository.save(foundAccount);
     }
 }
