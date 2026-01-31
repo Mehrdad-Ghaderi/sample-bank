@@ -38,14 +38,22 @@ public class AccountController {
         return ResponseEntity.ok(accountService.getAccounts(pageable));
     }
 
+    @GetMapping(ACCOUNTS_ID_PATH)
+    public ResponseEntity<AccountDto> getAccountById(@PathVariable UUID id) {
+        AccountDto accountDto = accountService.getAccountById(id);
+        return ResponseEntity.ok(accountDto);
+    }
+
     /**
      * Get a single account by its account number
      */
+/*
     @GetMapping(ACCOUNTS_NUMBER_PATH)
     public ResponseEntity<AccountDto> getAccountByAccountNumber(@PathVariable String accountNumber) {
         AccountDto account = accountService.getAccountByAccountNumber(accountNumber);
         return ResponseEntity.ok(account);
     }
+*/
 
     /**
      * update the status of an account

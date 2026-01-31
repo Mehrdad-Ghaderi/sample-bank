@@ -69,4 +69,10 @@ public class AccountService {
     public List<AccountDto> getAccountsByCustomerId(UUID clientId) {
         return clientService.getCustomerById(clientId).getAccounts();
     }
+
+    public AccountDto getAccountById(UUID id) {
+        return accountRepository.findById(id)
+                .map(accountMapper::toAccountDto)
+                .orElseThrow(() -> new AccountNotFoundException(id));
+    }
 }
