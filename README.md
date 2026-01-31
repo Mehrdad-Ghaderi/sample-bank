@@ -8,7 +8,7 @@ A backend-focused banking system built with **Spring Boot** that supports key op
 
 - **Backend:** Java, Spring Boot, Spring Data JPA
 - **Database:** PostgreSQL (hosted on [Supabase](https://supabase.io/) ☁️)
-- **Tools:** GitLab, Maven, IntelliJ
+- **Tools:** GitHub, Maven, IntelliJ
 - **Tests:** JUnit
 - **Deployment:** Local (can be containerized or deployed to the cloud)
 
@@ -21,7 +21,7 @@ The PostgreSQL database is hosted on **Supabase**, making this project ready for
 ## 📦 Features
 
 - ➕ Add a new client
-- 💱 Multi-currency support (USD, EUR, GBP, CAD) under one account
+- 💱 Multi-currency support (USD, EUR, CAD) under one account
 - 📞 Update client phone number
 - 💸 Deposit, Withdraw, and Transfer money
 - 🧾 View account balance per currency
@@ -41,18 +41,32 @@ The PostgreSQL database is hosted on **Supabase**, making this project ready for
 
 ---
 
+## 🚧 Project Status
+
+This project is under active development and is being evolved step by step toward
+a production-grade, enterprise-style banking system.
+
+Upcoming improvements include:
+- CI/CD pipelines
+- Docker & Kubernetes deployment
+- Improved testing strategy
+- Observability and logging
+- Database migration and versioning
+
+---
+
 ## 🛠️ Setup Instructions
 
 ### Prerequisites
 
-- Java 17+
+- Java 21
 - Maven
 - Git
-- (Optional) Postman or any REST client
+- Postman (Optional)
 
 ### Clone & Run
 
 ```bash
-git clone https://gitlab.com/Mehrdad-Ghaderi/sample-bank.git
+git clone https://github.com/Mehrdad-Ghaderi/sample-bank.git
 cd sample-bank
 ./mvnw spring-boot:run
