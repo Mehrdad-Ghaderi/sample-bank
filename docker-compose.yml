@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: sample-bank-postgres
+    environment:
+      POSTGRES_DB: sample_bank
+      POSTGRES_USER: sample_bank
+      POSTGRES_PASSWORD: sample_bank
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
