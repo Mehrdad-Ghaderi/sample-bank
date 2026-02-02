@@ -1,5 +1,6 @@
 package com.mehrdad.sample.bank.core.service;
 
+import com.mehrdad.sample.bank.api.dto.account.AccountCreateDto;
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.api.dto.customer.CustomerCreateDto;
 import com.mehrdad.sample.bank.api.dto.customer.CustomerDto;
@@ -135,7 +136,7 @@ public class CustomerService {
     // ACCOUNT ***************************************
 
     @Transactional
-    public AccountDto createAccount(UUID customerId, AccountDto accountDto) {
+    public AccountDto createAccount(UUID customerId, AccountCreateDto accountCreateDto) {
         CustomerEntity foundCustomer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException(customerId));
 
@@ -143,14 +144,7 @@ public class CustomerService {
         newAccount.setNumber(AccountNumberGenerator.generate(foundCustomer));
 
         // Set currency (default CAD)
-        newAccount.setCurrency(Optional.ofNullable(accountDto.getCurrency()).orElse(Currency.CAD));
-
-        //Set balance (default 0, or provided positive value)
-        newAccount.setBalance(
-                Optional.ofNullable(accountDto.getBalance())
-                        .filter(b -> b.signum() > 0)
-                        .orElse(BigDecimal.ZERO)
-        );
+        newAccount.setCurrency(Optional.ofNullable(accountCreateDto.getCurrency()).orElse(Currency.CAD));
 
         foundCustomer.addAccount(newAccount);
         customerRepository.save(foundCustomer);

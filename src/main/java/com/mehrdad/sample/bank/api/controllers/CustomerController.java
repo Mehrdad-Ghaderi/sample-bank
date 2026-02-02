@@ -1,5 +1,6 @@
 package com.mehrdad.sample.bank.api.controllers;
 
+import com.mehrdad.sample.bank.api.dto.account.AccountCreateDto;
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.api.dto.customer.CustomerCreateDto;
 import com.mehrdad.sample.bank.api.dto.customer.CustomerDto;
@@ -81,9 +82,9 @@ public class CustomerController {
      */
     @PostMapping(CUSTOMERS_ID_ACCOUNTS_PATH)
     public ResponseEntity<AccountDto> createAccountByCustomerId(@PathVariable("customerId") UUID customerID,
-                                                                @RequestBody(required = false) AccountDto accountDto) {
+                                                                @RequestBody(required = false) AccountCreateDto accountCreateDto) {
 
-        AccountDto createdAccount = customerService.createAccount(customerID, accountDto);
+        AccountDto createdAccount = customerService.createAccount(customerID, accountCreateDto);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
