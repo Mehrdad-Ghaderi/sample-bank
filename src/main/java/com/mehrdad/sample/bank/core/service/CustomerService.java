@@ -27,7 +27,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -147,9 +146,16 @@ public class CustomerService {
         newAccount.setCurrency(Optional.ofNullable(accountCreateDto.getCurrency()).orElse(Currency.CAD));
 
         foundCustomer.addAccount(newAccount);
-        customerRepository.save(foundCustomer);
 
-        return accountMapper.toAccountDto(newAccount);
+        customerRepository.saveAndFlush(foundCustomer);
+
+        AccountEntity managedAccount = foundCustomer.getAccounts()
+                .stream()
+                .filter(a -> a.getNumber().equals(newAccount.getNumber()))
+                .findFirst()
+                .orElseThrow();
+
+        return accountMapper.toAccountDto(managedAccount);
     }
 
     @Transactional(readOnly = true)
@@ -167,5 +173,15 @@ public class CustomerService {
         }
 
         return accounts;
+    }
+
+    public CustomerDto getCustomerByBusinessId(Integer businessId) {
+        return  customerRepository.findByBusinessId(businessId)
+                .map(customerMapper::toCustomerDto)
+                .orElseThrow(() -> new CustomerNotFoundException(businessId));
+    }
+
+    public CustomerDto getCustomerByName(String bank) {
+        return customerRepository.findByName("BANK").map(customerMapper::toCustomerDto).orElseThrow(CustomerNotFoundException::new);
     }
 }

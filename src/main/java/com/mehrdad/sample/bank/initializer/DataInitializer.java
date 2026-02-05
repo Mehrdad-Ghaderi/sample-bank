@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  * Date: 5/26/2025
  * Time: 11:53 PM
  */
-//@Profile("dev")
+@Profile({"dev", "test"})
 @Component
 @RequiredArgsConstructor
 @Transactional
@@ -61,6 +61,7 @@ public class DataInitializer implements CommandLineRunner {
     private Integer generateCustomerBusinessId() {
         return customerBusinessIdGenerator.getNextBusinessId();
     }
+
     private void ensureBankAccounts(CustomerEntity bank) {
         // Get currencies of existing bank accounts
         Set<Currency> existingCurrencies = bank.getAccounts()
