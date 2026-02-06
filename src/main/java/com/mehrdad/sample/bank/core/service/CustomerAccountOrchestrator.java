@@ -1,31 +1,20 @@
 package com.mehrdad.sample.bank.core.service;
 
-import com.mehrdad.sample.bank.api.dto.account.AccountDto;
-import com.mehrdad.sample.bank.core.entity.Status;
+import com.mehrdad.sample.bank.core.entity.AccountEntity;
+import com.mehrdad.sample.bank.core.entity.CustomerEntity;
+import com.mehrdad.sample.bank.core.repository.AccountRepository;
+import com.mehrdad.sample.bank.core.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class CustomerAccountOrchestrator {
 
-    private final CustomerService customerService;
-    private final AccountService accountService;
+    private final CustomerRepository customerService;
+    private final AccountRepository accountService;
 
-    @Transactional
-    public void updateCustomerAndAccountsStatus(UUID customerId, Status status) {
-        if (status == Status.ACTIVE) {
-            customerService.activateCustomer(customerId);
-        } else {
-            customerService.deactivateCustomer(customerId);
-        }
-        List<AccountDto> accounts = accountService.getAccountsByCustomerId(customerId);
-        for (AccountDto accountDto : accounts) {
-            accountService.setAccountStatus(accountDto.getId(), status);
-        }
+    public void saveAccountOFCustomer(CustomerEntity customerEntity, AccountEntity accountEntity) {
+        accountService.save(accountEntity);
     }
 }

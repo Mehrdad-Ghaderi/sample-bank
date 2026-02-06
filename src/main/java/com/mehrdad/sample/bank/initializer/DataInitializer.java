@@ -11,6 +11,8 @@ import com.mehrdad.sample.bank.core.util.CustomerBusinessIdGenerator;
 import com.mehrdad.sample.bank.core.util.PhoneNumberNormalizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
  * Date: 5/26/2025
  * Time: 11:53 PM
  */
+@Profile({"dev", "test"})
 @Component
 @RequiredArgsConstructor
 @Transactional
@@ -32,7 +35,6 @@ public class DataInitializer implements CommandLineRunner {
     private static final String BANK_NAME = "BANK";
     private static final String BANK_PHONE = "1234567890";
     private static final BigDecimal INITIAL_BALANCE = new BigDecimal("1000000000");
-    private final AccountRepository accountRepository;
     private final CustomerRepository customerRepository;
     private final CustomerBusinessIdGenerator customerBusinessIdGenerator;
 
@@ -53,12 +55,13 @@ public class DataInitializer implements CommandLineRunner {
         bank.setStatus(Status.ACTIVE);
         bank.setAccounts(new ArrayList<>());
         bank.setBusinessId(generateCustomerBusinessId());
-        return customerRepository.save(bank);
+        return customerRepository.saveAndFlush(bank);
     }
 
     private Integer generateCustomerBusinessId() {
         return customerBusinessIdGenerator.getNextBusinessId();
     }
+
     private void ensureBankAccounts(CustomerEntity bank) {
         // Get currencies of existing bank accounts
         Set<Currency> existingCurrencies = bank.getAccounts()
