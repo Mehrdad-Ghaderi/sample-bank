@@ -4,6 +4,7 @@ import com.mehrdad.sample.bank.core.entity.Currency;
 import com.mehrdad.sample.bank.core.entity.TransactionType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,6 +13,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
+@AllArgsConstructor
 public class CreateTransactionRequest {
     @NotNull
     private UUID senderAccountId;
