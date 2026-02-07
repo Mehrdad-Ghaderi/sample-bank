@@ -1,6 +1,6 @@
 package com.mehrdad.sample.bank.api.dto;
 
-import com.mehrdad.sample.bank.core.entity.Currency;
+import com.mehrdad.sample.bank.domain.entity.Currency;
 
 import java.math.BigDecimal;
 import java.time.Instant;

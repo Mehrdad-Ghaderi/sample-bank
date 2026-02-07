@@ -1,17 +1,15 @@
 package com.mehrdad.sample.bank.initializer;
 
-import com.mehrdad.sample.bank.core.entity.AccountEntity;
-import com.mehrdad.sample.bank.core.entity.Currency;
-import com.mehrdad.sample.bank.core.entity.CustomerEntity;
-import com.mehrdad.sample.bank.core.entity.Status;
-import com.mehrdad.sample.bank.core.repository.AccountRepository;
-import com.mehrdad.sample.bank.core.repository.CustomerRepository;
-import com.mehrdad.sample.bank.core.util.AccountNumberGenerator;
-import com.mehrdad.sample.bank.core.util.CustomerBusinessIdGenerator;
-import com.mehrdad.sample.bank.core.util.PhoneNumberNormalizer;
+import com.mehrdad.sample.bank.domain.entity.AccountEntity;
+import com.mehrdad.sample.bank.domain.entity.Currency;
+import com.mehrdad.sample.bank.domain.entity.CustomerEntity;
+import com.mehrdad.sample.bank.domain.entity.Status;
+import com.mehrdad.sample.bank.domain.repository.CustomerRepository;
+import com.mehrdad.sample.bank.domain.util.AccountNumberGenerator;
+import com.mehrdad.sample.bank.domain.util.CustomerBusinessIdGenerator;
+import com.mehrdad.sample.bank.domain.util.PhoneNumberNormalizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

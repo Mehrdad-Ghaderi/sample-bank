@@ -2,7 +2,7 @@ package com.mehrdad.sample.bank.api.controllers;
 
 import com.mehrdad.sample.bank.api.dto.CreateTransactionRequest;
 import com.mehrdad.sample.bank.api.dto.TransactionDto;
-import com.mehrdad.sample.bank.core.service.TransactionService;
+import com.mehrdad.sample.bank.domain.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -152,6 +152,9 @@
                 <configuration>
                     <forkCount>0</forkCount> <!-- avoids forking under wrong JDK -->
 <!--                    <reuseForks>true</reuseForks>-->
+                    <argLine>
+                        -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar
+                    </argLine>
                 </configuration>
             </plugin>
 
