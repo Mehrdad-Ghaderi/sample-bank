@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * Date: 5/26/2025
  * Time: 11:53 PM
  */
-@Profile({"dev", "test"})
+@Profile("dev")
 @Component
 @RequiredArgsConstructor
 @Transactional
@@ -52,7 +52,7 @@ public class DataInitializer implements CommandLineRunner {
         bank.setPhoneNumber(normalizedPhoneNumber);
         bank.setStatus(Status.ACTIVE);
         bank.setAccounts(new ArrayList<>());
-        bank.setBusinessId(generateCustomerBusinessId());
+        bank.setBusinessId(100000);
         return customerRepository.saveAndFlush(bank);
     }
 
