@@ -23,7 +23,6 @@ import java.util.UUID;
 public class AccountController {
 
     public static final String ACCOUNT_ID_PATH = ApiPaths.API_BASE_PATH + ApiPaths.ACCOUNTS + "/{id}";
-    public static final String ACCOUNT_NUMBER_PATH = "/{accountNumber}";
     private static final String ID_PATH = "/{id}";
 
     private final AccountService accountService;
@@ -43,17 +42,6 @@ public class AccountController {
         AccountDto accountDto = accountService.getAccountById(id);
         return ResponseEntity.ok(accountDto);
     }
-
-    /**
-     * Get a single account by its account number
-     */
-/*
-    @GetMapping(ACCOUNT_NUMBER_PATH)
-    public ResponseEntity<AccountDto> getAccountByAccountNumber(@PathVariable String accountNumber) {
-        AccountDto account = accountService.getAccountByAccountNumber(accountNumber);
-        return ResponseEntity.ok(account);
-    }
-*/
 
     /**
      * update the status of an account
