@@ -1,6 +1,6 @@
 package com.mehrdad.sample.bank.api.dto.account;
 
-import com.mehrdad.sample.bank.core.entity.Currency;
+import com.mehrdad.sample.bank.domain.entity.Currency;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

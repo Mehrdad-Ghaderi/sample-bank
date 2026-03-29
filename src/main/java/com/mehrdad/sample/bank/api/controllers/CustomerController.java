@@ -5,7 +5,7 @@ import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.api.dto.customer.CustomerCreateDto;
 import com.mehrdad.sample.bank.api.dto.customer.CustomerDto;
 import com.mehrdad.sample.bank.api.dto.customer.CustomerUpdateDto;
-import com.mehrdad.sample.bank.core.service.CustomerService;
+import com.mehrdad.sample.bank.domain.service.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
