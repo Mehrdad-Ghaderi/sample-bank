@@ -8,21 +8,23 @@ pipeline {
     }
 
     stages {
+        stage('Checkout Source') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Verify Workspace') {
             steps {
-                dir('/workspace') {
-                    sh 'pwd'
-                    sh 'ls -la'
-                }
+                sh 'pwd'
+                sh 'ls -la'
             }
         }
 
         stage('Run Transaction Integration Test') {
             steps {
-                dir('/workspace') {
-                    sh 'chmod +x mvnw'
-                    sh './mvnw clean -Dtest=TransactionServiceIT test'
-                }
+                sh 'chmod +x mvnw'
+                sh './mvnw clean -Dtest=TransactionServiceIT test'
             }
         }
     }
