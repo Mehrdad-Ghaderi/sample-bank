@@ -82,19 +82,6 @@
             <artifactId>postgresql</artifactId>
             <version>42.7.8</version>
         </dependency>
-
-
-        <!-- flyway -->
-        <!--<dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-database-postgresql</artifactId>
-        </dependency>-->
-
-
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -137,7 +124,6 @@
                 <version>3.0.0-M9</version>
                 <configuration>
                     <forkCount>0</forkCount> <!-- avoids forking under wrong JDK -->
-<!--                    <reuseForks>true</reuseForks>-->
                     <argLine>
                         -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar
                     </argLine>
