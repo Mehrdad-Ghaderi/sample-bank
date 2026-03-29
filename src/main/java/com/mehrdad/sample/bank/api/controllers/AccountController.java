@@ -1,5 +1,6 @@
 package com.mehrdad.sample.bank.api.controllers;
 
+import com.mehrdad.sample.bank.api.ApiPaths;
 import com.mehrdad.sample.bank.api.dto.StatusUpdateDto;
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.domain.service.AccountService;
@@ -18,47 +19,34 @@ import java.util.UUID;
  */
 @RestController
 @RequiredArgsConstructor
+@RequestMapping(ApiPaths.API_BASE_PATH + ApiPaths.ACCOUNTS)
 public class AccountController {
 
-    public static final String API_V1 = "/api/v1";
-
-    public static final String ACCOUNTS_PATH = API_V1 + "/accounts";
-    public static final String ACCOUNTS_ID_PATH = ACCOUNTS_PATH + "/{id}";
-    public static final String ACCOUNTS_NUMBER_PATH = ACCOUNTS_PATH + "/{accountNumber}";
+    public static final String ACCOUNT_ID_PATH = ApiPaths.API_BASE_PATH + ApiPaths.ACCOUNTS + "/{id}";
+    private static final String ID_PATH = "/{id}";
 
     private final AccountService accountService;
 
     /**
      * get all accounts default page size 5
      */
-    @GetMapping(ACCOUNTS_PATH)
+    @GetMapping
     public ResponseEntity<Page<AccountDto>> getAccounts(
             @PageableDefault(size = 5, sort = "createdAt") Pageable pageable) {
 
         return ResponseEntity.ok(accountService.getAccounts(pageable));
     }
 
-    @GetMapping(ACCOUNTS_ID_PATH)
+    @GetMapping(ID_PATH)
     public ResponseEntity<AccountDto> getAccountById(@PathVariable UUID id) {
         AccountDto accountDto = accountService.getAccountById(id);
         return ResponseEntity.ok(accountDto);
     }
 
     /**
-     * Get a single account by its account number
-     */
-/*
-    @GetMapping(ACCOUNTS_NUMBER_PATH)
-    public ResponseEntity<AccountDto> getAccountByAccountNumber(@PathVariable String accountNumber) {
-        AccountDto account = accountService.getAccountByAccountNumber(accountNumber);
-        return ResponseEntity.ok(account);
-    }
-*/
-
-    /**
      * update the status of an account
      */
-    @PatchMapping(ACCOUNTS_ID_PATH)
+    @PatchMapping(ID_PATH)
     public ResponseEntity<AccountDto> updateStatus(@PathVariable UUID id,
                              @RequestBody StatusUpdateDto statusUpdateDto) {
         AccountDto accountDto = accountService.updateStatus(id, statusUpdateDto);

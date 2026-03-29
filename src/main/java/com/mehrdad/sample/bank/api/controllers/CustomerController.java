@@ -1,5 +1,6 @@
 package com.mehrdad.sample.bank.api.controllers;
 
+import com.mehrdad.sample.bank.api.ApiPaths;
 import com.mehrdad.sample.bank.api.dto.account.AccountCreateDto;
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.api.dto.customer.CustomerCreateDto;
@@ -27,28 +28,25 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@RequestMapping(ApiPaths.API_BASE_PATH + ApiPaths.CUSTOMERS)
 public class CustomerController {
 
-    public static final String API_V1 = "/api/v1";
-
-    public static final String CUSTOMERS_PATH = API_V1 + "/customers";
-    public static final String CUSTOMERS_ID_PATH = CUSTOMERS_PATH + "/{customerId}";
-
-    public static final String CUSTOMERS_ID_ACCOUNTS_PATH = CUSTOMERS_PATH + "/{customerId}/accounts";
+    public static final String CUSTOMER_ID_PATH = "/{customerId}";
+    public static final String CUSTOMER_ACCOUNTS_PATH = "/{customerId}/accounts";
 
     private final CustomerService customerService;
 
-    @GetMapping(CUSTOMERS_PATH)
+    @GetMapping
     public ResponseEntity<Page<CustomerDto>> getCustomers(@PageableDefault(size = 5, sort = "createdAt") Pageable pageable) {
         return ResponseEntity.ok(customerService.getCustomers(pageable));
     }
 
-    @GetMapping(CUSTOMERS_ID_PATH)
+    @GetMapping(CUSTOMER_ID_PATH)
     public CustomerDto getCustomerById(@PathVariable UUID customerId) {
         return customerService.getCustomerById(customerId);
     }
 
-    @PostMapping(CUSTOMERS_PATH)
+    @PostMapping
     public ResponseEntity<CustomerDto> createCustomer(@RequestBody CustomerCreateDto customerCreateDto) {
         CustomerDto savedCustomerDto = customerService.createCustomer(customerCreateDto);
 
@@ -59,18 +57,18 @@ public class CustomerController {
         return ResponseEntity.created(location).body(savedCustomerDto);
     }
 
-    @DeleteMapping(CUSTOMERS_ID_PATH)
+    @DeleteMapping(CUSTOMER_ID_PATH)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCustomerById(@PathVariable UUID customerId) {
         customerService.deactivateCustomer(customerId);
     }
 
-    @PostMapping(CUSTOMERS_ID_PATH)
+    @PostMapping(CUSTOMER_ID_PATH)
     public void activateCustomer(@PathVariable UUID customerId) {
         customerService.activateCustomer(customerId);
     }
 
-    @PatchMapping(CUSTOMERS_ID_PATH)
+    @PatchMapping(CUSTOMER_ID_PATH)
     public ResponseEntity<CustomerDto> updateCustomer(@PathVariable UUID customerId,
                                                       @Valid @RequestBody CustomerUpdateDto customerUpdateDto) {
         CustomerDto updated = customerService.updateCustomer(customerId, customerUpdateDto);
@@ -80,16 +78,16 @@ public class CustomerController {
     /**
      * create an accounts belonging to a customer
      */
-    @PostMapping(CUSTOMERS_ID_ACCOUNTS_PATH)
-    public ResponseEntity<AccountDto> createAccountByCustomerId(@PathVariable("customerId") UUID customerID,
+    @PostMapping(CUSTOMER_ACCOUNTS_PATH)
+    public ResponseEntity<AccountDto> createAccountByCustomerId(@PathVariable("customerId") UUID customerId,
                                                                 @RequestBody(required = false) AccountCreateDto accountCreateDto) {
 
-        AccountDto createdAccount = customerService.createAccount(customerID, accountCreateDto);
+        AccountDto createdAccount = customerService.createAccount(customerId, accountCreateDto);
 
         URI location = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path(AccountController.ACCOUNTS_ID_PATH)
-                .buildAndExpand(createdAccount.getNumber())
+                .fromCurrentContextPath()
+                .path(AccountController.ACCOUNT_ID_PATH)
+                .buildAndExpand(createdAccount.getId())
                 .toUri();
 
         return ResponseEntity
@@ -97,9 +95,9 @@ public class CustomerController {
                 .body(createdAccount);
     }
 
-    @GetMapping(CUSTOMERS_ID_ACCOUNTS_PATH)
+    @GetMapping(CUSTOMER_ACCOUNTS_PATH)
     public ResponseEntity<List<AccountDto>> getAccountByCustomerId(@PathVariable UUID customerId) {
-        List<AccountDto> account = customerService.getAccountByCustomerId(customerId);
-        return ResponseEntity.ok(account);
+        List<AccountDto> accounts = customerService.getAccountByCustomerId(customerId);
+        return ResponseEntity.ok(accounts);
     }
 }
