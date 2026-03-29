@@ -36,3 +36,5 @@ out/
 
 ### Project Files ###
 /src/main/resources/backups/
+/jenkins_home/
+/facenet/
