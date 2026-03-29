@@ -14,7 +14,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by Mehrdad Ghaderi
@@ -25,7 +26,7 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
-    private final CustomerService clientService;
+    private final CustomerService customerService;
 
 
     public Page<AccountDto> getAccounts(Pageable pageable) {
@@ -59,15 +60,15 @@ public class AccountService {
         accountRepository.save(foundAccount);
     }
 
-    public AccountDto getAccountByAccountNumber(String accountNumber){
+    public AccountDto getAccountByAccountNumber(String accountNumber) {
 
         return accountRepository.findByNumber(accountNumber)
                 .map(accountMapper::toAccountDto)
                 .orElseThrow(() -> new AccountNotFoundException(accountNumber));
     }
 
-    public List<AccountDto> getAccountsByCustomerId(UUID clientId) {
-        return clientService.getCustomerById(clientId).getAccounts();
+    public List<AccountDto> getAccountsByCustomerId(UUID customerId) {
+        return customerService.getCustomerById(customerId).getAccounts();
     }
 
     public AccountDto getAccountById(UUID id) {
