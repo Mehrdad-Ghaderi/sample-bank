@@ -19,6 +19,7 @@ WORKDIR /app
 # Copy the packaged fat JAR from build stage
 COPY --from=build /app/target/sample-bank-0.0.1-SNAPSHOT.jar app.jar
 
-# Pass environment variables and bind all interfaces
-ENV JAVA_OPTS="-Dserver.address=0.0.0.0 -Dserver.port=\${PORT:-8080}"
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+# Bind the app to all interfaces and default to port 8080 inside the container.
+ENV JAVA_OPTS="-Dserver.address=0.0.0.0"
+ENV PORT="8080"
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dserver.port=$PORT -jar app.jar"]
