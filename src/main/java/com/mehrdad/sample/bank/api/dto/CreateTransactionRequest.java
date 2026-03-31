@@ -1,7 +1,7 @@
 package com.mehrdad.sample.bank.api.dto;
 
-import com.mehrdad.sample.bank.core.entity.Currency;
-import com.mehrdad.sample.bank.core.entity.TransactionType;
+import com.mehrdad.sample.bank.domain.entity.Currency;
+import com.mehrdad.sample.bank.domain.entity.TransactionType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;

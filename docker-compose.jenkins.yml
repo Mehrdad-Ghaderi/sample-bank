@@ -1,0 +1,16 @@
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: jenkins/Dockerfile
+    container_name: sample-bank-jenkins
+    user: root
+    ports:
+      - "9090:8080"
+      - "50001:50000"
+    volumes:
+      - ./jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/workspace
+    environment:
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=true"
