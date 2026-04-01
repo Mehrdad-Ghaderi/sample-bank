@@ -12,8 +12,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   app:
-    build:
-      context: .
+    image: ${APP_IMAGE:-sample-bank-app:latest}
     container_name: sample-bank-app
     depends_on:
       - postgres
