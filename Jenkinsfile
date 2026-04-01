@@ -6,7 +6,6 @@ pipeline {
         SPRING_DATASOURCE_USERNAME = 'sample_bank'
         SPRING_DATASOURCE_PASSWORD = 'sample_bank'
         APP_IMAGE_NAME = 'sample-bank-app'
-        APP_IMAGE_TAG = ''
     }
 
     stages {
@@ -31,10 +30,27 @@ pipeline {
                         rawBranch = sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
                     }
 
-                    env.GIT_BRANCH_NAME = rawBranch.replaceAll(/[\\\/]/, '-')
-                    env.GIT_COMMIT_ID = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
-                    env.APP_IMAGE_TAG = "${env.GIT_BRANCH_NAME}-${env.BUILD_NUMBER}-${env.GIT_COMMIT_ID}"
+                    def safeBranchName = rawBranch.replaceAll(/[\\\/]/, '-')
+                    def commitId = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                    def buildNumber = env.BUILD_NUMBER?.trim()
 
+                    if (!safeBranchName) {
+                        error('GIT_BRANCH_NAME is blank; cannot build Docker image tag')
+                    }
+                    if (!commitId) {
+                        error('GIT_COMMIT_ID is blank; cannot build Docker image tag')
+                    }
+                    if (!buildNumber) {
+                        error('BUILD_NUMBER is blank; cannot build Docker image tag')
+                    }
+
+                    env.GIT_BRANCH_NAME = safeBranchName
+                    env.GIT_COMMIT_ID = commitId
+                    env.APP_IMAGE_TAG = "${safeBranchName}-${buildNumber}-${commitId}"
+
+                    echo "Resolved branch name: ${env.GIT_BRANCH_NAME}"
+                    echo "Resolved commit id: ${env.GIT_COMMIT_ID}"
+                    echo "Resolved build number: ${buildNumber}"
                     echo "Using image tag: ${env.APP_IMAGE_TAG}"
                 }
             }
@@ -49,14 +65,21 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t ${APP_IMAGE_NAME}:${APP_IMAGE_TAG} -t ${APP_IMAGE_NAME}:latest .'
+                script {
+                    if (!env.APP_IMAGE_TAG?.trim()) {
+                        error('APP_IMAGE_TAG is blank before docker build')
+                    }
+
+                    echo "Building Docker image ${env.APP_IMAGE_NAME}:${env.APP_IMAGE_TAG}"
+                    sh "docker build -t ${env.APP_IMAGE_NAME}:${env.APP_IMAGE_TAG} -t ${env.APP_IMAGE_NAME}:latest ."
+                }
             }
         }
 
         stage('Verify Docker Image Tags') {
             steps {
-                sh 'docker image inspect ${APP_IMAGE_NAME}:${APP_IMAGE_TAG} > /dev/null'
-                sh 'docker image inspect ${APP_IMAGE_NAME}:latest > /dev/null'
+                sh "docker image inspect ${env.APP_IMAGE_NAME}:${env.APP_IMAGE_TAG} > /dev/null"
+                sh "docker image inspect ${env.APP_IMAGE_NAME}:latest > /dev/null"
                 echo "Built ${env.APP_IMAGE_NAME}:${env.APP_IMAGE_TAG} and ${env.APP_IMAGE_NAME}:latest"
             }
         }
