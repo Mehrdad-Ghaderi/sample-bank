@@ -26,16 +26,31 @@ pipeline {
             steps {
                 script {
                     def rawBranch = env.BRANCH_NAME?.trim()
+                    def gitBranch = env.GIT_BRANCH?.trim()
+
+                    if (!rawBranch && gitBranch) {
+                        rawBranch = gitBranch
+                    }
                     if (!rawBranch) {
                         rawBranch = sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
                     }
 
-                    def safeBranchName = rawBranch.replaceAll(/[\\\/]/, '-')
+                    def normalizedBranch = rawBranch
+                        .replaceFirst(/^refs\/heads\//, '')
+                        .replaceFirst(/^origin\//, '')
+                        .replaceFirst(/^\*\//, '')
+                    def safeBranchName = normalizedBranch.replaceAll(/[\\\/]/, '-')
                     def commitId = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
                     def buildNumber = env.BUILD_NUMBER?.trim()
 
+                    echo "Raw BRANCH_NAME: ${env.BRANCH_NAME}"
+                    echo "Raw GIT_BRANCH: ${env.GIT_BRANCH}"
+
                     if (!safeBranchName) {
                         error('GIT_BRANCH_NAME is blank; cannot build Docker image tag')
+                    }
+                    if (safeBranchName == 'HEAD') {
+                        error('GIT_BRANCH_NAME resolved to HEAD; Jenkins branch metadata is not usable yet')
                     }
                     if (!commitId) {
                         error('GIT_COMMIT_ID is blank; cannot build Docker image tag')
