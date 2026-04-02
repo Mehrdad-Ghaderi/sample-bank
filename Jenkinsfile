@@ -10,6 +10,7 @@ pipeline {
         REGISTRY_OWNER = 'mehrdad-ghaderi'
         REGISTRY_IMAGE_NAME = 'sample-bank'
         GHCR_CREDENTIALS_ID = 'ghcr-io'
+        COMPOSE_PROJECT_NAME = 'sample-bank'
     }
 
     stages {
@@ -167,6 +168,65 @@ pipeline {
                     } else {
                         echo "Prepared and pushed ${env.REMOTE_TRACEABLE_TAG}"
                     }
+                }
+            }
+        }
+
+        stage('Deploy Immutable Image With Compose') {
+            when {
+                expression {
+                    env.GIT_BRANCH_NAME == 'develop'
+                }
+            }
+            steps {
+                script {
+                    if (!env.REMOTE_TRACEABLE_TAG?.trim()) {
+                        error('REMOTE_TRACEABLE_TAG is blank before deployment')
+                    }
+                }
+
+                withCredentials([usernamePassword(
+                    credentialsId: env.GHCR_CREDENTIALS_ID,
+                    usernameVariable: 'GHCR_USERNAME',
+                    passwordVariable: 'GHCR_TOKEN'
+                )]) {
+                    sh 'printenv GHCR_TOKEN | docker login "$REGISTRY_HOST" -u "$GHCR_USERNAME" --password-stdin'
+                    sh 'docker-compose -p "$COMPOSE_PROJECT_NAME" -f docker-compose.yml up -d postgres'
+                    sh 'APP_IMAGE="$REMOTE_TRACEABLE_TAG" docker-compose -p "$COMPOSE_PROJECT_NAME" -f docker-compose.yml -f docker-compose.ghcr.yml up -d app'
+                }
+            }
+            post {
+                always {
+                    sh 'docker logout "$REGISTRY_HOST" || true'
+                }
+            }
+        }
+
+        stage('Verify Deployed Container') {
+            when {
+                expression {
+                    env.GIT_BRANCH_NAME == 'develop'
+                }
+            }
+            steps {
+                script {
+                    def deployedImage = sh(
+                        script: "docker inspect --format='{{.Config.Image}}' sample-bank-app",
+                        returnStdout: true
+                    ).trim()
+                    def containerRunning = sh(
+                        script: "docker inspect --format='{{.State.Running}}' sample-bank-app",
+                        returnStdout: true
+                    ).trim()
+
+                    if (deployedImage != env.REMOTE_TRACEABLE_TAG) {
+                        error("Deployed container image ${deployedImage} does not match expected ${env.REMOTE_TRACEABLE_TAG}")
+                    }
+                    if (containerRunning != 'true') {
+                        error('sample-bank-app container is not running after deployment')
+                    }
+
+                    echo "Deployed ${deployedImage} and verified sample-bank-app is running"
                 }
             }
         }
