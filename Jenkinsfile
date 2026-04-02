@@ -10,6 +10,7 @@ pipeline {
         REGISTRY_OWNER = 'mehrdad-ghaderi'
         REGISTRY_IMAGE_NAME = 'sample-bank'
         GHCR_CREDENTIALS_ID = 'ghcr-io'
+        COMPOSE_PROJECT_NAME = 'sample-bank'
     }
 
     stages {
@@ -190,8 +191,8 @@ pipeline {
                     passwordVariable: 'GHCR_TOKEN'
                 )]) {
                     sh 'printenv GHCR_TOKEN | docker login "$REGISTRY_HOST" -u "$GHCR_USERNAME" --password-stdin'
-                    sh 'docker-compose -f docker-compose.yml up -d postgres'
-                    sh 'APP_IMAGE="$REMOTE_TRACEABLE_TAG" docker-compose -f docker-compose.yml -f docker-compose.ghcr.yml up -d app'
+                    sh 'docker-compose -p "$COMPOSE_PROJECT_NAME" -f docker-compose.yml up -d postgres'
+                    sh 'APP_IMAGE="$REMOTE_TRACEABLE_TAG" docker-compose -p "$COMPOSE_PROJECT_NAME" -f docker-compose.yml -f docker-compose.ghcr.yml up -d app'
                 }
             }
             post {
