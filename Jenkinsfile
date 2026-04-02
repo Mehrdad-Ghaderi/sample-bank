@@ -6,6 +6,10 @@ pipeline {
         SPRING_DATASOURCE_USERNAME = 'sample_bank'
         SPRING_DATASOURCE_PASSWORD = 'sample_bank'
         APP_IMAGE_NAME = 'sample-bank-app'
+        REGISTRY_HOST = 'ghcr.io'
+        REGISTRY_OWNER = 'mehrdad-ghaderi'
+        REGISTRY_IMAGE_NAME = 'sample-bank'
+        GHCR_CREDENTIALS_ID = 'ghcr-io'
     }
 
     stages {
@@ -62,11 +66,15 @@ pipeline {
                     env.GIT_BRANCH_NAME = safeBranchName
                     env.GIT_COMMIT_ID = commitId
                     env.APP_IMAGE_TAG = "${safeBranchName}-${buildNumber}-${commitId}"
+                    env.REGISTRY_REPOSITORY = "${env.REGISTRY_HOST}/${env.REGISTRY_OWNER}/${env.REGISTRY_IMAGE_NAME}"
+                    env.REMOTE_TRACEABLE_TAG = "${env.REGISTRY_REPOSITORY}:${env.APP_IMAGE_TAG}"
+                    env.REMOTE_LATEST_TAG = "${env.REGISTRY_REPOSITORY}:latest"
 
                     echo "Resolved branch name: ${env.GIT_BRANCH_NAME}"
                     echo "Resolved commit id: ${env.GIT_COMMIT_ID}"
                     echo "Resolved build number: ${buildNumber}"
                     echo "Using image tag: ${env.APP_IMAGE_TAG}"
+                    echo "Using registry repository: ${env.REGISTRY_REPOSITORY}"
                 }
             }
         }
@@ -96,6 +104,70 @@ pipeline {
                 sh "docker image inspect ${env.APP_IMAGE_NAME}:${env.APP_IMAGE_TAG} > /dev/null"
                 sh "docker image inspect ${env.APP_IMAGE_NAME}:latest > /dev/null"
                 echo "Built ${env.APP_IMAGE_NAME}:${env.APP_IMAGE_TAG} and ${env.APP_IMAGE_NAME}:latest"
+            }
+        }
+
+        stage('Prepare Registry Tags') {
+            steps {
+                script {
+                    if (!env.REMOTE_TRACEABLE_TAG?.trim()) {
+                        error('REMOTE_TRACEABLE_TAG is blank before registry tag preparation')
+                    }
+                    if (!env.REMOTE_LATEST_TAG?.trim()) {
+                        error('REMOTE_LATEST_TAG is blank before registry tag preparation')
+                    }
+
+                    echo "Tagging ${env.APP_IMAGE_NAME}:${env.APP_IMAGE_TAG} as ${env.REMOTE_TRACEABLE_TAG}"
+                    sh "docker tag ${env.APP_IMAGE_NAME}:${env.APP_IMAGE_TAG} ${env.REMOTE_TRACEABLE_TAG}"
+
+                    if (env.GIT_BRANCH_NAME in ['develop', 'main']) {
+                        echo "Tagging ${env.APP_IMAGE_NAME}:latest as ${env.REMOTE_LATEST_TAG}"
+                        sh "docker tag ${env.APP_IMAGE_NAME}:latest ${env.REMOTE_LATEST_TAG}"
+                    } else {
+                        echo "Skipping remote latest tag because branch ${env.GIT_BRANCH_NAME} is not develop or main"
+                    }
+                }
+            }
+        }
+
+        stage('Push Docker Image To GHCR') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: env.GHCR_CREDENTIALS_ID,
+                    usernameVariable: 'GHCR_USERNAME',
+                    passwordVariable: 'GHCR_TOKEN'
+                )]) {
+                    sh 'printenv GHCR_TOKEN | docker login "$REGISTRY_HOST" -u "$GHCR_USERNAME" --password-stdin'
+                    sh "docker push ${env.REMOTE_TRACEABLE_TAG}"
+
+                    script {
+                        if (env.GIT_BRANCH_NAME in ['develop', 'main']) {
+                            sh "docker push ${env.REMOTE_LATEST_TAG}"
+                        } else {
+                            echo "Skipping remote latest push because branch ${env.GIT_BRANCH_NAME} is not develop or main"
+                        }
+                    }
+                }
+            }
+            post {
+                always {
+                    sh 'docker logout "$REGISTRY_HOST" || true'
+                }
+            }
+        }
+
+        stage('Verify Tagged Images Locally') {
+            steps {
+                script {
+                    sh "docker image inspect ${env.REMOTE_TRACEABLE_TAG} > /dev/null"
+
+                    if (env.GIT_BRANCH_NAME in ['develop', 'main']) {
+                        sh "docker image inspect ${env.REMOTE_LATEST_TAG} > /dev/null"
+                        echo "Prepared and pushed ${env.REMOTE_TRACEABLE_TAG} and ${env.REMOTE_LATEST_TAG}"
+                    } else {
+                        echo "Prepared and pushed ${env.REMOTE_TRACEABLE_TAG}"
+                    }
+                }
             }
         }
     }
