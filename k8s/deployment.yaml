@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-bank
+  namespace: sample-bank
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sample-bank
+  template:
+    metadata:
+      labels:
+        app: sample-bank
+    spec:
+      containers:
+        - name: app
+          image: sample-bank-app:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: sample-bank-config
+            - secretRef:
+                name: sample-bank-secrets
