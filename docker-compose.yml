@@ -3,21 +3,24 @@ services:
     image: postgres:15
     container_name: sample-bank-postgres
     environment:
-      POSTGRES_DB: sample_bank
-      POSTGRES_USER: sample_bank
-      POSTGRES_PASSWORD: sample_bank
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   app:
-    image: ${APP_IMAGE:-sample-bank-app:latest}
+    image: ${APP_IMAGE}
     container_name: sample-bank-app
     depends_on:
       - postgres
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      DB_URL: ${DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
     ports:
       - "8080:8080"
 

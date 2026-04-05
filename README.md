@@ -66,14 +66,24 @@ The repo [Dockerfile](C:/Users/mehrd/work/sample-bank/Dockerfile) uses a multi-s
 Run the application container with Compose:
 
 ```bash
-docker compose up -d postgres
-docker compose up -d app
+docker compose --env-file .env up -d postgres
+docker compose --env-file .env up -d app
 ```
 
 The base Compose file [docker-compose.yml](C:/Users/mehrd/work/sample-bank/docker-compose.yml) uses:
 
 - `postgres:15` for the database
-- `APP_IMAGE`, defaulting to `sample-bank-app:latest`, for the app service
+- `APP_IMAGE` for the app service
+
+The local Docker runtime expects these variables in `.env`:
+
+- `APP_IMAGE`
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `DB_URL`
+- `DB_USERNAME`
+- `DB_PASSWORD`
 
 That `APP_IMAGE` variable is important because it lets Compose consume a previously built image instead of rebuilding from source.
 
@@ -179,6 +189,33 @@ curl http://localhost:8080/actuator
 ```
 
 If `/actuator` returns `401 Unauthorized`, the container is running and the endpoint is protected by Spring Security.
+
+## Kubernetes Local Apply Flow
+
+The raw manifests live in [k8s](C:/Users/mehrd/work/sample-bank/k8s). Namespace creation must happen before the namespace-scoped resources, so the repeatable local deployment entry point is [scripts/deploy-k8s.ps1](C:/Users/mehrd/work/sample-bank/scripts/deploy-k8s.ps1).
+
+That script applies the namespace manifest first, then applies the visible Kubernetes manifests in a stable order. The non-secret settings live in [k8s/configmap.yaml](C:/Users/mehrd/work/sample-bank/k8s/configmap.yaml). The local Kubernetes secret values are read from `k8s/secret.yaml`, which stays out of Git.
+
+Apply the current manifests:
+
+```powershell
+.\scripts\deploy-k8s.ps1
+```
+
+Apply the manifests and then point the deployment at a specific image:
+
+```powershell
+.\scripts\deploy-k8s.ps1 -Image sample-bank-app:latest
+```
+
+Useful follow-up commands:
+
+```bash
+kubectl get all -n sample-bank
+kubectl describe deployment sample-bank -n sample-bank
+kubectl logs deployment/sample-bank -n sample-bank
+kubectl rollout status deployment/sample-bank -n sample-bank
+```
 
 ## Repository Notes
 

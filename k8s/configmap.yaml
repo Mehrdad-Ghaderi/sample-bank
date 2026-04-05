@@ -7,13 +7,3 @@ data:
   SPRING_PROFILES_ACTIVE: prod
   PORT: "8080"
   DB_URL: jdbc:postgresql://host.minikube.internal:5432/sample_bank
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: sample-bank-secrets
-  namespace: sample-bank
-type: Opaque
-stringData:
-  DB_USERNAME: sample_bank
-  DB_PASSWORD: sample_bank

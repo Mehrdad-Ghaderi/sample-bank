@@ -16,6 +16,7 @@ target/
 
 # Secrets
 .env
+/k8s/secret.yaml
 
 ### IntelliJ IDEA ###
 .idea
