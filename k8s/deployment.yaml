@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: ghcr.io/mehrdad-ghaderi/sample-bank:latest
+          image: ghcr.io/mehrdad-ghaderi/sample-bank:replace-at-deploy-time
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

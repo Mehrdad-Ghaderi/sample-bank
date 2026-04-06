@@ -71,14 +71,8 @@ Current model:
 
 - app runs in Kubernetes
 - PostgreSQL stays outside Kubernetes
-- deployment defaults to `ghcr.io/mehrdad-ghaderi/sample-bank:latest`
+- deployment requires an explicit immutable GHCR image tag
 - [scripts/deploy-k8s.ps1](C:/Users/mehrd/work/sample-bank/scripts/deploy-k8s.ps1) applies the local manifests in a safe order
-
-Deploy locally:
-
-```powershell
-.\scripts\deploy-k8s.ps1
-```
 
 Deploy a specific image:
 
