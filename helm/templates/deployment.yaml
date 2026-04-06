@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sample-bank.fullname" . }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "sample-bank.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "sample-bank.name" . }}
+{{ include "sample-bank.labels" . | indent 8 }}
+    spec:
+      containers:
+        - name: app
+          image: "{{ .Values.image.repository }}:{{ required "image.tag is required" .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "sample-bank.fullname" . }}-config
+            - secretRef:
+                name: {{ include "sample-bank.fullname" . }}-secrets
