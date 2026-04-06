@@ -1,6 +1,7 @@
 param(
     [string]$Namespace = "sample-bank",
-    [string]$Image = "",
+    [Parameter(Mandatory = $true)]
+    [string]$Image,
     [switch]$SkipRolloutWait
 )
 
@@ -12,10 +13,11 @@ $k8sDir = Join-Path $repoRoot "k8s"
 $namespaceManifest = Join-Path $k8sDir "namespace.yaml"
 $configMapManifest = Join-Path $k8sDir "configmap.yaml"
 $secretManifest = Join-Path $k8sDir "secret.yaml"
+$deploymentManifest = Join-Path $k8sDir "deployment.yaml"
+$serviceManifest = Join-Path $k8sDir "service.yaml"
 $orderedManifests = @(
     $configMapManifest,
-    (Join-Path $k8sDir "deployment.yaml"),
-    (Join-Path $k8sDir "service.yaml")
+    $serviceManifest
 )
 
 Write-Host "Applying namespace manifest: $namespaceManifest"
@@ -33,10 +35,8 @@ foreach ($manifest in $orderedManifests) {
     kubectl apply -f $manifest
 }
 
-if ($Image) {
-    Write-Host "Updating deployment image to: $Image"
-    kubectl set image deployment/sample-bank app=$Image -n $Namespace
-}
+Write-Host "Applying deployment manifest with image: $Image"
+kubectl set image -f $deploymentManifest app=$Image --local -o yaml | kubectl apply -f -
 
 if (-not $SkipRolloutWait) {
     Write-Host "Waiting for deployment rollout to complete"
