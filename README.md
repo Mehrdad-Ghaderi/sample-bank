@@ -65,14 +65,12 @@ Images are published to:
 
 ## Kubernetes
 
-The Kubernetes manifests live in [k8s](C:/Users/mehrd/work/sample-bank/k8s).
-
 Current model:
 
 - app runs in Kubernetes
 - PostgreSQL stays outside Kubernetes
+- deployment is Helm-managed
 - deployment requires an explicit immutable GHCR image tag
-- [scripts/deploy-k8s.ps1](C:/Users/mehrd/work/sample-bank/scripts/deploy-k8s.ps1) applies the local manifests in a safe order
 
 ## Helm
 
@@ -83,12 +81,6 @@ Current goal:
 - keep the same Kubernetes runtime model
 - make image repository and image tag values-driven
 - align the deployment packaging approach with `facenet`
-
-Deploy a specific image:
-
-```powershell
-.\scripts\deploy-k8s.ps1 -Image ghcr.io/mehrdad-ghaderi/sample-bank:develop-12-a1b2c3d
-```
 
 Render or install the Helm chart with an explicit image tag:
 
