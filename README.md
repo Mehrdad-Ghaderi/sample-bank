@@ -1,46 +1,25 @@
 # Sample Bank
 
-Sample Bank is a Spring Boot backend for banking operations such as client management, multi-currency account handling, deposits, withdrawals, transfers, transaction history, and balance tracking.
+Sample Bank is a Spring Boot backend for customer, account, balance, and transaction operations.
 
-## Tech Stack
+## Stack
 
 - Java 21
 - Spring Boot
-- Spring Data JPA
 - PostgreSQL
 - Maven
-- Docker and Docker Compose
+- Docker / Docker Compose
 - Jenkins
-- GitHub Container Registry (GHCR)
-
-## Core Features
-
-- Add and manage clients
-- Support USD, EUR, GBP, and CAD
-- Update client information
-- Deposit, withdraw, and transfer funds
-- Show balances and recent transactions
-- Freeze accounts
-- Keep historical records when a client is removed
+- Kubernetes
 
 ## Runtime Profiles
 
-The application uses environment-specific Spring profiles:
-
 - `local`: host-machine development against `localhost:5432`
 - `docker`: app container talking to PostgreSQL at `postgres:5432`
-- `test`: integration tests against `localhost:5432`
-- `prod`: environment-driven configuration from external variables
-
-Shared defaults live in [src/main/resources/application.properties](C:/Users/mehrd/work/sample-bank/src/main/resources/application.properties).
+- `test`: integration tests
+- `prod`: environment-driven runtime configuration
 
 ## Local Development
-
-Prerequisites:
-
-- Java 21
-- Docker Desktop
-- Git
 
 Start PostgreSQL:
 
@@ -48,140 +27,72 @@ Start PostgreSQL:
 docker compose up -d postgres
 ```
 
-Run the app from the host using the `local` profile:
+Run the app:
 
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-The default Spring Security credentials come from `application.properties`. A `401 Unauthorized` response from `/actuator` means the app is running and security is active.
+## Docker Compose
 
-## Docker Runtime
+The Docker runtime uses:
 
-The repo [Dockerfile](C:/Users/mehrd/work/sample-bank/Dockerfile) uses a multi-stage build:
+- [docker-compose.yml](C:/Users/mehrd/work/sample-bank/docker-compose.yml)
+- local `.env` for runtime values
+- [application-docker.properties](C:/Users/mehrd/work/sample-bank/src/main/resources/application-docker.properties) for env-based Docker profile configuration
 
-1. build the jar with Maven and JDK 21
-2. copy the jar into a smaller JRE image
-
-Run the application container with Compose:
+Start the Compose runtime:
 
 ```bash
-docker compose up -d postgres
-docker compose up -d app
+docker compose --env-file .env up -d postgres
+docker compose --env-file .env up -d app
 ```
 
-The base Compose file [docker-compose.yml](C:/Users/mehrd/work/sample-bank/docker-compose.yml) uses:
+Docker Compose remains the local/dev runtime path.
 
-- `postgres:15` for the database
-- `APP_IMAGE`, defaulting to `sample-bank-app:latest`, for the app service
-
-That `APP_IMAGE` variable is important because it lets Compose consume a previously built image instead of rebuilding from source.
-
-## Jenkins CI/CD Flow
+## CI/CD
 
 The pipeline lives in [Jenkinsfile](C:/Users/mehrd/work/sample-bank/Jenkinsfile).
 
 Current flow:
 
-1. Jenkins checks out the configured branch from SCM.
-2. Jenkins verifies the workspace.
-3. Jenkins computes a traceable image tag from branch name, Jenkins build number, and short commit SHA.
-4. Jenkins runs `TransactionServiceIT` against PostgreSQL.
-5. Jenkins builds the Docker image locally.
-6. Jenkins tags the image for GHCR.
-7. Jenkins pushes the immutable tag to GHCR.
-8. Jenkins pushes `latest` only for `develop` and `main`.
-
-This design gives every build an immutable artifact while preventing feature branches from moving the shared `latest` tag.
-
-## GHCR Image Naming
+1. run `TransactionServiceIT`
+2. build the Docker image
+3. tag and push the image to GHCR
+4. on `develop`, deploy the immutable GHCR image to Kubernetes through Helm
 
 Images are published to:
 
 `ghcr.io/mehrdad-ghaderi/sample-bank`
 
-Tag model:
+## Kubernetes
 
-- immutable tag: `<branch>-<jenkins-build-number>-<short-commit-sha>`
-- mutable tag: `latest`
+Current model:
 
-Examples:
+- app runs in Kubernetes
+- PostgreSQL stays outside Kubernetes
+- deployment is Helm-managed
+- deployment requires an explicit immutable GHCR image tag
 
-- `ghcr.io/mehrdad-ghaderi/sample-bank:develop-12-a1b2c3d`
-- `ghcr.io/mehrdad-ghaderi/sample-bank:cicd-ghcr-push-11-07437b8`
+## Helm
 
-Important:
+The Helm chart lives in [helm](C:/Users/mehrd/work/sample-bank/helm).
 
-- every branch can push its own immutable tag
-- only `develop` and `main` should publish `latest`
+Current goal:
 
-That is why a feature branch build can succeed even when no `latest` tag appears in GHCR.
+- keep the same Kubernetes runtime model
+- make image repository and image tag values-driven
+- align the deployment packaging approach with `facenet`
+- make Helm/Kubernetes the official CD deployment path
 
-## Jenkins Credentials For GHCR
-
-Jenkins should store one credential with:
-
-- kind: `Username with password`
-- ID: `ghcr-io`
-- username: GitHub username
-- password: GitHub Personal Access Token
-
-Minimum token scopes:
-
-- `write:packages`
-- `read:packages`
-
-The token is not committed to Git. Jenkins reads it at runtime and uses it for `docker login ghcr.io`.
-
-## Deploy From GHCR With Compose
-
-The override file [docker-compose.ghcr.yml](C:/Users/mehrd/work/sample-bank/docker-compose.ghcr.yml) tells Compose to pull the app image from GHCR instead of using only a locally built image.
-
-Start PostgreSQL:
+Render or install the Helm chart with an explicit image tag:
 
 ```bash
-docker compose up -d postgres
+helm upgrade --install sample-bank ./helm --namespace sample-bank --create-namespace --set image.tag=develop-12-a1b2c3d
 ```
-
-Log in to GHCR:
-
-```bash
-docker login ghcr.io
-```
-
-Run the latest registry image:
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.ghcr.yml up -d app
-```
-
-Run a specific immutable image:
-
-```bash
-APP_IMAGE=ghcr.io/mehrdad-ghaderi/sample-bank:develop-12-a1b2c3d docker compose -f docker-compose.yml -f docker-compose.ghcr.yml up -d app
-```
-
-Using an immutable tag is the stronger deployment practice because it guarantees the running container matches one specific CI build.
-
-## Verification
-
-Check running services:
-
-```bash
-docker compose ps
-docker ps -a
-```
-
-Check the actuator endpoint:
-
-```bash
-curl http://localhost:8080/actuator
-```
-
-If `/actuator` returns `401 Unauthorized`, the container is running and the endpoint is protected by Spring Security.
 
 ## Repository Notes
 
-- `notes/` is ignored by Git and used for local learning notes
-- `jenkins_home/` is local Jenkins state and is ignored by Git
-- `facenet/` is a separate nested repository and is not part of this repo's history
+- `notes/` is local and not tracked
+- `jenkins_home/` is local Jenkins state and not tracked
+- `facenet/` is a separate nested repository
