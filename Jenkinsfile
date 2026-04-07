@@ -16,7 +16,8 @@ pipeline {
         REGISTRY_OWNER = 'mehrdad-ghaderi'
         REGISTRY_IMAGE_NAME = 'sample-bank'
         GHCR_CREDENTIALS_ID = 'ghcr-io'
-        COMPOSE_PROJECT_NAME = 'sample-bank'
+        KUBE_NAMESPACE = 'sample-bank'
+        HELM_RELEASE_NAME = 'sample-bank'
     }
 
     stages {
@@ -178,7 +179,7 @@ pipeline {
             }
         }
 
-        stage('Deploy Immutable Image With Compose') {
+        stage('Deploy Immutable Image With Helm') {
             when {
                 expression {
                     env.GIT_BRANCH_NAME == 'develop'
@@ -189,28 +190,22 @@ pipeline {
                     if (!env.REMOTE_TRACEABLE_TAG?.trim()) {
                         error('REMOTE_TRACEABLE_TAG is blank before deployment')
                     }
-                }
-
-                withCredentials([usernamePassword(
-                    credentialsId: env.GHCR_CREDENTIALS_ID,
-                    usernameVariable: 'GHCR_USERNAME',
-                    passwordVariable: 'GHCR_TOKEN'
-                )]) {
-                    withEnv(["APP_IMAGE=${env.REMOTE_TRACEABLE_TAG}"]) {
-                        sh 'printenv GHCR_TOKEN | docker login "$REGISTRY_HOST" -u "$GHCR_USERNAME" --password-stdin'
-                        sh 'docker-compose -p "$COMPOSE_PROJECT_NAME" -f docker-compose.yml up -d postgres'
-                        sh 'docker-compose -p "$COMPOSE_PROJECT_NAME" -f docker-compose.yml -f docker-compose.ghcr.yml up -d app'
+                    if (!env.APP_IMAGE_TAG?.trim()) {
+                        error('APP_IMAGE_TAG is blank before Helm deployment')
                     }
                 }
-            }
-            post {
-                always {
-                    sh 'docker logout "$REGISTRY_HOST" || true'
-                }
+
+                sh 'kubectl config current-context'
+                sh """
+                helm upgrade --install "$HELM_RELEASE_NAME" ./helm \
+                  --namespace "$KUBE_NAMESPACE" \
+                  --create-namespace \
+                  --set image.tag="$APP_IMAGE_TAG"
+                """
             }
         }
 
-        stage('Verify Deployed Container') {
+        stage('Verify Helm Deployment') {
             when {
                 expression {
                     env.GIT_BRANCH_NAME == 'develop'
@@ -218,23 +213,25 @@ pipeline {
             }
             steps {
                 script {
+                    sh 'kubectl rollout status deployment/sample-bank -n "$KUBE_NAMESPACE"'
+
                     def deployedImage = sh(
-                        script: "docker inspect --format='{{.Config.Image}}' sample-bank-app",
+                        script: "kubectl get deployment sample-bank -n \"$KUBE_NAMESPACE\" -o jsonpath='{.spec.template.spec.containers[0].image}'",
                         returnStdout: true
                     ).trim()
-                    def containerRunning = sh(
-                        script: "docker inspect --format='{{.State.Running}}' sample-bank-app",
+                    def availableReplicas = sh(
+                        script: "kubectl get deployment sample-bank -n \"$KUBE_NAMESPACE\" -o jsonpath='{.status.availableReplicas}'",
                         returnStdout: true
                     ).trim()
 
                     if (deployedImage != env.REMOTE_TRACEABLE_TAG) {
-                        error("Deployed container image ${deployedImage} does not match expected ${env.REMOTE_TRACEABLE_TAG}")
+                        error("Helm deployment image ${deployedImage} does not match expected ${env.REMOTE_TRACEABLE_TAG}")
                     }
-                    if (containerRunning != 'true') {
-                        error('sample-bank-app container is not running after deployment')
+                    if (availableReplicas != '2') {
+                        error("Expected 2 available replicas but found ${availableReplicas}")
                     }
 
-                    echo "Deployed ${deployedImage} and verified sample-bank-app is running"
+                    echo "Deployed ${deployedImage} and verified Helm/Kubernetes rollout"
                 }
             }
         }

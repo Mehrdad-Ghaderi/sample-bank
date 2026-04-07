@@ -48,6 +48,8 @@ docker compose --env-file .env up -d postgres
 docker compose --env-file .env up -d app
 ```
 
+Docker Compose remains the local/dev runtime path.
+
 ## CI/CD
 
 The pipeline lives in [Jenkinsfile](C:/Users/mehrd/work/sample-bank/Jenkinsfile).
@@ -57,7 +59,7 @@ Current flow:
 1. run `TransactionServiceIT`
 2. build the Docker image
 3. tag and push the image to GHCR
-4. on `develop`, deploy the immutable GHCR image through Docker Compose
+4. on `develop`, deploy the immutable GHCR image to Kubernetes through Helm
 
 Images are published to:
 
@@ -81,6 +83,7 @@ Current goal:
 - keep the same Kubernetes runtime model
 - make image repository and image tag values-driven
 - align the deployment packaging approach with `facenet`
+- make Helm/Kubernetes the official CD deployment path
 
 Render or install the Helm chart with an explicit image tag:
 
