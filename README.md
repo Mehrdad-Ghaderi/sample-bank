@@ -77,9 +77,3 @@ Example deploy:
 ```bash
 helm upgrade --install sample-bank ./helm --namespace sample-bank --create-namespace --set image.tag=develop-24-8d9f17b
 ```
-
-## Repository Notes
-
-- `notes/` is local and not tracked
-- `jenkins_home/` is local Jenkins state and not tracked
-- `facenet/` is a separate nested repository
