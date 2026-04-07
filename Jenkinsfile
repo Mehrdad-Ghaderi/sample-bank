@@ -18,6 +18,7 @@ pipeline {
         GHCR_CREDENTIALS_ID = 'ghcr-io'
         KUBE_NAMESPACE = 'sample-bank'
         HELM_RELEASE_NAME = 'sample-bank'
+        HEALTHCHECK_URL = 'http://127.0.0.1:18080/actuator/health'
     }
 
     stages {
@@ -230,6 +231,16 @@ pipeline {
                     if (availableReplicas != '2') {
                         error("Expected 2 available replicas but found ${availableReplicas}")
                     }
+
+                    sh '''
+                    kubectl port-forward svc/sample-bank-service 18080:8080 -n "$KUBE_NAMESPACE" >/tmp/sample-bank-port-forward.log 2>&1 &
+                    PORT_FORWARD_PID=$!
+                    trap "kill $PORT_FORWARD_PID" EXIT
+                    sleep 5
+
+                    HEALTH_RESPONSE=$(curl --silent --show-error --fail "$HEALTHCHECK_URL")
+                    echo "$HEALTH_RESPONSE" | grep '"status":"UP"' > /dev/null
+                    '''
 
                     echo "Deployed ${deployedImage} and verified Helm/Kubernetes rollout"
                 }
