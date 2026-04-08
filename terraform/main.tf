@@ -28,7 +28,7 @@ terraform {
 provider "docker" {}
 
 provider "postgresql" {
-  host            = "localhost"
+  host            = "host.docker.internal"
   port            = var.postgres_port
   database        = var.postgres_db
   username        = var.postgres_admin_user

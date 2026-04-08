@@ -10,6 +10,4 @@ resource "kubernetes_secret_v1" "app_db_credentials" {
     DB_USERNAME = var.app_db_username
     DB_PASSWORD = random_password.app_db_password.result
   }
-
-  depends_on = [kubernetes_namespace_v1.sample_bank]
 }
