@@ -235,7 +235,20 @@ pipeline {
             }
             steps {
                 script {
-                    sh 'kubectl rollout status deployment/sample-bank -n "$KUBE_NAMESPACE"'
+                    sh '''
+                    for i in $(seq 1 10); do
+                      kubectl get deployment sample-bank -n "$KUBE_NAMESPACE" >/dev/null 2>&1 && break
+                      sleep 2
+                    done
+
+                    for i in $(seq 1 3); do
+                      kubectl rollout status deployment/sample-bank -n "$KUBE_NAMESPACE" && exit 0
+                      sleep 2
+                    done
+
+                    echo "Deployment rollout did not stabilize in time." >&2
+                    exit 1
+                    '''
 
                     def deployedImage = sh(
                         script: "kubectl get deployment sample-bank -n \"$KUBE_NAMESPACE\" -o jsonpath='{.spec.template.spec.containers[0].image}'",
