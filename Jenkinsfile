@@ -4,6 +4,7 @@ pipeline {
     environment {
         DOCKER_HOST = 'unix:///var/run/docker.sock'
         TESTCONTAINERS_RYUK_DISABLED = 'true'
+        TESTCONTAINERS_HOST_OVERRIDE = 'host.docker.internal'
         SPRING_DATASOURCE_URL = 'jdbc:postgresql://host.docker.internal:5432/sample_bank'
         SPRING_DATASOURCE_USERNAME = 'sample_bank'
         SPRING_DATASOURCE_PASSWORD = 'sample_bank'
