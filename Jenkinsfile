@@ -93,7 +93,7 @@ pipeline {
 
         stage('Run Transaction Integration Test') {
             steps {
-                echo 'Skipping TransactionServiceIT on cd/terraform while the runtime provisioning model moves to Terraform. Reintroduce this stage with Testcontainers.'
+                echo 'Skipping TransactionServiceIT temporarily while the runtime provisioning model moves to Terraform. Reintroduce this stage with Testcontainers.'
             }
         }
 
@@ -191,6 +191,7 @@ pipeline {
             steps {
                 script {
                     sh """
+                    kubectl get namespace "$KUBE_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$KUBE_NAMESPACE"
                     terraform -chdir="$TERRAFORM_DIR" init
                     terraform -chdir="$TERRAFORM_DIR" apply -auto-approve \
                       -var kubeconfig_path="$TERRAFORM_KUBECONFIG" \
