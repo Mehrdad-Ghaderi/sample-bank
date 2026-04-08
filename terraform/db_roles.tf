@@ -3,5 +3,5 @@ resource "postgresql_role" "app_user" {
   login    = true
   password = random_password.app_db_password.result
 
-  depends_on = [docker_container.postgres]
+  depends_on = [null_resource.wait_for_postgres]
 }

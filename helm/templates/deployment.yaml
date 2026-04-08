@@ -24,4 +24,4 @@ spec:
             - configMapRef:
                 name: {{ include "sample-bank.fullname" . }}-config
             - secretRef:
-                name: {{ include "sample-bank.fullname" . }}-secrets
+                name: {{ .Values.db.secretName }}
