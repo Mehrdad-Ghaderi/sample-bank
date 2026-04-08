@@ -2,21 +2,15 @@ pipeline {
     agent any
 
     environment {
-        SPRING_DATASOURCE_URL = 'jdbc:postgresql://host.docker.internal:5432/sample_bank'
-        SPRING_DATASOURCE_USERNAME = 'sample_bank'
-        SPRING_DATASOURCE_PASSWORD = 'sample_bank'
-        POSTGRES_DB = 'sample_bank'
-        POSTGRES_USER = 'sample_bank'
-        POSTGRES_PASSWORD = 'sample_bank'
-        DB_URL = 'jdbc:postgresql://postgres:5432/sample_bank'
-        DB_USERNAME = 'sample_bank'
-        DB_PASSWORD = 'sample_bank'
         APP_IMAGE_NAME = 'sample-bank-app'
         REGISTRY_HOST = 'ghcr.io'
         REGISTRY_OWNER = 'mehrdad-ghaderi'
         REGISTRY_IMAGE_NAME = 'sample-bank'
         GHCR_CREDENTIALS_ID = 'ghcr-io'
+        DEPLOY_BRANCH = 'develop'
         KUBE_NAMESPACE = 'sample-bank'
+        KUBE_DEPLOYMENT_NAME = 'sample-bank'
+        KUBE_SERVICE_NAME = 'sample-bank-service'
         HELM_RELEASE_NAME = 'sample-bank'
         TERRAFORM_DIR = 'terraform'
         TERRAFORM_KUBECONFIG = '/root/.kube/config'
@@ -81,6 +75,8 @@ pipeline {
                     env.REGISTRY_REPOSITORY = "${env.REGISTRY_HOST}/${env.REGISTRY_OWNER}/${env.REGISTRY_IMAGE_NAME}"
                     env.REMOTE_TRACEABLE_TAG = "${env.REGISTRY_REPOSITORY}:${env.APP_IMAGE_TAG}"
                     env.REMOTE_LATEST_TAG = "${env.REGISTRY_REPOSITORY}:latest"
+                    env.PUBLISH_LATEST_TAG = (safeBranchName in ['develop', 'main']).toString()
+                    env.SHOULD_DEPLOY = (safeBranchName == env.DEPLOY_BRANCH).toString()
 
                     echo "Resolved branch name: ${env.GIT_BRANCH_NAME}"
                     echo "Resolved commit id: ${env.GIT_COMMIT_ID}"
@@ -131,7 +127,7 @@ pipeline {
                     echo "Tagging ${env.APP_IMAGE_NAME}:${env.APP_IMAGE_TAG} as ${env.REMOTE_TRACEABLE_TAG}"
                     sh "docker tag ${env.APP_IMAGE_NAME}:${env.APP_IMAGE_TAG} ${env.REMOTE_TRACEABLE_TAG}"
 
-                    if (env.GIT_BRANCH_NAME in ['develop', 'main']) {
+                    if (env.PUBLISH_LATEST_TAG == 'true') {
                         echo "Tagging ${env.APP_IMAGE_NAME}:latest as ${env.REMOTE_LATEST_TAG}"
                         sh "docker tag ${env.APP_IMAGE_NAME}:latest ${env.REMOTE_LATEST_TAG}"
                     } else {
@@ -152,7 +148,7 @@ pipeline {
                     sh "docker push ${env.REMOTE_TRACEABLE_TAG}"
 
                     script {
-                        if (env.GIT_BRANCH_NAME in ['develop', 'main']) {
+                        if (env.PUBLISH_LATEST_TAG == 'true') {
                             sh "docker push ${env.REMOTE_LATEST_TAG}"
                         } else {
                             echo "Skipping remote latest push because branch ${env.GIT_BRANCH_NAME} is not develop or main"
@@ -172,7 +168,7 @@ pipeline {
                 script {
                     sh "docker image inspect ${env.REMOTE_TRACEABLE_TAG} > /dev/null"
 
-                    if (env.GIT_BRANCH_NAME in ['develop', 'main']) {
+                    if (env.PUBLISH_LATEST_TAG == 'true') {
                         sh "docker image inspect ${env.REMOTE_LATEST_TAG} > /dev/null"
                         echo "Prepared and pushed ${env.REMOTE_TRACEABLE_TAG} and ${env.REMOTE_LATEST_TAG}"
                     } else {
@@ -185,7 +181,7 @@ pipeline {
         stage('Apply Terraform Runtime') {
             when {
                 expression {
-                    env.GIT_BRANCH_NAME == 'develop'
+                    env.SHOULD_DEPLOY == 'true'
                 }
             }
             steps {
@@ -205,7 +201,7 @@ pipeline {
         stage('Deploy Immutable Image With Helm') {
             when {
                 expression {
-                    env.GIT_BRANCH_NAME == 'develop'
+                    env.SHOULD_DEPLOY == 'true'
                 }
             }
             steps {
@@ -230,19 +226,19 @@ pipeline {
         stage('Verify Helm Deployment') {
             when {
                 expression {
-                    env.GIT_BRANCH_NAME == 'develop'
+                    env.SHOULD_DEPLOY == 'true'
                 }
             }
             steps {
                 script {
                     sh '''
                     for i in $(seq 1 10); do
-                      kubectl get deployment sample-bank -n "$KUBE_NAMESPACE" >/dev/null 2>&1 && break
+                      kubectl get deployment "$KUBE_DEPLOYMENT_NAME" -n "$KUBE_NAMESPACE" >/dev/null 2>&1 && break
                       sleep 2
                     done
 
                     for i in $(seq 1 3); do
-                      kubectl rollout status deployment/sample-bank -n "$KUBE_NAMESPACE" && exit 0
+                      kubectl rollout status deployment/"$KUBE_DEPLOYMENT_NAME" -n "$KUBE_NAMESPACE" && exit 0
                       sleep 2
                     done
 
@@ -251,11 +247,11 @@ pipeline {
                     '''
 
                     def deployedImage = sh(
-                        script: "kubectl get deployment sample-bank -n \"$KUBE_NAMESPACE\" -o jsonpath='{.spec.template.spec.containers[0].image}'",
+                        script: "kubectl get deployment \"$KUBE_DEPLOYMENT_NAME\" -n \"$KUBE_NAMESPACE\" -o jsonpath='{.spec.template.spec.containers[0].image}'",
                         returnStdout: true
                     ).trim()
                     def availableReplicas = sh(
-                        script: "kubectl get deployment sample-bank -n \"$KUBE_NAMESPACE\" -o jsonpath='{.status.availableReplicas}'",
+                        script: "kubectl get deployment \"$KUBE_DEPLOYMENT_NAME\" -n \"$KUBE_NAMESPACE\" -o jsonpath='{.status.availableReplicas}'",
                         returnStdout: true
                     ).trim()
 
@@ -268,7 +264,7 @@ pipeline {
 
                     sh '''
                     set -e
-                    kubectl port-forward deployment/sample-bank 18080:8080 -n "$KUBE_NAMESPACE" >/tmp/sample-bank-port-forward.log 2>&1 &
+                    kubectl port-forward deployment/"$KUBE_DEPLOYMENT_NAME" 18080:8080 -n "$KUBE_NAMESPACE" >/tmp/sample-bank-port-forward.log 2>&1 &
                     PORT_FORWARD_PID=$!
                     trap 'kill "$PORT_FORWARD_PID" >/dev/null 2>&1 || true' EXIT
 
