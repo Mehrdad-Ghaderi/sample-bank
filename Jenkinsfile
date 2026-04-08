@@ -267,13 +267,21 @@ pipeline {
                     }
 
                     sh '''
-                    kubectl port-forward svc/sample-bank-service 18080:8080 -n "$KUBE_NAMESPACE" >/tmp/sample-bank-port-forward.log 2>&1 &
+                    set -e
+                    kubectl port-forward deployment/sample-bank 18080:8080 -n "$KUBE_NAMESPACE" >/tmp/sample-bank-port-forward.log 2>&1 &
                     PORT_FORWARD_PID=$!
-                    trap "kill $PORT_FORWARD_PID" EXIT
-                    sleep 5
+                    trap 'kill "$PORT_FORWARD_PID" >/dev/null 2>&1 || true' EXIT
 
-                    HEALTH_RESPONSE=$(curl --silent --show-error --fail "$HEALTHCHECK_URL")
-                    echo "$HEALTH_RESPONSE" | grep '"status":"UP"' > /dev/null
+                    for i in $(seq 1 15); do
+                      if curl --silent --show-error --fail "$HEALTHCHECK_URL" | grep '"status":"UP"' > /dev/null; then
+                        exit 0
+                      fi
+                      sleep 2
+                    done
+
+                    echo "Application health check did not return UP." >&2
+                    cat /tmp/sample-bank-port-forward.log >&2 || true
+                    exit 1
                     '''
 
                     echo "Deployed ${deployedImage} and verified Helm/Kubernetes rollout"
