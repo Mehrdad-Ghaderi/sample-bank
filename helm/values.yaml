@@ -20,5 +20,4 @@ app:
 
 db:
   url: jdbc:postgresql://host.minikube.internal:5432/sample_bank
-  username: sample_bank
-  password: sample_bank
+  secretName: sample-bank-db-secret
