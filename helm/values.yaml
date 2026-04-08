@@ -17,8 +17,20 @@ app:
   name: sample-bank
   profile: prod
   port: "8080"
+  healthPath: /actuator/health
+
+probes:
+  readiness:
+    initialDelaySeconds: 20
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 12
+  liveness:
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 6
 
 db:
   url: jdbc:postgresql://host.minikube.internal:5432/sample_bank
-  username: sample_bank
-  password: sample_bank
+  secretName: sample-bank-db-secret
