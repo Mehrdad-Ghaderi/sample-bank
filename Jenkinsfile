@@ -30,6 +30,7 @@ pipeline {
         HEALTHCHECK_URL = 'http://127.0.0.1:18080/actuator/health'
         KUBECONFIG_HOST = '/root/.kube/config.host'
         GENERATED_KUBECONFIG = "${WORKSPACE}/.kube/config"
+        MINIKUBE_HOME = '/root/.minikube'
     }
 
     stages {
@@ -202,8 +203,13 @@ pipeline {
             steps {
                 sh '''
                 test -f "$KUBECONFIG_HOST"
+                test -d "$MINIKUBE_HOME"
                 mkdir -p "$(dirname "$GENERATED_KUBECONFIG")"
-                sed 's#https://127\\.0\\.0\\.1:#https://host.docker.internal:#g' "$KUBECONFIG_HOST" > "$GENERATED_KUBECONFIG"
+                sed \
+                  -e 's#https://127\\.0\\.0\\.1:#https://host.docker.internal:#g' \
+                  -e 's#[A-Za-z]:\\\\Users\\\\[^\\\\]*\\\\.minikube\\\\#/root/.minikube/#g' \
+                  -e 's#\\\\#/#g' \
+                  "$KUBECONFIG_HOST" > "$GENERATED_KUBECONFIG"
                 '''
                 sh 'KUBECONFIG="$GENERATED_KUBECONFIG" kubectl config current-context'
                 sh 'KUBECONFIG="$GENERATED_KUBECONFIG" kubectl cluster-info'

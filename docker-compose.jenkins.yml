@@ -13,6 +13,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./:/workspace
       - ${USERPROFILE}/.kube/config:/root/.kube/config.host:ro
+      - ${USERPROFILE}/.minikube:/root/.minikube:ro
     environment:
       JAVA_OPTS: "-Djenkins.install.runSetupWizard=true"
       KUBECONFIG_HOST: "/root/.kube/config.host"
+      MINIKUBE_HOME: "/root/.minikube"
