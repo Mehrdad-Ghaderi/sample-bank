@@ -210,6 +210,7 @@ pipeline {
                   -e 's#[A-Za-z]:\\\\Users\\\\[^\\\\]*\\\\.minikube\\\\#/root/.minikube/#g' \
                   -e 's#\\\\#/#g' \
                   "$KUBECONFIG_HOST" > "$GENERATED_KUBECONFIG"
+                KUBECONFIG="$GENERATED_KUBECONFIG" kubectl config set-cluster minikube --tls-server-name=localhost >/dev/null
                 '''
                 sh 'KUBECONFIG="$GENERATED_KUBECONFIG" kubectl config current-context'
                 sh 'KUBECONFIG="$GENERATED_KUBECONFIG" kubectl cluster-info'
