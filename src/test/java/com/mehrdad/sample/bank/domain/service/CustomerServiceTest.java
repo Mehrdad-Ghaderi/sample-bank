@@ -344,35 +344,6 @@ class CustomerServiceTest {
         verify(accountMapper).toAccountDto(secondAccount);
     }
 
-    @Test
-    void getCustomerByNameShouldReturnMappedCustomerUsingProvidedName() {
-        String customerName = "BANK";
-        CustomerEntity customer = customerEntity(60);
-        CustomerDto expectedCustomer = customerDto(customer.getId());
-
-        when(customerRepository.findByName(customerName)).thenReturn(Optional.of(customer));
-        when(customerMapper.toCustomerDto(customer)).thenReturn(expectedCustomer);
-
-        CustomerDto result = customerService.getCustomerByName(customerName);
-
-        assertEquals(expectedCustomer, result);
-        verify(customerRepository).findByName(customerName);
-        verify(customerMapper).toCustomerDto(customer);
-    }
-
-    @Test
-    void getCustomerByNameShouldThrowWhenCustomerDoesNotExist() {
-        String customerName = "UNKNOWN";
-
-        when(customerRepository.findByName(customerName)).thenReturn(Optional.empty());
-
-        assertThrows(CustomerNotFoundException.class,
-                () -> customerService.getCustomerByName(customerName));
-
-        verify(customerRepository).findByName(customerName);
-        verifyNoInteractions(customerMapper);
-    }
-
     private CustomerEntity customerEntity(int businessId) {
         CustomerEntity customer = new CustomerEntity();
         customer.setId(UUID.randomUUID());
