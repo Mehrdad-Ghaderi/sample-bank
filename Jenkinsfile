@@ -309,13 +309,15 @@ pipeline {
                     trap 'kill "$PORT_FORWARD_PID" >/dev/null 2>&1 || true' EXIT
 
                     for i in $(seq 1 15); do
-                      if curl --silent --show-error --fail "$HEALTHCHECK_URL" | grep '"status":"UP"' > /dev/null; then
+                      RESPONSE=$(curl --silent --show-error --fail "$HEALTHCHECK_URL" 2>/dev/null || true)
+                      if printf '%s' "$RESPONSE" | grep '"status":"UP"' > /dev/null; then
                         exit 0
                       fi
                       sleep 2
                     done
 
                     echo "Application health check did not return UP." >&2
+                    printf '%s\n' "$RESPONSE" >&2 || true
                     cat /tmp/sample-bank-port-forward.log >&2 || true
                     exit 1
                     '''
