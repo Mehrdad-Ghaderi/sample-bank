@@ -182,6 +182,8 @@ public class CustomerService {
     }
 
     public CustomerDto getCustomerByName(String bank) {
-        return customerRepository.findByName("BANK").map(customerMapper::toCustomerDto).orElseThrow(CustomerNotFoundException::new);
+        return customerRepository.findByName(bank)
+                .map(customerMapper::toCustomerDto)
+                .orElseThrow(CustomerNotFoundException::new);
     }
 }
