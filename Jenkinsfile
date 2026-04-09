@@ -2,6 +2,18 @@ pipeline {
     agent any
 
     environment {
+        DOCKER_HOST = 'unix:///var/run/docker.sock'
+        TESTCONTAINERS_RYUK_DISABLED = 'true'
+        TESTCONTAINERS_HOST_OVERRIDE = 'host.docker.internal'
+        SPRING_DATASOURCE_URL = 'jdbc:postgresql://host.docker.internal:5432/sample_bank'
+        SPRING_DATASOURCE_USERNAME = 'sample_bank'
+        SPRING_DATASOURCE_PASSWORD = 'sample_bank'
+        POSTGRES_DB = 'sample_bank'
+        POSTGRES_USER = 'sample_bank'
+        POSTGRES_PASSWORD = 'sample_bank'
+        DB_URL = 'jdbc:postgresql://postgres:5432/sample_bank'
+        DB_USERNAME = 'sample_bank'
+        DB_PASSWORD = 'sample_bank'
         APP_IMAGE_NAME = 'sample-bank-app'
         REGISTRY_HOST = 'ghcr.io'
         REGISTRY_OWNER = 'mehrdad-ghaderi'
@@ -13,9 +25,12 @@ pipeline {
         KUBE_SERVICE_NAME = 'sample-bank-service'
         HELM_RELEASE_NAME = 'sample-bank'
         TERRAFORM_DIR = 'terraform'
-        TERRAFORM_KUBECONFIG = '/root/.kube/config'
+        TERRAFORM_KUBECONFIG = "${WORKSPACE}/.kube/config"
         TERRAFORM_KUBECONTEXT = 'minikube'
         HEALTHCHECK_URL = 'http://127.0.0.1:18080/actuator/health'
+        KUBECONFIG_HOST = '/root/.kube/config.host'
+        GENERATED_KUBECONFIG = "${WORKSPACE}/.kube/config"
+        MINIKUBE_HOME = '/root/.minikube'
     }
 
     stages {
@@ -89,7 +104,8 @@ pipeline {
 
         stage('Run Transaction Integration Test') {
             steps {
-                echo 'Skipping TransactionServiceIT temporarily while the runtime provisioning model moves to Terraform. Reintroduce this stage with Testcontainers.'
+                sh 'chmod +x mvnw'
+                sh './mvnw clean -Dtest=TransactionServiceIT test'
             }
         }
 
@@ -178,6 +194,29 @@ pipeline {
             }
         }
 
+        stage('Prepare Kubernetes Access') {
+            when {
+                expression {
+                    env.SHOULD_DEPLOY == 'true'
+                }
+            }
+            steps {
+                sh '''
+                test -f "$KUBECONFIG_HOST"
+                test -d "$MINIKUBE_HOME"
+                mkdir -p "$(dirname "$GENERATED_KUBECONFIG")"
+                sed \
+                  -e 's#https://127\\.0\\.0\\.1:#https://host.docker.internal:#g' \
+                  -e 's#[A-Za-z]:\\\\Users\\\\[^\\\\]*\\\\.minikube\\\\#/root/.minikube/#g' \
+                  -e 's#\\\\#/#g' \
+                  "$KUBECONFIG_HOST" > "$GENERATED_KUBECONFIG"
+                KUBECONFIG="$GENERATED_KUBECONFIG" kubectl config set-cluster minikube --tls-server-name=localhost >/dev/null
+                '''
+                sh 'KUBECONFIG="$GENERATED_KUBECONFIG" kubectl config current-context'
+                sh 'KUBECONFIG="$GENERATED_KUBECONFIG" kubectl cluster-info'
+            }
+        }
+
         stage('Apply Terraform Runtime') {
             when {
                 expression {
@@ -186,14 +225,15 @@ pipeline {
             }
             steps {
                 script {
-                    sh """
-                    kubectl get namespace "$KUBE_NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$KUBE_NAMESPACE"
+                    sh '''
+                    KUBECONFIG="$GENERATED_KUBECONFIG" kubectl get namespace "$KUBE_NAMESPACE" >/dev/null 2>&1 || \
+                      KUBECONFIG="$GENERATED_KUBECONFIG" kubectl create namespace "$KUBE_NAMESPACE"
                     terraform -chdir="$TERRAFORM_DIR" init
                     terraform -chdir="$TERRAFORM_DIR" apply -auto-approve \
                       -var kubeconfig_path="$TERRAFORM_KUBECONFIG" \
                       -var kube_context="$TERRAFORM_KUBECONTEXT" \
                       -var kube_namespace="$KUBE_NAMESPACE"
-                    """
+                    '''
                 }
             }
         }
@@ -214,9 +254,9 @@ pipeline {
                     }
                 }
 
-                sh 'kubectl config current-context'
+                sh 'KUBECONFIG="$GENERATED_KUBECONFIG" kubectl config current-context'
                 sh """
-                helm upgrade --install "$HELM_RELEASE_NAME" ./helm \
+                KUBECONFIG="$GENERATED_KUBECONFIG" helm upgrade --install "$HELM_RELEASE_NAME" ./helm \
                   --namespace "$KUBE_NAMESPACE" \
                   --set image.tag="$APP_IMAGE_TAG"
                 """
@@ -233,12 +273,12 @@ pipeline {
                 script {
                     sh '''
                     for i in $(seq 1 10); do
-                      kubectl get deployment "$KUBE_DEPLOYMENT_NAME" -n "$KUBE_NAMESPACE" >/dev/null 2>&1 && break
+                      KUBECONFIG="$GENERATED_KUBECONFIG" kubectl get deployment "$KUBE_DEPLOYMENT_NAME" -n "$KUBE_NAMESPACE" >/dev/null 2>&1 && break
                       sleep 2
                     done
 
                     for i in $(seq 1 3); do
-                      kubectl rollout status deployment/"$KUBE_DEPLOYMENT_NAME" -n "$KUBE_NAMESPACE" && exit 0
+                      KUBECONFIG="$GENERATED_KUBECONFIG" kubectl rollout status deployment/"$KUBE_DEPLOYMENT_NAME" -n "$KUBE_NAMESPACE" && exit 0
                       sleep 2
                     done
 
@@ -247,11 +287,11 @@ pipeline {
                     '''
 
                     def deployedImage = sh(
-                        script: "kubectl get deployment \"$KUBE_DEPLOYMENT_NAME\" -n \"$KUBE_NAMESPACE\" -o jsonpath='{.spec.template.spec.containers[0].image}'",
+                        script: "KUBECONFIG=\"$GENERATED_KUBECONFIG\" kubectl get deployment \"$KUBE_DEPLOYMENT_NAME\" -n \"$KUBE_NAMESPACE\" -o jsonpath='{.spec.template.spec.containers[0].image}'",
                         returnStdout: true
                     ).trim()
                     def availableReplicas = sh(
-                        script: "kubectl get deployment \"$KUBE_DEPLOYMENT_NAME\" -n \"$KUBE_NAMESPACE\" -o jsonpath='{.status.availableReplicas}'",
+                        script: "KUBECONFIG=\"$GENERATED_KUBECONFIG\" kubectl get deployment \"$KUBE_DEPLOYMENT_NAME\" -n \"$KUBE_NAMESPACE\" -o jsonpath='{.status.availableReplicas}'",
                         returnStdout: true
                     ).trim()
 
@@ -264,7 +304,7 @@ pipeline {
 
                     sh '''
                     set -e
-                    kubectl port-forward deployment/"$KUBE_DEPLOYMENT_NAME" 18080:8080 -n "$KUBE_NAMESPACE" >/tmp/sample-bank-port-forward.log 2>&1 &
+                    KUBECONFIG="$GENERATED_KUBECONFIG" kubectl port-forward deployment/"$KUBE_DEPLOYMENT_NAME" 18080:8080 -n "$KUBE_NAMESPACE" >/tmp/sample-bank-port-forward.log 2>&1 &
                     PORT_FORWARD_PID=$!
                     trap 'kill "$PORT_FORWARD_PID" >/dev/null 2>&1 || true' EXIT
 
