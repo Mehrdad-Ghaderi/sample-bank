@@ -40,3 +40,4 @@ out/
 /jenkins/kubeconfig.minikube
 /facenet/
 /notes/
+/context/

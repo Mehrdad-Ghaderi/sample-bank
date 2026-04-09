@@ -2,6 +2,18 @@ pipeline {
     agent any
 
     environment {
+        DOCKER_HOST = 'unix:///var/run/docker.sock'
+        TESTCONTAINERS_RYUK_DISABLED = 'true'
+        TESTCONTAINERS_HOST_OVERRIDE = 'host.docker.internal'
+        SPRING_DATASOURCE_URL = 'jdbc:postgresql://host.docker.internal:5432/sample_bank'
+        SPRING_DATASOURCE_USERNAME = 'sample_bank'
+        SPRING_DATASOURCE_PASSWORD = 'sample_bank'
+        POSTGRES_DB = 'sample_bank'
+        POSTGRES_USER = 'sample_bank'
+        POSTGRES_PASSWORD = 'sample_bank'
+        DB_URL = 'jdbc:postgresql://postgres:5432/sample_bank'
+        DB_USERNAME = 'sample_bank'
+        DB_PASSWORD = 'sample_bank'
         APP_IMAGE_NAME = 'sample-bank-app'
         REGISTRY_HOST = 'ghcr.io'
         REGISTRY_OWNER = 'mehrdad-ghaderi'
