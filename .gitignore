@@ -37,7 +37,6 @@ out/
 ### Project Files ###
 /src/main/resources/backups/
 /jenkins_home/
-/jenkins/kubeconfig.minikube
 /facenet/
 /notes/
 /context/
