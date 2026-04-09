@@ -26,8 +26,6 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
-    private final CustomerService customerService;
-
 
     public Page<AccountDto> getAccounts(Pageable pageable) {
         return accountRepository.findAll(pageable).map(accountMapper::toAccountDto);
@@ -58,17 +56,6 @@ public class AccountService {
 
         foundAccount.setStatus(status);
         accountRepository.save(foundAccount);
-    }
-
-    public AccountDto getAccountByAccountNumber(String accountNumber) {
-
-        return accountRepository.findByNumber(accountNumber)
-                .map(accountMapper::toAccountDto)
-                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
-    }
-
-    public List<AccountDto> getAccountsByCustomerId(UUID customerId) {
-        return customerService.getCustomerById(customerId).getAccounts();
     }
 
     public AccountDto getAccountById(UUID id) {
