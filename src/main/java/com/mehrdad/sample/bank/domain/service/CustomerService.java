@@ -174,14 +174,4 @@ public class CustomerService {
 
         return accounts;
     }
-
-    public CustomerDto getCustomerByBusinessId(Integer businessId) {
-        return  customerRepository.findByBusinessId(businessId)
-                .map(customerMapper::toCustomerDto)
-                .orElseThrow(() -> new CustomerNotFoundException(businessId));
-    }
-
-    public CustomerDto getCustomerByName(String bank) {
-        return customerRepository.findByName("BANK").map(customerMapper::toCustomerDto).orElseThrow(CustomerNotFoundException::new);
-    }
 }
