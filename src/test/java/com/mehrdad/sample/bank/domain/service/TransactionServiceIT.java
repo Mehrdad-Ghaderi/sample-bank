@@ -1,11 +1,14 @@
 package com.mehrdad.sample.bank.domain.service;
 
-import com.mehrdad.sample.bank.api.dto.CreateTransactionRequest;
+import com.mehrdad.sample.bank.api.dto.CreateDepositRequest;
+import com.mehrdad.sample.bank.api.dto.CreateTransferRequest;
+import com.mehrdad.sample.bank.api.dto.CreateWithdrawalRequest;
 import com.mehrdad.sample.bank.api.dto.account.AccountCreateDto;
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.api.dto.customer.CustomerCreateDto;
 import com.mehrdad.sample.bank.domain.entity.*;
 import com.mehrdad.sample.bank.domain.exception.account.AccountNotActiveException;
+import com.mehrdad.sample.bank.domain.exception.account.AccountNotFoundException;
 import com.mehrdad.sample.bank.domain.exception.transaction.CurrencyMismatchException;
 import com.mehrdad.sample.bank.domain.exception.transaction.IllegalTransactionTypeException;
 import com.mehrdad.sample.bank.domain.exception.transaction.InsufficientBalanceException;
@@ -30,6 +33,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -179,29 +183,27 @@ class TransactionServiceIT {
 
     @Test
     void shouldThrowInvalidAmountException() {
-        CreateTransactionRequest request = new CreateTransactionRequest(
+        CreateTransferRequest request = new CreateTransferRequest(
                 senderAccount.getId(),
                 receiverAccount.getId(),
                 BigDecimal.ZERO,
-                Currency.CAD,
-                TransactionType.TRANSFER
+                Currency.CAD
         );
 
-        assertThrows(InvalidAmountException.class, () -> transactionService.createTransaction(request));
+        assertThrows(InvalidAmountException.class, () -> transactionService.transfer(request));
         assertEquals(0, transactionRepository.count());
     }
 
     @Test
     void shouldThrowCurrencyMismatchException() {
-        CreateTransactionRequest request = new CreateTransactionRequest(
+        CreateTransferRequest request = new CreateTransferRequest(
                 senderAccount.getId(),
                 receiverAccount.getId(),
                 BigDecimal.valueOf(10),
-                Currency.USD,
-                TransactionType.TRANSFER
+                Currency.USD
         );
 
-        assertThrows(CurrencyMismatchException.class, () -> transactionService.createTransaction(request));
+        assertThrows(CurrencyMismatchException.class, () -> transactionService.transfer(request));
         assertEquals(0, transactionRepository.count());
     }
 
@@ -226,17 +228,25 @@ class TransactionServiceIT {
     }
 
     @Test
-    void shouldThrowWhenDepositSenderIsNotBankTreasuryAccount() {
-        assertThrows(IllegalTransactionTypeException.class,
-                () -> transfer(senderAccount, receiverAccount, new BigDecimal("5.0000"), TransactionType.DEPOSIT));
+    void shouldThrowWhenDepositTargetAccountDoesNotExist() {
+        CreateDepositRequest request = new CreateDepositRequest(
+                UUID.randomUUID(),
+                new BigDecimal("5.0000"),
+                Currency.CAD
+        );
+
+        assertThrows(AccountNotFoundException.class, () -> transactionService.deposit(request));
     }
 
     @Test
-    void shouldThrowWhenWithdrawReceiverIsNotBankTreasuryAccount() {
-        givenAccountHasBalance(senderAccount, new BigDecimal("10.0000"));
+    void shouldThrowWhenWithdrawalSourceAccountDoesNotExist() {
+        CreateWithdrawalRequest request = new CreateWithdrawalRequest(
+                UUID.randomUUID(),
+                new BigDecimal("5.0000"),
+                Currency.CAD
+        );
 
-        assertThrows(IllegalTransactionTypeException.class,
-                () -> transfer(senderAccount, receiverAccount, new BigDecimal("5.0000"), TransactionType.WITHDRAW));
+        assertThrows(AccountNotFoundException.class, () -> transactionService.withdraw(request));
     }
 
     @Test
@@ -252,19 +262,17 @@ class TransactionServiceIT {
     void shouldSerializeConcurrentWithdrawalsOnSameSenderAccount() throws Exception {
         givenAccountHasBalance(senderAccount, new BigDecimal("100.0000"));
 
-        CreateTransactionRequest withdrawRequest = new CreateTransactionRequest(
+        CreateWithdrawalRequest withdrawRequest = new CreateWithdrawalRequest(
                 senderAccount.getId(),
-                bankCadAccount.getId(),
                 new BigDecimal("60.0000"),
-                Currency.CAD,
-                TransactionType.WITHDRAW
+                Currency.CAD
         );
 
         CountDownLatch ready = new CountDownLatch(2);
         CountDownLatch start = new CountDownLatch(1);
 
         try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
-            Callable<Throwable> task = () -> executeTransactionConcurrently(withdrawRequest, ready, start);
+            Callable<Throwable> task = () -> executeWithdrawalConcurrently(withdrawRequest, ready, start);
 
             Future<Throwable> first = executor.submit(task);
             Future<Throwable> second = executor.submit(task);
@@ -294,25 +302,35 @@ class TransactionServiceIT {
             BigDecimal amount,
             TransactionType transactionType
     ) {
-        CreateTransactionRequest transactionRequest = new CreateTransactionRequest(
-                senderAccount.getId(),
-                receiverAccount.getId(),
-                amount,
-                Currency.CAD,
-                transactionType);
-
-        transactionService.createTransaction(transactionRequest);
+        switch (transactionType) {
+            case TRANSFER -> transactionService.transfer(new CreateTransferRequest(
+                    senderAccount.getId(),
+                    receiverAccount.getId(),
+                    amount,
+                    Currency.CAD
+            ));
+            case DEPOSIT -> transactionService.deposit(new CreateDepositRequest(
+                    receiverAccount.getId(),
+                    amount,
+                    Currency.CAD
+            ));
+            case WITHDRAW -> transactionService.withdraw(new CreateWithdrawalRequest(
+                    senderAccount.getId(),
+                    amount,
+                    Currency.CAD
+            ));
+        }
     }
 
-    private Throwable executeTransactionConcurrently(
-            CreateTransactionRequest request,
+    private Throwable executeWithdrawalConcurrently(
+            CreateWithdrawalRequest request,
             CountDownLatch ready,
             CountDownLatch start
     ) {
         ready.countDown();
         try {
             start.await();
-            transactionService.createTransaction(request);
+            transactionService.withdraw(request);
             return null;
         } catch (Throwable throwable) {
             return throwable;

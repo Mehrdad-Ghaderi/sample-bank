@@ -2,6 +2,18 @@
 
 Sample Bank is a Spring Boot backend for customer, account, balance, and transaction operations.
 
+## Transaction Model
+
+Transaction creation is exposed as three business commands instead of one generic request:
+
+- `transfer`: customer account to customer account
+- `deposit`: bank treasury account to customer account
+- `withdraw`: customer account to bank treasury account
+
+The bank treasury account is an internal system account identified by `AccountRole.BANK_TREASURY`.
+Clients do not need to supply that account id for deposits or withdrawals. The service resolves the
+correct treasury account by currency and keeps that routing rule inside the backend.
+
 ## Stack
 
 - Java 21
