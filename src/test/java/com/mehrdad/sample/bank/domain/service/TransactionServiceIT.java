@@ -102,6 +102,7 @@ class TransactionServiceIT {
                 account.setNumber(accountNumber);
                 account.setCurrency(currency);
                 account.setBalance(new BigDecimal("1000000000"));
+                account.setAccountRole(AccountRole.BANK_TREASURY);
                 account.setStatus(Status.ACTIVE);
                 account.setCustomer(bankEntity);
 

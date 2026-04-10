@@ -1,5 +1,6 @@
 package com.mehrdad.sample.bank.domain.repository;
 
+import com.mehrdad.sample.bank.domain.entity.AccountRole;
 import com.mehrdad.sample.bank.domain.entity.CustomerEntity;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -13,9 +14,6 @@ import java.util.UUID;
  * Created by Mehrdad Ghaderi
  */
 public interface CustomerRepository extends JpaRepository<CustomerEntity, UUID> {
-    boolean existsByName(String name);
-
-    Optional<CustomerEntity> findByName(String defaultCustomerName);
 
     @Query("select max(c.businessId) from CustomerEntity c")
     Integer findLastBusinessId();
@@ -25,5 +23,13 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, UUID> 
     boolean existsByPhoneNumber(@Pattern(regexp = "^\\+?[0-9]{10,15}$") String phoneNumber);
 
     Optional<CustomerEntity> findByBusinessId(Integer businessId);
+
+    @Query("""
+            select distinct c
+            from CustomerEntity c
+            join c.accounts a
+            where a.accountRole = :accountRole
+            """)
+    Optional<CustomerEntity> findByAccountRole(AccountRole accountRole);
 
 }
