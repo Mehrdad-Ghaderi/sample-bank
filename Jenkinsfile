@@ -102,10 +102,16 @@ pipeline {
             }
         }
 
-        stage('Run Transaction Integration Test') {
+        stage('Run Unit Test Suite') {
             steps {
                 sh 'chmod +x mvnw'
-                sh './mvnw clean -Dtest=TransactionServiceIT test'
+                sh './mvnw clean "-Dtest=*Test" test'
+            }
+        }
+
+        stage('Run Transaction Integration Test') {
+            steps {
+                sh './mvnw -Dtest=TransactionServiceIT test'
             }
         }
 
