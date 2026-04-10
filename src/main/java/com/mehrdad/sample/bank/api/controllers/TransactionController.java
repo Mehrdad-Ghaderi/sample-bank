@@ -1,9 +1,12 @@
 package com.mehrdad.sample.bank.api.controllers;
 
 import com.mehrdad.sample.bank.api.ApiPaths;
-import com.mehrdad.sample.bank.api.dto.CreateTransactionRequest;
+import com.mehrdad.sample.bank.api.dto.CreateDepositRequest;
+import com.mehrdad.sample.bank.api.dto.CreateTransferRequest;
+import com.mehrdad.sample.bank.api.dto.CreateWithdrawalRequest;
 import com.mehrdad.sample.bank.api.dto.TransactionDto;
 import com.mehrdad.sample.bank.domain.service.TransactionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,10 +26,18 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.getTransactions(pageable));
     }
 
-    @PostMapping
-    public ResponseEntity<TransactionDto> createTransactionRequest(@RequestBody CreateTransactionRequest createTransactionRequest) {
-        TransactionDto transactionDto = transactionService.createTransaction(createTransactionRequest);
+    @PostMapping("/transfers")
+    public ResponseEntity<TransactionDto> transfer(@Valid @RequestBody CreateTransferRequest request) {
+        return ResponseEntity.ok(transactionService.transfer(request));
+    }
 
-        return ResponseEntity.ok(transactionDto);
+    @PostMapping("/deposits")
+    public ResponseEntity<TransactionDto> deposit(@Valid @RequestBody CreateDepositRequest request) {
+        return ResponseEntity.ok(transactionService.deposit(request));
+    }
+
+    @PostMapping("/withdrawals")
+    public ResponseEntity<TransactionDto> withdraw(@Valid @RequestBody CreateWithdrawalRequest request) {
+        return ResponseEntity.ok(transactionService.withdraw(request));
     }
 }
