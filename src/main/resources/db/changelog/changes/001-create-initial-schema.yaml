@@ -1,0 +1,240 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-customer-entity
+      author: mehrdad
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: customer_entity
+      changes:
+        - createTable:
+            tableName: customer_entity
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_customer_entity
+              - column:
+                  name: business_id
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: phone_number
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+        - addUniqueConstraint:
+            tableName: customer_entity
+            columnNames: business_id
+            constraintName: uk_customer_business_id
+        - addUniqueConstraint:
+            tableName: customer_entity
+            columnNames: phone_number
+            constraintName: uk_customer_phone
+        - createIndex:
+            tableName: customer_entity
+            indexName: idx_customer_status
+            columns:
+              - column:
+                  name: status
+        - sql:
+            dbms: postgresql
+            sql: ALTER TABLE customer_entity ADD CONSTRAINT chk_customer_status CHECK (status IN ('ACTIVE', 'SUSPENDED', 'FROZEN', 'CLOSED'))
+
+  - changeSet:
+      id: 002-create-account-entity
+      author: mehrdad
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: account_entity
+      changes:
+        - createTable:
+            tableName: account_entity
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_account_entity
+              - column:
+                  name: customer_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: number
+                  type: varchar(19)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: account_role
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: balance
+                  type: numeric(19,4)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: account_entity
+            columnNames: number
+            constraintName: uk_account_number
+        - addForeignKeyConstraint:
+            baseTableName: account_entity
+            baseColumnNames: customer_id
+            constraintName: fk_account_customer
+            referencedTableName: customer_entity
+            referencedColumnNames: id
+        - createIndex:
+            tableName: account_entity
+            indexName: idx_account_customer
+            columns:
+              - column:
+                  name: customer_id
+        - createIndex:
+            tableName: account_entity
+            indexName: idx_account_status
+            columns:
+              - column:
+                  name: status
+        - createIndex:
+            tableName: account_entity
+            indexName: idx_account_currency
+            columns:
+              - column:
+                  name: currency
+        - sql:
+            dbms: postgresql
+            sql: ALTER TABLE account_entity ADD CONSTRAINT chk_account_status CHECK (status IN ('ACTIVE', 'SUSPENDED', 'FROZEN', 'CLOSED'))
+        - sql:
+            dbms: postgresql
+            sql: ALTER TABLE account_entity ADD CONSTRAINT chk_account_currency CHECK (currency IN ('USD', 'CAD', 'EUR'))
+        - sql:
+            dbms: postgresql
+            sql: ALTER TABLE account_entity ADD CONSTRAINT chk_account_role CHECK (account_role IN ('CUSTOMER', 'BANK_TREASURY'))
+
+  - changeSet:
+      id: 003-create-transaction-entity
+      author: mehrdad
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: transaction_entity
+      changes:
+        - createTable:
+            tableName: transaction_entity
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_transaction_entity
+              - column:
+                  name: sender_account_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: receiver_account_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: numeric(19,4)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: varchar(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: type
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: transaction_time
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: transaction_entity
+            baseColumnNames: sender_account_id
+            constraintName: fk_transaction_sender_account
+            referencedTableName: account_entity
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            baseTableName: transaction_entity
+            baseColumnNames: receiver_account_id
+            constraintName: fk_transaction_receiver_account
+            referencedTableName: account_entity
+            referencedColumnNames: id
+        - sql:
+            dbms: postgresql
+            sql: ALTER TABLE transaction_entity ADD CONSTRAINT chk_transaction_currency CHECK (currency IN ('USD', 'CAD', 'EUR'))
+        - sql:
+            dbms: postgresql
+            sql: ALTER TABLE transaction_entity ADD CONSTRAINT chk_transaction_type CHECK (type IN ('TRANSFER', 'DEPOSIT', 'WITHDRAW'))
