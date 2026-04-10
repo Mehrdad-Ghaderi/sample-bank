@@ -60,6 +60,10 @@ public class AccountEntity {
     @Column(nullable = false, updatable = false)
     private Currency currency;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "account_role", nullable = false)
+    private AccountRole accountRole;
+
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal balance;
 
@@ -105,6 +109,10 @@ public class AccountEntity {
 
         if (currency == null) {
             currency = Currency.CAD;
+        }
+
+        if (accountRole == null) {
+            accountRole = AccountRole.CUSTOMER;
         }
 
         if (balance == null) {

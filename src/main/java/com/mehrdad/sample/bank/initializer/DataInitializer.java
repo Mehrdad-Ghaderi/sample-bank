@@ -1,12 +1,12 @@
 package com.mehrdad.sample.bank.initializer;
 
 import com.mehrdad.sample.bank.domain.entity.AccountEntity;
+import com.mehrdad.sample.bank.domain.entity.AccountRole;
 import com.mehrdad.sample.bank.domain.entity.Currency;
 import com.mehrdad.sample.bank.domain.entity.CustomerEntity;
 import com.mehrdad.sample.bank.domain.entity.Status;
 import com.mehrdad.sample.bank.domain.repository.CustomerRepository;
 import com.mehrdad.sample.bank.domain.util.AccountNumberGenerator;
-import com.mehrdad.sample.bank.domain.util.CustomerBusinessIdGenerator;
 import com.mehrdad.sample.bank.domain.util.PhoneNumberNormalizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -34,12 +34,11 @@ public class DataInitializer implements CommandLineRunner {
     private static final String BANK_PHONE = "1234567890";
     private static final BigDecimal INITIAL_BALANCE = new BigDecimal("1000000000");
     private final CustomerRepository customerRepository;
-    private final CustomerBusinessIdGenerator customerBusinessIdGenerator;
 
     @Override
     public void run(String... args) {
 
-        CustomerEntity bank = customerRepository.findByName(BANK_NAME)
+        CustomerEntity bank = customerRepository.findByAccountRole(AccountRole.BANK_TREASURY)
                 .orElseGet(this::createBankCustomer);
 
         ensureBankAccounts(bank);
@@ -54,10 +53,6 @@ public class DataInitializer implements CommandLineRunner {
         bank.setAccounts(new ArrayList<>());
         bank.setBusinessId(100000);
         return customerRepository.saveAndFlush(bank);
-    }
-
-    private Integer generateCustomerBusinessId() {
-        return customerBusinessIdGenerator.getNextBusinessId();
     }
 
     private void ensureBankAccounts(CustomerEntity bank) {
@@ -75,6 +70,7 @@ public class DataInitializer implements CommandLineRunner {
                 account.setNumber(accountNumber);
                 account.setCurrency(currency);
                 account.setBalance(INITIAL_BALANCE);
+                account.setAccountRole(AccountRole.BANK_TREASURY);
                 account.setStatus(Status.ACTIVE);
                 account.setCustomer(bank);
 

@@ -75,6 +75,7 @@ class AccountEntityTest {
 
         assertEquals(Status.ACTIVE, account.getStatus());
         assertEquals(Currency.CAD, account.getCurrency());
+        assertEquals(AccountRole.CUSTOMER, account.getAccountRole());
         assertEquals(BigDecimal.ZERO, account.getBalance());
         assertNotNull(account.getCreatedAt());
         assertNotNull(account.getUpdatedAt());

@@ -134,6 +134,6 @@ public class TransactionService {
     }
 
     private boolean isSystemAccount(AccountEntity account) {
-        return "BANK".equals(account.getCustomer().getName());
+        return account.getAccountRole() == AccountRole.BANK_TREASURY;
     }
 }
