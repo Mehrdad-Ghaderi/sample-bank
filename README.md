@@ -61,17 +61,19 @@ Docker Compose is the local/dev runtime path.
 
 The pipeline lives in [Jenkinsfile](C:/Users/mehrd/work/sample-bank/Jenkinsfile).
 
-Current `develop` flow:
+The Jenkins pipeline provides a branch-aware delivery workflow:
 
-1. run `TransactionServiceIT`
-2. build the Docker image
-3. push an immutable image to GHCR
-4. deploy that image to Kubernetes through Helm
-5. verify the Kubernetes rollout and deployed image
+1. run unit and integration test gates
+2. build a Docker image
+3. push an immutable, traceable image tag to GHCR
+4. deploy selected branches to a local Kubernetes environment through Helm
+5. verify the Kubernetes rollout, deployed image identity, replica availability, and application health
 
 Published image repository:
 
 `ghcr.io/mehrdad-ghaderi/sample-bank`
+
+For local Jenkins runs, [docker-compose.jenkins.yml](C:/Users/mehrd/work/sample-bank/docker-compose.jenkins.yml) expects the host kubeconfig and Minikube certificate directory to be mounted into the Jenkins container. Use [.env.jenkins.example](C:/Users/mehrd/work/sample-bank/.env.jenkins.example) as the template for those machine-specific paths.
 
 ## Kubernetes
 

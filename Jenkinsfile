@@ -19,6 +19,7 @@ pipeline {
         REGISTRY_OWNER = 'mehrdad-ghaderi'
         REGISTRY_IMAGE_NAME = 'sample-bank'
         GHCR_CREDENTIALS_ID = 'ghcr-io'
+        // Only the local integration branch deploys to Minikube right now.
         DEPLOY_BRANCH = 'develop'
         KUBE_NAMESPACE = 'sample-bank'
         KUBE_DEPLOYMENT_NAME = 'sample-bank'
@@ -50,6 +51,7 @@ pipeline {
         stage('Build Image Metadata') {
             steps {
                 script {
+                    // Jenkins branch metadata can differ between freestyle and multibranch jobs.
                     def rawBranch = env.BRANCH_NAME?.trim()
                     def gitBranch = env.GIT_BRANCH?.trim()
 
@@ -105,13 +107,13 @@ pipeline {
         stage('Run Unit Test Suite') {
             steps {
                 sh 'chmod +x mvnw'
-                sh './mvnw clean "-Dtest=*Test" test'
+                sh './mvnw clean test'
             }
         }
 
         stage('Run Transaction Integration Test') {
             steps {
-                sh './mvnw -Dtest=TransactionServiceIT test'
+                sh './mvnw "-DskipUnitTests=true" verify'
             }
         }
 
@@ -207,6 +209,7 @@ pipeline {
                 }
             }
             steps {
+                // Jenkins runs in Docker, so the host Minikube kubeconfig needs container-valid paths.
                 sh '''
                 test -f "$KUBECONFIG_HOST"
                 test -d "$MINIKUBE_HOME"
@@ -223,6 +226,21 @@ pipeline {
             }
         }
 
+        stage('Ensure Kubernetes Namespace') {
+            when {
+                expression {
+                    env.SHOULD_DEPLOY == 'true'
+                }
+            }
+            steps {
+                // Terraform creates a Kubernetes secret in this namespace, so the namespace must exist first.
+                sh '''
+                KUBECONFIG="$GENERATED_KUBECONFIG" kubectl get namespace "$KUBE_NAMESPACE" >/dev/null 2>&1 || \
+                  KUBECONFIG="$GENERATED_KUBECONFIG" kubectl create namespace "$KUBE_NAMESPACE"
+                '''
+            }
+        }
+
         stage('Apply Terraform Runtime') {
             when {
                 expression {
@@ -232,8 +250,6 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    KUBECONFIG="$GENERATED_KUBECONFIG" kubectl get namespace "$KUBE_NAMESPACE" >/dev/null 2>&1 || \
-                      KUBECONFIG="$GENERATED_KUBECONFIG" kubectl create namespace "$KUBE_NAMESPACE"
                     terraform -chdir="$TERRAFORM_DIR" init
                     terraform -chdir="$TERRAFORM_DIR" apply -auto-approve \
                       -var kubeconfig_path="$TERRAFORM_KUBECONFIG" \
@@ -300,12 +316,17 @@ pipeline {
                         script: "KUBECONFIG=\"$GENERATED_KUBECONFIG\" kubectl get deployment \"$KUBE_DEPLOYMENT_NAME\" -n \"$KUBE_NAMESPACE\" -o jsonpath='{.status.availableReplicas}'",
                         returnStdout: true
                     ).trim()
+                    def desiredReplicas = sh(
+                        script: "KUBECONFIG=\"$GENERATED_KUBECONFIG\" kubectl get deployment \"$KUBE_DEPLOYMENT_NAME\" -n \"$KUBE_NAMESPACE\" -o jsonpath='{.spec.replicas}'",
+                        returnStdout: true
+                    ).trim()
 
                     if (deployedImage != env.REMOTE_TRACEABLE_TAG) {
                         error("Helm deployment image ${deployedImage} does not match expected ${env.REMOTE_TRACEABLE_TAG}")
                     }
-                    if (availableReplicas != '2') {
-                        error("Expected 2 available replicas but found ${availableReplicas}")
+                    // Compare against the rendered deployment spec instead of hard-coding the Helm value.
+                    if (availableReplicas != desiredReplicas) {
+                        error("Expected ${desiredReplicas} available replicas but found ${availableReplicas}")
                     }
 
                     sh '''
