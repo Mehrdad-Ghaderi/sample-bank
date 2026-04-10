@@ -32,6 +32,15 @@ correct treasury account by currency and keeps that routing rule inside the back
 - `test`: integration tests
 - `prod`: environment-driven runtime configuration
 
+## Database Migrations
+
+Database schema changes are managed with Liquibase. The master changelog lives at
+[src/main/resources/db/changelog/db.changelog-master.yaml](C:/Users/mehrd/work/sample-bank/src/main/resources/db/changelog/db.changelog-master.yaml).
+
+Hibernate validates the schema at startup, while Liquibase owns creating and evolving database
+objects. This keeps schema changes versioned, repeatable, and safer than relying on automatic
+Hibernate schema updates in deployed environments.
+
 ## Local Development
 
 Start PostgreSQL:
