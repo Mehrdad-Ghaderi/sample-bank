@@ -16,6 +16,7 @@ target/
 
 # Secrets
 .env
+.env.jenkins
 
 ### IntelliJ IDEA ###
 .idea
