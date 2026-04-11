@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/changes/001-create-initial-schema.yaml
   - include:
       file: db/changelog/changes/002-create-idempotency-record.yaml
+  - include:
+      file: db/changelog/changes/003-add-account-role-to-baselined-accounts.yaml
