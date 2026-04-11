@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-add-account-role-to-baselined-accounts
+      author: mehrdad
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: account_entity
+              columnName: account_role
+      changes:
+        - addColumn:
+            tableName: account_entity
+            columns:
+              - column:
+                  name: account_role
+                  type: varchar(255)
+                  defaultValue: CUSTOMER
+                  constraints:
+                    nullable: false
+        - sql:
+            dbms: postgresql
+            sql: UPDATE account_entity SET account_role = 'BANK_TREASURY' WHERE customer_id IN (SELECT id FROM customer_entity WHERE name = 'BANK')
+        - sql:
+            dbms: postgresql
+            sql: ALTER TABLE account_entity ADD CONSTRAINT chk_account_role CHECK (account_role IN ('CUSTOMER', 'BANK_TREASURY'))
