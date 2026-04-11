@@ -10,12 +10,14 @@ import com.mehrdad.sample.bank.domain.entity.*;
 import com.mehrdad.sample.bank.domain.exception.account.AccountNotActiveException;
 import com.mehrdad.sample.bank.domain.exception.account.AccountNotFoundException;
 import com.mehrdad.sample.bank.domain.exception.transaction.CurrencyMismatchException;
+import com.mehrdad.sample.bank.domain.exception.transaction.IdempotencyKeyConflictException;
 import com.mehrdad.sample.bank.domain.exception.transaction.IllegalTransactionTypeException;
 import com.mehrdad.sample.bank.domain.exception.transaction.InsufficientBalanceException;
 import com.mehrdad.sample.bank.domain.exception.transaction.InvalidAmountException;
 import com.mehrdad.sample.bank.domain.mapper.AccountMapper;
 import com.mehrdad.sample.bank.domain.repository.AccountRepository;
 import com.mehrdad.sample.bank.domain.repository.CustomerRepository;
+import com.mehrdad.sample.bank.domain.repository.IdempotencyRecordRepository;
 import com.mehrdad.sample.bank.domain.repository.TransactionRepository;
 import com.mehrdad.sample.bank.domain.util.AccountNumberGenerator;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,6 +78,8 @@ class TransactionServiceIT {
     private AccountRepository accountRepository;
     @Autowired
     private TransactionRepository transactionRepository;
+    @Autowired
+    private IdempotencyRecordRepository idempotencyRecordRepository;
 
     AccountDto bankCadAccount;
     AccountDto senderAccount;
@@ -85,6 +89,7 @@ class TransactionServiceIT {
 
     @BeforeEach
     void setup() {
+        idempotencyRecordRepository.deleteAll();
         transactionRepository.deleteAll();
         accountRepository.deleteAll();
         customerRepository.deleteAll();
@@ -256,6 +261,53 @@ class TransactionServiceIT {
 
         assertThrows(AccountNotActiveException.class,
                 () -> transfer(senderAccount, receiverAccount, new BigDecimal("5.0000"), TransactionType.TRANSFER));
+    }
+
+    @Test
+    void shouldReturnOriginalTransferWhenIdempotencyKeyIsRetried() {
+        givenAccountHasBalance(senderAccount, new BigDecimal("100.0000"));
+        CreateTransferRequest request = new CreateTransferRequest(
+                senderAccount.getId(),
+                receiverAccount.getId(),
+                new BigDecimal("10.0000"),
+                Currency.CAD
+        );
+
+        var first = transactionService.transfer(request, "transfer-retry-1");
+        var second = transactionService.transfer(request, "transfer-retry-1");
+
+        assertEquals(first.getId(), second.getId());
+        assertBalance(senderAccount, "90.0000");
+        assertBalance(receiverAccount, "10.0000");
+        assertEquals(2, transactionRepository.count()); // initial deposit + one transfer
+        assertEquals(1, idempotencyRecordRepository.count());
+    }
+
+    @Test
+    void shouldRejectReusedIdempotencyKeyWithDifferentTransferRequest() {
+        givenAccountHasBalance(senderAccount, new BigDecimal("100.0000"));
+        CreateTransferRequest firstRequest = new CreateTransferRequest(
+                senderAccount.getId(),
+                receiverAccount.getId(),
+                new BigDecimal("10.0000"),
+                Currency.CAD
+        );
+        CreateTransferRequest changedRequest = new CreateTransferRequest(
+                senderAccount.getId(),
+                receiverAccount.getId(),
+                new BigDecimal("15.0000"),
+                Currency.CAD
+        );
+
+        transactionService.transfer(firstRequest, "transfer-retry-2");
+
+        assertThrows(
+                IdempotencyKeyConflictException.class,
+                () -> transactionService.transfer(changedRequest, "transfer-retry-2")
+        );
+        assertBalance(senderAccount, "90.0000");
+        assertBalance(receiverAccount, "10.0000");
+        assertEquals(2, transactionRepository.count()); // initial deposit + first transfer only
     }
 
     @Test
