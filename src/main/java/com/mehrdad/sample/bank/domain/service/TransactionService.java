@@ -7,16 +7,20 @@ import com.mehrdad.sample.bank.api.dto.TransactionDto;
 import com.mehrdad.sample.bank.domain.entity.AccountEntity;
 import com.mehrdad.sample.bank.domain.entity.AccountRole;
 import com.mehrdad.sample.bank.domain.entity.Currency;
+import com.mehrdad.sample.bank.domain.entity.IdempotencyRecordEntity;
 import com.mehrdad.sample.bank.domain.entity.Status;
 import com.mehrdad.sample.bank.domain.entity.TransactionEntity;
 import com.mehrdad.sample.bank.domain.entity.TransactionType;
 import com.mehrdad.sample.bank.domain.exception.account.AccountNotActiveException;
 import com.mehrdad.sample.bank.domain.exception.account.AccountNotFoundException;
 import com.mehrdad.sample.bank.domain.exception.transaction.CurrencyMismatchException;
+import com.mehrdad.sample.bank.domain.exception.transaction.IdempotencyKeyConflictException;
 import com.mehrdad.sample.bank.domain.exception.transaction.IllegalTransactionTypeException;
 import com.mehrdad.sample.bank.domain.exception.transaction.InvalidAmountException;
+import com.mehrdad.sample.bank.domain.exception.transaction.InvalidIdempotencyKeyException;
 import com.mehrdad.sample.bank.domain.mapper.TransactionMapper;
 import com.mehrdad.sample.bank.domain.repository.AccountRepository;
+import com.mehrdad.sample.bank.domain.repository.IdempotencyRecordRepository;
 import com.mehrdad.sample.bank.domain.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,14 +29,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.HexFormat;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
+    private final IdempotencyRecordRepository idempotencyRecordRepository;
     private final TransactionMapper transactionMapper;
 
     public Page<TransactionDto> getTransactions(Pageable pageable) {
@@ -42,12 +52,29 @@ public class TransactionService {
     @Transactional
     public TransactionDto transfer(CreateTransferRequest request) {
         validateAmount(request.getAmount());
-        return createTransaction(
+        return transactionMapper.toTransactionDto(createTransaction(
                 request.getSenderAccountId(),
                 request.getReceiverAccountId(),
                 request.getAmount(),
                 request.getCurrency(),
                 TransactionType.TRANSFER
+        ));
+    }
+
+    @Transactional
+    public TransactionDto transfer(CreateTransferRequest request, String idempotencyKey) {
+        validateAmount(request.getAmount());
+        return executeIdempotently(
+                idempotencyKey,
+                TransactionType.TRANSFER,
+                transferRequestHash(request),
+                () -> createTransaction(
+                        request.getSenderAccountId(),
+                        request.getReceiverAccountId(),
+                        request.getAmount(),
+                        request.getCurrency(),
+                        TransactionType.TRANSFER
+                )
         );
     }
 
@@ -55,12 +82,32 @@ public class TransactionService {
     public TransactionDto deposit(CreateDepositRequest request) {
         validateAmount(request.getAmount());
         AccountEntity bankTreasury = loadBankTreasuryAccountForUpdate(request.getCurrency());
-        return createTransaction(
+        return transactionMapper.toTransactionDto(createTransaction(
                 bankTreasury.getId(),
                 request.getReceiverAccountId(),
                 request.getAmount(),
                 request.getCurrency(),
                 TransactionType.DEPOSIT
+        ));
+    }
+
+    @Transactional
+    public TransactionDto deposit(CreateDepositRequest request, String idempotencyKey) {
+        validateAmount(request.getAmount());
+        return executeIdempotently(
+                idempotencyKey,
+                TransactionType.DEPOSIT,
+                depositRequestHash(request),
+                () -> {
+                    AccountEntity bankTreasury = loadBankTreasuryAccountForUpdate(request.getCurrency());
+                    return createTransaction(
+                            bankTreasury.getId(),
+                            request.getReceiverAccountId(),
+                            request.getAmount(),
+                            request.getCurrency(),
+                            TransactionType.DEPOSIT
+                    );
+                }
         );
     }
 
@@ -68,16 +115,36 @@ public class TransactionService {
     public TransactionDto withdraw(CreateWithdrawalRequest request) {
         validateAmount(request.getAmount());
         AccountEntity bankTreasury = loadBankTreasuryAccountForUpdate(request.getCurrency());
-        return createTransaction(
+        return transactionMapper.toTransactionDto(createTransaction(
                 request.getSenderAccountId(),
                 bankTreasury.getId(),
                 request.getAmount(),
                 request.getCurrency(),
                 TransactionType.WITHDRAW
+        ));
+    }
+
+    @Transactional
+    public TransactionDto withdraw(CreateWithdrawalRequest request, String idempotencyKey) {
+        validateAmount(request.getAmount());
+        return executeIdempotently(
+                idempotencyKey,
+                TransactionType.WITHDRAW,
+                withdrawalRequestHash(request),
+                () -> {
+                    AccountEntity bankTreasury = loadBankTreasuryAccountForUpdate(request.getCurrency());
+                    return createTransaction(
+                            request.getSenderAccountId(),
+                            bankTreasury.getId(),
+                            request.getAmount(),
+                            request.getCurrency(),
+                            TransactionType.WITHDRAW
+                    );
+                }
         );
     }
 
-    private TransactionDto createTransaction(
+    private TransactionEntity createTransaction(
             UUID senderId,
             UUID receiverId,
             BigDecimal amount,
@@ -99,7 +166,99 @@ public class TransactionService {
         transaction.setTransactionTime(Instant.now());
 
         TransactionEntity savedTransaction = transactionRepository.save(transaction);
-        return transactionMapper.toTransactionDto(savedTransaction);
+        return savedTransaction;
+    }
+
+    private TransactionDto executeIdempotently(
+            String idempotencyKey,
+            TransactionType commandType,
+            String requestHash,
+            Supplier<TransactionEntity> transactionSupplier
+    ) {
+        String normalizedKey = normalizeIdempotencyKey(idempotencyKey);
+
+        return idempotencyRecordRepository.findByIdempotencyKeyAndCommandType(normalizedKey, commandType)
+                .map(existingRecord -> resolveExistingIdempotencyRecord(existingRecord, requestHash, normalizedKey))
+                .orElseGet(() -> createIdempotentTransaction(
+                        normalizedKey,
+                        commandType,
+                        requestHash,
+                        transactionSupplier
+                ));
+    }
+
+    private TransactionDto resolveExistingIdempotencyRecord(
+            IdempotencyRecordEntity existingRecord,
+            String requestHash,
+            String idempotencyKey
+    ) {
+        if (!existingRecord.getRequestHash().equals(requestHash)) {
+            throw new IdempotencyKeyConflictException(idempotencyKey);
+        }
+        return transactionMapper.toTransactionDto(existingRecord.getTransaction());
+    }
+
+    private TransactionDto createIdempotentTransaction(
+            String idempotencyKey,
+            TransactionType commandType,
+            String requestHash,
+            Supplier<TransactionEntity> transactionSupplier
+    ) {
+        IdempotencyRecordEntity record = new IdempotencyRecordEntity();
+        record.setIdempotencyKey(idempotencyKey);
+        record.setCommandType(commandType);
+        record.setRequestHash(requestHash);
+        idempotencyRecordRepository.saveAndFlush(record);
+
+        TransactionEntity transaction = transactionSupplier.get();
+        record.setTransaction(transaction);
+
+        return transactionMapper.toTransactionDto(transaction);
+    }
+
+    private String transferRequestHash(CreateTransferRequest request) {
+        return sha256(String.join("|",
+                request.getSenderAccountId().toString(),
+                request.getReceiverAccountId().toString(),
+                normalizeAmount(request.getAmount()),
+                request.getCurrency().name()
+        ));
+    }
+
+    private String depositRequestHash(CreateDepositRequest request) {
+        return sha256(String.join("|",
+                request.getReceiverAccountId().toString(),
+                normalizeAmount(request.getAmount()),
+                request.getCurrency().name()
+        ));
+    }
+
+    private String withdrawalRequestHash(CreateWithdrawalRequest request) {
+        return sha256(String.join("|",
+                request.getSenderAccountId().toString(),
+                normalizeAmount(request.getAmount()),
+                request.getCurrency().name()
+        ));
+    }
+
+    private String normalizeIdempotencyKey(String idempotencyKey) {
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            throw new InvalidIdempotencyKeyException();
+        }
+        return idempotencyKey.trim();
+    }
+
+    private String normalizeAmount(BigDecimal amount) {
+        return amount.stripTrailingZeros().toPlainString();
+    }
+
+    private String sha256(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return HexFormat.of().formatHex(digest.digest(value.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 hashing is not available", e);
+        }
     }
 
     private void validateAmount(BigDecimal amount) {

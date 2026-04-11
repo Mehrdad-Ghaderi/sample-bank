@@ -14,6 +14,11 @@ The bank treasury account is an internal system account identified by `AccountRo
 Clients do not need to supply that account id for deposits or withdrawals. The service resolves the
 correct treasury account by currency and keeps that routing rule inside the backend.
 
+Transaction command endpoints require an `Idempotency-Key` HTTP header. This makes client retries
+safe for money movement: retrying the same command with the same key returns the original
+transaction instead of creating a second one. Reusing the same key with a different request is
+rejected as a conflict.
+
 ## Stack
 
 - Java 21

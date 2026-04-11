@@ -1,0 +1,60 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-idempotency-record
+      author: mehrdad
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: idempotency_record
+      changes:
+        - createTable:
+            tableName: idempotency_record
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_idempotency_record
+              - column:
+                  name: idempotency_key
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: command_type
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: request_hash
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: transaction_id
+                  type: uuid
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: idempotency_record
+            columnNames: idempotency_key, command_type
+            constraintName: uk_idempotency_record_key_command
+        - addForeignKeyConstraint:
+            baseTableName: idempotency_record
+            baseColumnNames: transaction_id
+            constraintName: fk_idempotency_record_transaction
+            referencedTableName: transaction_entity
+            referencedColumnNames: id
+        - addUniqueConstraint:
+            tableName: idempotency_record
+            columnNames: transaction_id
+            constraintName: uk_idempotency_record_transaction
+        - sql:
+            dbms: postgresql
+            sql: ALTER TABLE idempotency_record ADD CONSTRAINT chk_idempotency_record_command_type CHECK (command_type IN ('TRANSFER', 'DEPOSIT', 'WITHDRAW'))

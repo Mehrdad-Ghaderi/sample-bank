@@ -9,8 +9,10 @@ import com.mehrdad.sample.bank.domain.exception.account.AccountNotFoundException
 import com.mehrdad.sample.bank.domain.exception.account.AccountStatusAlreadySetException;
 import com.mehrdad.sample.bank.domain.exception.customer.*;
 import com.mehrdad.sample.bank.domain.exception.transaction.CurrencyMismatchException;
+import com.mehrdad.sample.bank.domain.exception.transaction.IdempotencyKeyConflictException;
 import com.mehrdad.sample.bank.domain.exception.transaction.IllegalTransactionTypeException;
 import com.mehrdad.sample.bank.domain.exception.transaction.InsufficientBalanceException;
+import com.mehrdad.sample.bank.domain.exception.transaction.InvalidIdempotencyKeyException;
 import com.mehrdad.sample.bank.domain.exception.transaction.InvalidAmountException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -19,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.OffsetDateTime;
@@ -298,6 +301,48 @@ public class GlobalExceptionHandler {
                 OffsetDateTime.now()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(apiErrorResponse);
+    }
+
+    @ExceptionHandler(InvalidIdempotencyKeyException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidIdempotencyKey(InvalidIdempotencyKeyException ex,
+                                                                        HttpServletRequest request) {
+        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "INVALID_IDEMPOTENCY_KEY",
+                ex.getMessage(),
+                request.getRequestURI(),
+                OffsetDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(apiErrorResponse);
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ApiErrorResponse> handleMissingRequestHeader(MissingRequestHeaderException ex,
+                                                                       HttpServletRequest request) {
+        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "MISSING_REQUEST_HEADER",
+                "Missing required header: " + ex.getHeaderName(),
+                request.getRequestURI(),
+                OffsetDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(apiErrorResponse);
+    }
+
+    @ExceptionHandler(IdempotencyKeyConflictException.class)
+    public ResponseEntity<ApiErrorResponse> handleIdempotencyKeyConflict(IdempotencyKeyConflictException ex,
+                                                                         HttpServletRequest request) {
+        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "IDEMPOTENCY_KEY_CONFLICT",
+                ex.getMessage(),
+                request.getRequestURI(),
+                OffsetDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(apiErrorResponse);
     }
 

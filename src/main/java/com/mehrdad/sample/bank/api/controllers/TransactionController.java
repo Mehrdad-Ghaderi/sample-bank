@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping(ApiPaths.API_BASE_PATH + ApiPaths.TRANSACTIONS)
 public class TransactionController {
+    private static final String IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
+
     private final TransactionService transactionService;
 
     @GetMapping
@@ -27,17 +29,26 @@ public class TransactionController {
     }
 
     @PostMapping("/transfers")
-    public ResponseEntity<TransactionDto> transfer(@Valid @RequestBody CreateTransferRequest request) {
-        return ResponseEntity.ok(transactionService.transfer(request));
+    public ResponseEntity<TransactionDto> transfer(
+            @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
+            @Valid @RequestBody CreateTransferRequest request
+    ) {
+        return ResponseEntity.ok(transactionService.transfer(request, idempotencyKey));
     }
 
     @PostMapping("/deposits")
-    public ResponseEntity<TransactionDto> deposit(@Valid @RequestBody CreateDepositRequest request) {
-        return ResponseEntity.ok(transactionService.deposit(request));
+    public ResponseEntity<TransactionDto> deposit(
+            @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
+            @Valid @RequestBody CreateDepositRequest request
+    ) {
+        return ResponseEntity.ok(transactionService.deposit(request, idempotencyKey));
     }
 
     @PostMapping("/withdrawals")
-    public ResponseEntity<TransactionDto> withdraw(@Valid @RequestBody CreateWithdrawalRequest request) {
-        return ResponseEntity.ok(transactionService.withdraw(request));
+    public ResponseEntity<TransactionDto> withdraw(
+            @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
+            @Valid @RequestBody CreateWithdrawalRequest request
+    ) {
+        return ResponseEntity.ok(transactionService.withdraw(request, idempotencyKey));
     }
 }
