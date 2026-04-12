@@ -92,7 +92,7 @@ pipeline {
                     env.REGISTRY_REPOSITORY = "${env.REGISTRY_HOST}/${env.REGISTRY_OWNER}/${env.REGISTRY_IMAGE_NAME}"
                     env.REMOTE_TRACEABLE_TAG = "${env.REGISTRY_REPOSITORY}:${env.APP_IMAGE_TAG}"
                     env.REMOTE_LATEST_TAG = "${env.REGISTRY_REPOSITORY}:latest"
-                    env.PUBLISH_LATEST_TAG = (safeBranchName in ['develop', 'main']).toString()
+                    env.SHOULD_PUBLISH_LATEST_TAG = (safeBranchName in ['develop', 'main']).toString()
                     env.SHOULD_DEPLOY = (safeBranchName == env.DEPLOY_BRANCH).toString()
 
                     echo "Resolved branch name: ${env.GIT_BRANCH_NAME}"
@@ -151,7 +151,7 @@ pipeline {
                     echo "Tagging ${env.APP_IMAGE_NAME}:${env.APP_IMAGE_TAG} as ${env.REMOTE_TRACEABLE_TAG}"
                     sh "docker tag ${env.APP_IMAGE_NAME}:${env.APP_IMAGE_TAG} ${env.REMOTE_TRACEABLE_TAG}"
 
-                    if (env.PUBLISH_LATEST_TAG == 'true') {
+                    if (env.SHOULD_PUBLISH_LATEST_TAG == 'true') {
                         echo "Tagging ${env.APP_IMAGE_NAME}:latest as ${env.REMOTE_LATEST_TAG}"
                         sh "docker tag ${env.APP_IMAGE_NAME}:latest ${env.REMOTE_LATEST_TAG}"
                     } else {
@@ -172,7 +172,7 @@ pipeline {
                     sh "docker push ${env.REMOTE_TRACEABLE_TAG}"
 
                     script {
-                        if (env.PUBLISH_LATEST_TAG == 'true') {
+                        if (env.SHOULD_PUBLISH_LATEST_TAG == 'true') {
                             sh "docker push ${env.REMOTE_LATEST_TAG}"
                         } else {
                             echo "Skipping remote latest push because branch ${env.GIT_BRANCH_NAME} is not develop or main"
@@ -192,7 +192,7 @@ pipeline {
                 script {
                     sh "docker image inspect ${env.REMOTE_TRACEABLE_TAG} > /dev/null"
 
-                    if (env.PUBLISH_LATEST_TAG == 'true') {
+                    if (env.SHOULD_PUBLISH_LATEST_TAG == 'true') {
                         sh "docker image inspect ${env.REMOTE_LATEST_TAG} > /dev/null"
                         echo "Prepared and pushed ${env.REMOTE_TRACEABLE_TAG} and ${env.REMOTE_LATEST_TAG}"
                     } else {
