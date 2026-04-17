@@ -167,6 +167,22 @@ class TransactionControllerWebMvcTest {
         verify(transactionService).withdraw(org.mockito.ArgumentMatchers.any(CreateWithdrawalRequest.class), eq(IDEMPOTENCY_KEY));
     }
 
+    private static CreateWithdrawalRequest withdrawalRequest() {
+        return new CreateWithdrawalRequest(
+                UUID.fromString("11111111-1111-1111-1111-111111111111"),
+                new BigDecimal("25.50"),
+                Currency.CAD
+        );
+    }
+
+    private static CreateDepositRequest depositRequest() {
+        return new CreateDepositRequest(
+                UUID.fromString("22222222-2222-2222-2222-222222222222"),
+                new BigDecimal("25.50"),
+                Currency.CAD
+        );
+    }
+
     private static CreateTransferRequest transferRequest() {
         return new CreateTransferRequest(
                 UUID.fromString("11111111-1111-1111-1111-111111111111"),
@@ -185,22 +201,6 @@ class TransactionControllerWebMvcTest {
                 request.getCurrency(),
                 TransactionType.TRANSFER,
                 Instant.parse("2026-04-15T12:00:00Z")
-        );
-    }
-
-    private static CreateDepositRequest depositRequest() {
-        return new CreateDepositRequest(
-                UUID.fromString("22222222-2222-2222-2222-222222222222"),
-                new BigDecimal("25.50"),
-                Currency.CAD
-        );
-    }
-
-    private static CreateWithdrawalRequest withdrawalRequest() {
-        return new CreateWithdrawalRequest(
-                UUID.fromString("11111111-1111-1111-1111-111111111111"),
-                new BigDecimal("25.50"),
-                Currency.CAD
         );
     }
 }
