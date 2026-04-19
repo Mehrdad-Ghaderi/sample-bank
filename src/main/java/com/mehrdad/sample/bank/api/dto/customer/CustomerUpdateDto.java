@@ -22,5 +22,6 @@ public class CustomerUpdateDto {
             message = "Invalid phone number format"
     )
     private String phoneNumber;
-    private Status Status;
+
+    private Status status;
 }

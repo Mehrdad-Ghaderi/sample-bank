@@ -4,6 +4,7 @@ import com.mehrdad.sample.bank.api.ApiPaths;
 import com.mehrdad.sample.bank.api.dto.StatusUpdateDto;
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.domain.service.AccountService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,7 +49,7 @@ public class AccountController {
      */
     @PatchMapping(ID_PATH)
     public ResponseEntity<AccountDto> updateStatus(@PathVariable UUID id,
-                             @RequestBody StatusUpdateDto statusUpdateDto) {
+                                                   @Valid @RequestBody StatusUpdateDto statusUpdateDto) {
         AccountDto accountDto = accountService.updateStatus(id, statusUpdateDto);
 
         return ResponseEntity.ok(accountDto);

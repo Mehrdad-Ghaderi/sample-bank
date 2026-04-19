@@ -9,7 +9,6 @@ import com.mehrdad.sample.bank.api.dto.customer.CustomerUpdateDto;
 import com.mehrdad.sample.bank.domain.service.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -25,7 +24,6 @@ import java.util.UUID;
 /**
  * Created by Mehrdad Ghaderi
  */
-@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(ApiPaths.API_BASE_PATH + ApiPaths.CUSTOMERS)
@@ -42,12 +40,12 @@ public class CustomerController {
     }
 
     @GetMapping(CUSTOMER_ID_PATH)
-    public CustomerDto getCustomerById(@PathVariable UUID customerId) {
-        return customerService.getCustomerById(customerId);
+    public ResponseEntity<CustomerDto> getCustomerById(@PathVariable UUID customerId) {
+        return ResponseEntity.ok(customerService.getCustomerById(customerId));
     }
 
     @PostMapping
-    public ResponseEntity<CustomerDto> createCustomer(@RequestBody CustomerCreateDto customerCreateDto) {
+    public ResponseEntity<CustomerDto> createCustomer(@Valid @RequestBody CustomerCreateDto customerCreateDto) {
         CustomerDto savedCustomerDto = customerService.createCustomer(customerCreateDto);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -64,6 +62,7 @@ public class CustomerController {
     }
 
     @PostMapping(CUSTOMER_ID_PATH)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void activateCustomer(@PathVariable UUID customerId) {
         customerService.activateCustomer(customerId);
     }
