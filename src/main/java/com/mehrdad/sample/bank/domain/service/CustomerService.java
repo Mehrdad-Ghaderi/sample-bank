@@ -28,7 +28,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -57,10 +56,8 @@ public class CustomerService {
 
     public CustomerDto createCustomer(CustomerCreateDto customerCreateDto) {
 
-        // normalize phone number
         String normalizedPhoneNumber = PhoneNumberNormalizer.normalizePhoneNumber(
-                customerCreateDto.getPhoneNumber()
-        );
+                customerCreateDto.getPhoneNumber());
 
         if (customerRepository.findByPhoneNumber(normalizedPhoneNumber).isPresent()) {
             throw new CustomerAlreadyExistException(normalizedPhoneNumber);
@@ -119,11 +116,6 @@ public class CustomerService {
             }
             foundCustomer.setPhoneNumber(normalizedPhoneNumber);
         }
-        // update status if value provided
-        if (customerUpdateDto.getStatus() != null) {
-            foundCustomer.setStatus(customerUpdateDto.getStatus());
-        }
-
         return customerMapper.toCustomerDto(foundCustomer);
         } catch (OptimisticLockingFailureException ex) {
             throw new ConcurrentUpdateException("Customer was updated concurrently. Please retry.", ex);
@@ -142,8 +134,7 @@ public class CustomerService {
         AccountEntity newAccount = new AccountEntity();
         newAccount.setNumber(AccountNumberGenerator.generate(foundCustomer));
 
-        // Set currency (default CAD)
-        newAccount.setCurrency(Optional.ofNullable(accountCreateDto.getCurrency()).orElse(Currency.CAD));
+        newAccount.setCurrency(accountCreateDto.getCurrency());
 
         foundCustomer.addAccount(newAccount);
 
@@ -159,7 +150,7 @@ public class CustomerService {
     }
 
     @Transactional(readOnly = true)
-    public List<AccountDto> getAccountByCustomerId(UUID customerId) {
+    public List<AccountDto> getCustomerAccounts(UUID customerId) {
 
         CustomerEntity foundCustomer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException(customerId));

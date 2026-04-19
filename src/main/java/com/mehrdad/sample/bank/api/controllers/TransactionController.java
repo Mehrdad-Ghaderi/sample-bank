@@ -24,7 +24,8 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     @GetMapping
-    public ResponseEntity<Page<TransactionDto>> getTransaction(@PageableDefault(size = 5, sort = "transactionTime", direction = Sort.Direction.DESC) Pageable pageable) {
+    public ResponseEntity<Page<TransactionDto>> getTransactions(
+            @PageableDefault(size = 5, sort = "transactionTime", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(transactionService.getTransactions(pageable));
     }
 

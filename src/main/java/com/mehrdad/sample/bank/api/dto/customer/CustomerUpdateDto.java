@@ -1,6 +1,5 @@
 package com.mehrdad.sample.bank.api.dto.customer;
 
-import com.mehrdad.sample.bank.domain.entity.Status;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -22,5 +21,4 @@ public class CustomerUpdateDto {
             message = "Invalid phone number format"
     )
     private String phoneNumber;
-    private Status Status;
 }

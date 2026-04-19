@@ -1,6 +1,6 @@
 package com.mehrdad.sample.bank.domain.service;
 
-import com.mehrdad.sample.bank.api.dto.StatusUpdateDto;
+import com.mehrdad.sample.bank.api.dto.account.AccountStatusUpdateDto;
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.domain.entity.AccountEntity;
 import com.mehrdad.sample.bank.domain.entity.Status;
@@ -41,14 +41,14 @@ class AccountServiceTest {
     private AccountService accountService;
 
     @Test
-    void updateStatusShouldChangeAccountStatusAndReturnMappedDto() {
+    void updateAccountStatusShouldChangeAccountStatusAndReturnMappedDto() {
         UUID accountId = UUID.randomUUID();
 
         AccountEntity account = new AccountEntity();
         account.setId(accountId);
         account.setStatus(Status.ACTIVE);
 
-        StatusUpdateDto statusUpdateDto = new StatusUpdateDto(Status.SUSPENDED);
+        AccountStatusUpdateDto statusUpdateDto = new AccountStatusUpdateDto(Status.SUSPENDED);
 
         AccountDto mappedDto = new AccountDto();
         mappedDto.setId(accountId);
@@ -57,7 +57,7 @@ class AccountServiceTest {
         when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
         when(accountMapper.toAccountDto(account)).thenReturn(mappedDto);
 
-        AccountDto result = accountService.updateStatus(accountId, statusUpdateDto);
+        AccountDto result = accountService.updateAccountStatus(accountId, statusUpdateDto);
 
         assertEquals(Status.SUSPENDED, account.getStatus());
         assertEquals(Status.SUSPENDED, result.getStatus());
@@ -67,20 +67,20 @@ class AccountServiceTest {
     }
 
     @Test
-    void updateStatusShouldThrowWhenStatusIsAlreadySet() {
+    void updateAccountStatusShouldThrowWhenStatusIsAlreadySet() {
         UUID accountId = UUID.randomUUID();
 
         AccountEntity account = new AccountEntity();
         account.setId(accountId);
         account.setStatus(Status.ACTIVE);
 
-        StatusUpdateDto statusUpdateDto = new StatusUpdateDto(Status.ACTIVE);
+        AccountStatusUpdateDto statusUpdateDto = new AccountStatusUpdateDto(Status.ACTIVE);
 
         when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
 
         assertThrows(
                 AccountStatusAlreadySetException.class,
-                () -> accountService.updateStatus(accountId, statusUpdateDto)
+                () -> accountService.updateAccountStatus(accountId, statusUpdateDto)
         );
 
         verify(accountRepository).findById(accountId);
@@ -89,15 +89,15 @@ class AccountServiceTest {
     }
 
     @Test
-    void updateStatusShouldThrowWhenAccountDoesNotExist() {
+    void updateAccountStatusShouldThrowWhenAccountDoesNotExist() {
         UUID accountId = UUID.randomUUID();
-        StatusUpdateDto statusUpdateDto = new StatusUpdateDto(Status.SUSPENDED);
+        AccountStatusUpdateDto statusUpdateDto = new AccountStatusUpdateDto(Status.SUSPENDED);
 
         when(accountRepository.findById(accountId)).thenReturn(Optional.empty());
 
         assertThrows(
                 AccountNotFoundException.class,
-                () -> accountService.updateStatus(accountId, statusUpdateDto)
+                () -> accountService.updateAccountStatus(accountId, statusUpdateDto)
         );
 
         verify(accountRepository).findById(accountId);

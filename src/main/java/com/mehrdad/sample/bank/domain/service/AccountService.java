@@ -1,6 +1,6 @@
 package com.mehrdad.sample.bank.domain.service;
 
-import com.mehrdad.sample.bank.api.dto.StatusUpdateDto;
+import com.mehrdad.sample.bank.api.dto.account.AccountStatusUpdateDto;
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.domain.entity.AccountEntity;
 import com.mehrdad.sample.bank.domain.entity.Status;
@@ -32,8 +32,8 @@ public class AccountService {
     }
 
     @Transactional
-    public AccountDto updateStatus(UUID id, StatusUpdateDto statusUpdateDto) {
-        AccountEntity foundAccount = loadAccountById(id);
+    public AccountDto updateAccountStatus(UUID accountId, AccountStatusUpdateDto statusUpdateDto) {
+        AccountEntity foundAccount = loadAccountById(accountId);
 
         Status newStatus = statusUpdateDto.getStatus();
         Status currentStatus = foundAccount.getStatus();
