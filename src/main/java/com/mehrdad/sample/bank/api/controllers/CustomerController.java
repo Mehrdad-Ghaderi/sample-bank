@@ -47,14 +47,12 @@ public class CustomerController {
     }
 
     @PostMapping
-    public ResponseEntity<CustomerDto> createCustomer(@Valid @RequestBody CustomerCreateDto customerCreateDto) {
-        CustomerDto savedCustomerDto = customerService.createCustomer(customerCreateDto);
+    public ResponseEntity<CustomerDto> createCustomer(
+            @Valid @RequestBody CustomerCreateDto customerCreateDto) {
+        CustomerDto createdCustomer = customerService.createCustomer(customerCreateDto);
 
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(savedCustomerDto.getId())
-                .toUri();
-        return ResponseEntity.created(location).body(savedCustomerDto);
+        URI location = buildResourceLocation(ApiPaths.CUSTOMER_RESOURCE, createdCustomer.getId());
+        return ResponseEntity.created(location).body(createdCustomer);
     }
 
     @DeleteMapping(CUSTOMER_RESOURCE_PATH)
@@ -85,11 +83,7 @@ public class CustomerController {
 
         AccountDto createdAccount = customerService.createAccount(customerId, accountCreateDto);
 
-        URI location = ServletUriComponentsBuilder
-                .fromCurrentContextPath()
-                .path(ApiPaths.ACCOUNT_RESOURCE)
-                .buildAndExpand(createdAccount.getId())
-                .toUri();
+        URI location = buildResourceLocation(ApiPaths.ACCOUNT_RESOURCE, createdAccount.getId());
 
         return ResponseEntity
                 .created(location)
@@ -100,5 +94,13 @@ public class CustomerController {
     public ResponseEntity<List<AccountDto>> getAccountByCustomerId(@PathVariable UUID customerId) {
         List<AccountDto> accounts = customerService.getAccountByCustomerId(customerId);
         return ResponseEntity.ok(accounts);
+    }
+
+    private static URI buildResourceLocation(String resourcePath, Object... uriVariables) {
+        return ServletUriComponentsBuilder
+                .fromCurrentContextPath()
+                .path(resourcePath)
+                .buildAndExpand(uriVariables)
+                .toUri();
     }
 }
