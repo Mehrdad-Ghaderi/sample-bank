@@ -13,7 +13,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -39,6 +42,38 @@ class AccountServiceTest {
 
     @InjectMocks
     private AccountService accountService;
+
+    @Test
+    void getAccountsShouldSearchByTrimmedAccountNumber() {
+        String accountNumber = "2026-101-000046-001";
+        PageRequest pageable = PageRequest.of(0, 5);
+        AccountEntity account = new AccountEntity();
+        AccountDto accountDto = new AccountDto();
+
+        when(accountRepository.searchAccounts(accountNumber, pageable))
+                .thenReturn(new PageImpl<>(List.of(account)));
+        when(accountMapper.toAccountDto(account)).thenReturn(accountDto);
+
+        var result = accountService.getAccounts("  " + accountNumber + "  ", pageable);
+
+        assertEquals(List.of(accountDto), result.getContent());
+        verify(accountRepository).searchAccounts(accountNumber, pageable);
+        verify(accountMapper).toAccountDto(account);
+    }
+
+    @Test
+    void getAccountsShouldTreatBlankNumberAsNoNumberFilter() {
+        PageRequest pageable = PageRequest.of(0, 5);
+
+        when(accountRepository.searchAccounts(null, pageable))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        var result = accountService.getAccounts("   ", pageable);
+
+        assertEquals(List.of(), result.getContent());
+        verify(accountRepository).searchAccounts(null, pageable);
+        verifyNoInteractions(accountMapper);
+    }
 
     @Test
     void updateAccountStatusShouldChangeAccountStatusAndReturnMappedDto() {

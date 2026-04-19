@@ -45,8 +45,10 @@ public class TransactionService {
     private final IdempotencyRecordRepository idempotencyRecordRepository;
     private final TransactionMapper transactionMapper;
 
-    public Page<TransactionDto> getTransactions(Pageable pageable) {
-        return transactionRepository.findAll(pageable).map(transactionMapper::toTransactionDto);
+    @Transactional(readOnly = true)
+    public Page<TransactionDto> getTransactions(String accountNumber, Pageable pageable) {
+        return transactionRepository.searchTransactions(normalizeOptionalAccountNumber(accountNumber), pageable)
+                .map(transactionMapper::toTransactionDto);
     }
 
     @Transactional
@@ -337,6 +339,13 @@ public class TransactionService {
         if (account.getAccountRole() != AccountRole.BANK_TREASURY) {
             throw new IllegalTransactionTypeException(message);
         }
+    }
+
+    private String normalizeOptionalAccountNumber(String accountNumber) {
+        if (accountNumber == null || accountNumber.isBlank()) {
+            return null;
+        }
+        return accountNumber.trim();
     }
 
     private record LockedAccounts(AccountEntity sender, AccountEntity receiver) {

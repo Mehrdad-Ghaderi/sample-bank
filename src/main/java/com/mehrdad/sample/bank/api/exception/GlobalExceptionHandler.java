@@ -167,22 +167,6 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
-    @ExceptionHandler(CustomerNameAlreadyExistsException.class)
-    public ResponseEntity<ApiErrorResponse> handleCustomerNameExists(
-            CustomerNameAlreadyExistsException ex,
-            HttpServletRequest request
-    ) {
-        ApiErrorResponse error = new ApiErrorResponse(
-                HttpStatus.CONFLICT.value(),
-                "CUSTOMER_NAME_ALREADY_EXISTS",
-                ex.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
-        );
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
-    }
-
     @ExceptionHandler(InvalidPhoneNumberException.class)
     public ResponseEntity<ApiErrorResponse> handleInvalidPhoneNumber(
 

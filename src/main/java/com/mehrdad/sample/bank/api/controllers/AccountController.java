@@ -1,8 +1,8 @@
 package com.mehrdad.sample.bank.api.controllers;
 
 import com.mehrdad.sample.bank.api.ApiPaths;
-import com.mehrdad.sample.bank.api.dto.account.AccountStatusUpdateDto;
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
+import com.mehrdad.sample.bank.api.dto.account.AccountStatusUpdateDto;
 import com.mehrdad.sample.bank.domain.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,13 +28,11 @@ public class AccountController {
 
     private final AccountService accountService;
 
-    /**
-     * get all accounts default page size 5
-     */
     @GetMapping
     public ResponseEntity<Page<AccountDto>> getAccounts(
+            @RequestParam(required = false) String number,
             @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(accountService.getAccounts(pageable));
+        return ResponseEntity.ok(accountService.getAccounts(number, pageable));
     }
 
     @GetMapping(ACCOUNT_RESOURCE_PATH)
@@ -43,9 +41,6 @@ public class AccountController {
         return ResponseEntity.ok(accountDto);
     }
 
-    /**
-     * update the status of an account
-     */
     @PatchMapping(ACCOUNT_RESOURCE_PATH)
     public ResponseEntity<AccountDto> updateAccountStatus(@PathVariable UUID accountId,
                                                           @Valid @RequestBody AccountStatusUpdateDto statusUpdateDto) {
@@ -53,5 +48,4 @@ public class AccountController {
 
         return ResponseEntity.ok(accountDto);
     }
-
 }

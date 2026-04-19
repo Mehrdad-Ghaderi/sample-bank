@@ -7,8 +7,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
-import java.util.List;
-
 /**
  * Created by Mehrdad Ghaderi
  */
@@ -26,12 +24,5 @@ public interface CustomerMapper {
     @Mapping(target = "updatedAt", ignore = true)
     CustomerEntity toCustomerEntity(CustomerCreateDto dto);
 
-
     CustomerDto toCustomerDto(CustomerEntity entity);
-
-
-    List<CustomerDto> toCustomerDtoList(List<CustomerEntity> entities);
-
-    List<CustomerEntity> toCustomerEntityList(List<CustomerDto> dtos);
-
 }

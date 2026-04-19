@@ -39,8 +39,10 @@ public class CustomerController {
 
     @GetMapping
     public ResponseEntity<Page<CustomerDto>> getCustomers(
+            @RequestParam(required = false) Integer businessId,
+            @RequestParam(required = false) String phoneNumber,
             @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(customerService.getCustomers(pageable));
+        return ResponseEntity.ok(customerService.getCustomers(businessId, phoneNumber, pageable));
     }
 
     @GetMapping(CUSTOMER_RESOURCE_PATH)
