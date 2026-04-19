@@ -23,8 +23,7 @@ import java.util.UUID;
 @RequestMapping(ApiPaths.API_BASE_PATH + ApiPaths.ACCOUNTS)
 public class AccountController {
 
-    public static final String ACCOUNT_ID_PATH = ApiPaths.API_BASE_PATH + ApiPaths.ACCOUNTS + "/{id}";
-    private static final String ID_PATH = "/{id}";
+    private static final String ACCOUNT_RESOURCE_PATH = "/{accountId}";
 
     private final AccountService accountService;
 
@@ -38,19 +37,19 @@ public class AccountController {
         return ResponseEntity.ok(accountService.getAccounts(pageable));
     }
 
-    @GetMapping(ID_PATH)
-    public ResponseEntity<AccountDto> getAccountById(@PathVariable UUID id) {
-        AccountDto accountDto = accountService.getAccountById(id);
+    @GetMapping(ACCOUNT_RESOURCE_PATH)
+    public ResponseEntity<AccountDto> getAccountById(@PathVariable UUID accountId) {
+        AccountDto accountDto = accountService.getAccountById(accountId);
         return ResponseEntity.ok(accountDto);
     }
 
     /**
      * update the status of an account
      */
-    @PatchMapping(ID_PATH)
-    public ResponseEntity<AccountDto> updateStatus(@PathVariable UUID id,
+    @PatchMapping(ACCOUNT_RESOURCE_PATH)
+    public ResponseEntity<AccountDto> updateStatus(@PathVariable UUID accountId,
                                                    @Valid @RequestBody StatusUpdateDto statusUpdateDto) {
-        AccountDto accountDto = accountService.updateStatus(id, statusUpdateDto);
+        AccountDto accountDto = accountService.updateStatus(accountId, statusUpdateDto);
 
         return ResponseEntity.ok(accountDto);
     }
