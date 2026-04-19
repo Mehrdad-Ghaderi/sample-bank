@@ -25,8 +25,9 @@ public class TransactionController {
 
     @GetMapping
     public ResponseEntity<Page<TransactionDto>> getTransactions(
+            @RequestParam(required = false) String accountNumber,
             @PageableDefault(size = 5, sort = "transactionTime", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(transactionService.getTransactions(pageable));
+        return ResponseEntity.ok(transactionService.getTransactions(accountNumber, pageable));
     }
 
     @PostMapping("/transfers")
