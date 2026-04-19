@@ -52,7 +52,7 @@ class TransactionControllerWebMvcTest {
 
     @Test
     void transferRequiresAuthentication() throws Exception {
-        CreateTransferRequest request = transferRequest();
+        CreateTransferRequest request = buildTransferRequest();
 
         mockMvc.perform(post(TRANSACTIONS_PATH + "/transfers")
                         .header("Idempotency-Key", IDEMPOTENCY_KEY)
@@ -65,7 +65,7 @@ class TransactionControllerWebMvcTest {
 
     @Test
     void transferRequiresIdempotencyKeyHeader() throws Exception {
-        CreateTransferRequest request = transferRequest();
+        CreateTransferRequest request = buildTransferRequest();
 
         mockMvc.perform(post(TRANSACTIONS_PATH + "/transfers")
                         .header("Authorization", BASIC_AUTH)
@@ -82,8 +82,8 @@ class TransactionControllerWebMvcTest {
 
     @Test
     void transferPassesRequestAndIdempotencyKeyToService() throws Exception {
-        CreateTransferRequest request = transferRequest();
-        TransactionDto response = transactionResponse(request);
+        CreateTransferRequest request = buildTransferRequest();
+        TransactionDto response = buildTransferResponse(request);
 
         when(transactionService.transfer(org.mockito.ArgumentMatchers.any(CreateTransferRequest.class), eq(IDEMPOTENCY_KEY)))
                 .thenReturn(response);
@@ -113,7 +113,7 @@ class TransactionControllerWebMvcTest {
 
     @Test
     void depositPassesRequestAndIdempotencyKeyToService() throws Exception {
-        CreateDepositRequest request = depositRequest();
+        CreateDepositRequest request = buildDepositRequest();
         TransactionDto response = new TransactionDto(
                 UUID.fromString("44444444-4444-4444-4444-444444444444"),
                 UUID.fromString("99999999-9999-9999-9999-999999999999"),
@@ -141,7 +141,7 @@ class TransactionControllerWebMvcTest {
 
     @Test
     void withdrawalPassesRequestAndIdempotencyKeyToService() throws Exception {
-        CreateWithdrawalRequest request = withdrawalRequest();
+        CreateWithdrawalRequest request = buildWithdrawalRequest();
         TransactionDto response = new TransactionDto(
                 UUID.fromString("55555555-5555-5555-5555-555555555555"),
                 request.getSenderAccountId(),
@@ -167,7 +167,7 @@ class TransactionControllerWebMvcTest {
         verify(transactionService).withdraw(org.mockito.ArgumentMatchers.any(CreateWithdrawalRequest.class), eq(IDEMPOTENCY_KEY));
     }
 
-    private static CreateWithdrawalRequest withdrawalRequest() {
+    private static CreateWithdrawalRequest buildWithdrawalRequest() {
         return new CreateWithdrawalRequest(
                 UUID.fromString("11111111-1111-1111-1111-111111111111"),
                 new BigDecimal("25.50"),
@@ -175,7 +175,7 @@ class TransactionControllerWebMvcTest {
         );
     }
 
-    private static CreateDepositRequest depositRequest() {
+    private static CreateDepositRequest buildDepositRequest() {
         return new CreateDepositRequest(
                 UUID.fromString("22222222-2222-2222-2222-222222222222"),
                 new BigDecimal("25.50"),
@@ -183,7 +183,7 @@ class TransactionControllerWebMvcTest {
         );
     }
 
-    private static CreateTransferRequest transferRequest() {
+    private static CreateTransferRequest buildTransferRequest() {
         return new CreateTransferRequest(
                 UUID.fromString("11111111-1111-1111-1111-111111111111"),
                 UUID.fromString("22222222-2222-2222-2222-222222222222"),
@@ -192,7 +192,7 @@ class TransactionControllerWebMvcTest {
         );
     }
 
-    private static TransactionDto transactionResponse(CreateTransferRequest request) {
+    private static TransactionDto buildTransferResponse(CreateTransferRequest request) {
         return new TransactionDto(
                 UUID.fromString("33333333-3333-3333-3333-333333333333"),
                 request.getSenderAccountId(),

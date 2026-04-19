@@ -66,7 +66,7 @@ class AccountControllerWebMvcTest {
     @Test
     void getAccountsSearchesByAccountNumber() throws Exception {
         String accountNumber = "2026-101-000046-001";
-        AccountDto account = accountDto(accountNumber);
+        AccountDto account = buildAccountDto(accountNumber);
 
         when(accountService.getAccounts(eq(accountNumber), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(account)));
@@ -91,7 +91,7 @@ class AccountControllerWebMvcTest {
 
     @Test
     void getAccountByIdReturnsAccount() throws Exception {
-        AccountDto account = accountDto("2026-101-000046-001");
+        AccountDto account = buildAccountDto("2026-101-000046-001");
 
         when(accountService.getAccountById(account.getId())).thenReturn(account);
 
@@ -109,7 +109,7 @@ class AccountControllerWebMvcTest {
     void updateAccountStatusPassesRequestToService() throws Exception {
         UUID accountId = UUID.fromString("11111111-1111-1111-1111-111111111111");
         AccountStatusUpdateDto request = new AccountStatusUpdateDto(Status.SUSPENDED);
-        AccountDto response = accountDto("2026-101-000046-001");
+        AccountDto response = buildAccountDto("2026-101-000046-001");
         response.setId(accountId);
         response.setStatus(Status.SUSPENDED);
 
@@ -147,7 +147,7 @@ class AccountControllerWebMvcTest {
         verifyNoInteractions(accountService);
     }
 
-    private static AccountDto accountDto(String accountNumber) {
+    private static AccountDto buildAccountDto(String accountNumber) {
         return new AccountDto(
                 UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
                 accountNumber,
