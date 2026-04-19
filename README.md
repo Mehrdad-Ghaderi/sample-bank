@@ -14,6 +14,11 @@ The bank treasury account is an internal system account identified by `AccountRo
 Clients do not need to supply that account id for deposits or withdrawals. The service resolves the
 correct treasury account by currency and keeps that routing rule inside the backend.
 
+Transaction command endpoints require an `Idempotency-Key` HTTP header. This makes client retries
+safe for money movement: retrying the same command with the same key returns the original
+transaction instead of creating a second one. Reusing the same key with a different request is
+rejected as a conflict.
+
 ## Stack
 
 - Java 21
@@ -31,6 +36,15 @@ correct treasury account by currency and keeps that routing rule inside the back
 - `docker`: container runtime against `postgres:5432`
 - `test`: integration tests
 - `prod`: environment-driven runtime configuration
+
+## Database Migrations
+
+Database schema changes are managed with Liquibase. The master changelog lives at
+[src/main/resources/db/changelog/db.changelog-master.yaml](C:/Users/mehrd/work/sample-bank/src/main/resources/db/changelog/db.changelog-master.yaml).
+
+Hibernate validates the schema at startup, while Liquibase owns creating and evolving database
+objects. This keeps schema changes versioned, repeatable, and safer than relying on automatic
+Hibernate schema updates in deployed environments.
 
 ## Local Development
 
