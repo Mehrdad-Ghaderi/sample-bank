@@ -226,7 +226,6 @@ class CustomerServiceTest {
         CustomerUpdateDto customerUpdateDto = new CustomerUpdateDto();
         customerUpdateDto.setName("Bob");
         customerUpdateDto.setPhoneNumber("(647) 555-1234");
-        customerUpdateDto.setStatus(Status.SUSPENDED);
 
         CustomerDto expectedCustomer = customerDto(customerId);
 
@@ -239,7 +238,7 @@ class CustomerServiceTest {
         assertEquals(expectedCustomer, result);
         assertEquals("Bob", existingCustomer.getName());
         assertEquals("+16475551234", existingCustomer.getPhoneNumber());
-        assertEquals(Status.SUSPENDED, existingCustomer.getStatus());
+        assertEquals(Status.ACTIVE, existingCustomer.getStatus());
         verify(customerRepository).findById(customerId);
         verify(customerRepository).existsByPhoneNumber("+16475551234");
         verify(customerMapper).toCustomerDto(existingCustomer);
@@ -279,7 +278,7 @@ class CustomerServiceTest {
     }
 
     @Test
-    void createAccountShouldDefaultCurrencyToCadAndReturnMappedAccount() {
+    void createAccountShouldUseRequestedCurrencyAndReturnMappedAccount() {
         UUID customerId = UUID.randomUUID();
         CustomerEntity customer = customerEntity(44);
         customer.setId(customerId);
@@ -291,7 +290,9 @@ class CustomerServiceTest {
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
         when(accountMapper.toAccountDto(any(AccountEntity.class))).thenReturn(expectedAccount);
 
-        AccountDto result = customerService.createAccount(customerId, new AccountCreateDto());
+        AccountCreateDto accountCreateDto = new AccountCreateDto(Currency.CAD);
+
+        AccountDto result = customerService.createAccount(customerId, accountCreateDto);
 
         ArgumentCaptor<AccountEntity> accountCaptor = ArgumentCaptor.forClass(AccountEntity.class);
 

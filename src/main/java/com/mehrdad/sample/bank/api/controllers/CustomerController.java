@@ -31,6 +31,8 @@ import java.util.UUID;
 public class CustomerController {
 
     private static final String CUSTOMER_RESOURCE_PATH = "/{customerId}";
+    private static final String CUSTOMER_ACTIVATION_PATH = CUSTOMER_RESOURCE_PATH + "/activation";
+    private static final String CUSTOMER_DEACTIVATION_PATH = CUSTOMER_RESOURCE_PATH + "/deactivation";
     private static final String CUSTOMER_ACCOUNTS_COLLECTION_PATH = "/{customerId}/accounts";
 
     private final CustomerService customerService;
@@ -55,13 +57,13 @@ public class CustomerController {
         return ResponseEntity.created(location).body(createdCustomer);
     }
 
-    @DeleteMapping(CUSTOMER_RESOURCE_PATH)
+    @PatchMapping(CUSTOMER_DEACTIVATION_PATH)
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCustomerById(@PathVariable UUID customerId) {
+    public void deactivateCustomer(@PathVariable UUID customerId) {
         customerService.deactivateCustomer(customerId);
     }
 
-    @PostMapping(CUSTOMER_RESOURCE_PATH)
+    @PatchMapping(CUSTOMER_ACTIVATION_PATH)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void activateCustomer(@PathVariable UUID customerId) {
         customerService.activateCustomer(customerId);
@@ -70,16 +72,13 @@ public class CustomerController {
     @PatchMapping(CUSTOMER_RESOURCE_PATH)
     public ResponseEntity<CustomerDto> updateCustomer(@PathVariable UUID customerId,
                                                       @Valid @RequestBody CustomerUpdateDto customerUpdateDto) {
-        CustomerDto updated = customerService.updateCustomer(customerId, customerUpdateDto);
-        return ResponseEntity.ok(updated);
+        CustomerDto updatedCustomer = customerService.updateCustomer(customerId, customerUpdateDto);
+        return ResponseEntity.ok(updatedCustomer);
     }
 
-    /**
-     * create an accounts belonging to a customer
-     */
     @PostMapping(CUSTOMER_ACCOUNTS_COLLECTION_PATH)
-    public ResponseEntity<AccountDto> createAccountByCustomerId(@PathVariable("customerId") UUID customerId,
-                                                                @RequestBody(required = false) AccountCreateDto accountCreateDto) {
+    public ResponseEntity<AccountDto> createCustomerAccount(@PathVariable UUID customerId,
+                                                            @Valid @RequestBody AccountCreateDto accountCreateDto) {
 
         AccountDto createdAccount = customerService.createAccount(customerId, accountCreateDto);
 
