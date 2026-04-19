@@ -69,15 +69,15 @@ class CustomerControllerWebMvcTest {
 
     @Test
     void getCustomersSearchesByBusinessIdAndPhoneNumber() throws Exception {
-        CustomerDto customer = customerDto();
+        CustomerDto customer = buildCustomerDto();
 
-        when(customerService.getCustomers(eq(1001), eq("4165551234"), any(Pageable.class)))
+        when(customerService.getCustomers(eq(1001), eq("5554443322"), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(customer)));
 
         mockMvc.perform(get(CUSTOMERS_PATH)
                         .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH)
                         .param("businessId", "1001")
-                        .param("phoneNumber", "4165551234"))
+                        .param("phoneNumber", "5554443322"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(customer.getId().toString()))
                 .andExpect(jsonPath("$.content[0].businessId").value(1001))
@@ -86,14 +86,14 @@ class CustomerControllerWebMvcTest {
                 .andExpect(jsonPath("$.content[0].status").value("ACTIVE"));
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        verify(customerService).getCustomers(eq(1001), eq("4165551234"), pageableCaptor.capture());
+        verify(customerService).getCustomers(eq(1001), eq("5554443322"), pageableCaptor.capture());
         assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(5);
         assertThat(pageableCaptor.getValue().getSort().getOrderFor("createdAt")).isNotNull();
     }
 
     @Test
     void getCustomerByIdReturnsCustomer() throws Exception {
-        CustomerDto customer = customerDto();
+        CustomerDto customer = buildCustomerDto();
 
         when(customerService.getCustomerById(customer.getId())).thenReturn(customer);
 
@@ -109,16 +109,13 @@ class CustomerControllerWebMvcTest {
 
     @Test
     void createCustomerReturnsCreatedWithLocationHeader() throws Exception {
-        CustomerCreateDto customerCreateDto = new CustomerCreateDto();
-        customerCreateDto.setName("John Doe");
-        customerCreateDto.setPhoneNumber("5554443322");
+        CustomerCreateDto customerCreateDto = buildCustomerCreateDto();
 
         UUID customerId = UUID.randomUUID();
-        CustomerDto savedCustomerDto = new CustomerDto.Builder()
-                .id(customerId)
-                .name(customerCreateDto.getName())
-                .phoneNumber(customerCreateDto.getPhoneNumber())
-                .build();
+        CustomerDto savedCustomerDto = buildCustomerDto();
+        savedCustomerDto.setId(customerId);
+        savedCustomerDto.setName(customerCreateDto.getName());
+        savedCustomerDto.setPhoneNumber(customerCreateDto.getPhoneNumber());
 
         when(customerService.createCustomer(any(CustomerCreateDto.class))).thenReturn(savedCustomerDto);
 
@@ -139,8 +136,8 @@ class CustomerControllerWebMvcTest {
 
     @Test
     void createCustomerRequiresName() throws Exception {
-        CustomerCreateDto customerCreateDto = new CustomerCreateDto();
-        customerCreateDto.setPhoneNumber("5554443322");
+        CustomerCreateDto customerCreateDto = buildCustomerCreateDto();
+        customerCreateDto.setName(null);
 
         mockMvc.perform(post(CUSTOMERS_PATH)
                         .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH)
@@ -159,7 +156,7 @@ class CustomerControllerWebMvcTest {
     void updateCustomerPassesRequestToService() throws Exception {
         UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
         CustomerUpdateDto request = new CustomerUpdateDto("Jane Doe", "(416) 555-9999");
-        CustomerDto response = customerDto();
+        CustomerDto response = buildCustomerDto();
         response.setId(customerId);
         response.setName(request.getName());
         response.setPhoneNumber("+14165559999");
@@ -225,7 +222,7 @@ class CustomerControllerWebMvcTest {
     void createCustomerAccountReturnsCreatedWithLocationHeader() throws Exception {
         UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
         AccountCreateDto request = new AccountCreateDto(Currency.CAD);
-        AccountDto response = accountDto("2026-101-000001-001");
+        AccountDto response = buildAccountDto("2026-101-000001-001");
 
         when(customerService.createAccount(eq(customerId), any(AccountCreateDto.class))).thenReturn(response);
 
@@ -268,8 +265,8 @@ class CustomerControllerWebMvcTest {
     @Test
     void getCustomerAccountsReturnsAccounts() throws Exception {
         UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-        AccountDto firstAccount = accountDto("2026-101-000001-001");
-        AccountDto secondAccount = accountDto("2026-101-000001-002");
+        AccountDto firstAccount = buildAccountDto("2026-101-000001-001");
+        AccountDto secondAccount = buildAccountDto("2026-101-000001-002");
 
         when(customerService.getCustomerAccounts(customerId)).thenReturn(List.of(firstAccount, secondAccount));
 
@@ -282,7 +279,14 @@ class CustomerControllerWebMvcTest {
         verify(customerService).getCustomerAccounts(customerId);
     }
 
-    private static CustomerDto customerDto() {
+    private static CustomerCreateDto buildCustomerCreateDto() {
+        CustomerCreateDto customerCreateDto = new CustomerCreateDto();
+        customerCreateDto.setName("John Doe");
+        customerCreateDto.setPhoneNumber("5554443322");
+        return customerCreateDto;
+    }
+
+    private static CustomerDto buildCustomerDto() {
         CustomerDto customer = new CustomerDto();
         customer.setId(UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"));
         customer.setBusinessId(1001);
@@ -294,7 +298,7 @@ class CustomerControllerWebMvcTest {
         return customer;
     }
 
-    private static AccountDto accountDto(String accountNumber) {
+    private static AccountDto buildAccountDto(String accountNumber) {
         return new AccountDto(
                 UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
                 accountNumber,
