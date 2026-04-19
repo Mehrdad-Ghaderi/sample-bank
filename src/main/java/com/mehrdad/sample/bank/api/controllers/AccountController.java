@@ -1,7 +1,7 @@
 package com.mehrdad.sample.bank.api.controllers;
 
 import com.mehrdad.sample.bank.api.ApiPaths;
-import com.mehrdad.sample.bank.api.dto.StatusUpdateDto;
+import com.mehrdad.sample.bank.api.dto.account.AccountStatusUpdateDto;
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.domain.service.AccountService;
 import jakarta.validation.Valid;
@@ -48,7 +48,7 @@ public class AccountController {
      */
     @PatchMapping(ACCOUNT_RESOURCE_PATH)
     public ResponseEntity<AccountDto> updateAccountStatus(@PathVariable UUID accountId,
-                                                          @Valid @RequestBody StatusUpdateDto statusUpdateDto) {
+                                                          @Valid @RequestBody AccountStatusUpdateDto statusUpdateDto) {
         AccountDto accountDto = accountService.updateAccountStatus(accountId, statusUpdateDto);
 
         return ResponseEntity.ok(accountDto);

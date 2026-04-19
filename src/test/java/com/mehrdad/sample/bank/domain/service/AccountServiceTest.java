@@ -1,6 +1,6 @@
 package com.mehrdad.sample.bank.domain.service;
 
-import com.mehrdad.sample.bank.api.dto.StatusUpdateDto;
+import com.mehrdad.sample.bank.api.dto.account.AccountStatusUpdateDto;
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.domain.entity.AccountEntity;
 import com.mehrdad.sample.bank.domain.entity.Status;
@@ -48,7 +48,7 @@ class AccountServiceTest {
         account.setId(accountId);
         account.setStatus(Status.ACTIVE);
 
-        StatusUpdateDto statusUpdateDto = new StatusUpdateDto(Status.SUSPENDED);
+        AccountStatusUpdateDto statusUpdateDto = new AccountStatusUpdateDto(Status.SUSPENDED);
 
         AccountDto mappedDto = new AccountDto();
         mappedDto.setId(accountId);
@@ -74,7 +74,7 @@ class AccountServiceTest {
         account.setId(accountId);
         account.setStatus(Status.ACTIVE);
 
-        StatusUpdateDto statusUpdateDto = new StatusUpdateDto(Status.ACTIVE);
+        AccountStatusUpdateDto statusUpdateDto = new AccountStatusUpdateDto(Status.ACTIVE);
 
         when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
 
@@ -91,7 +91,7 @@ class AccountServiceTest {
     @Test
     void updateAccountStatusShouldThrowWhenAccountDoesNotExist() {
         UUID accountId = UUID.randomUUID();
-        StatusUpdateDto statusUpdateDto = new StatusUpdateDto(Status.SUSPENDED);
+        AccountStatusUpdateDto statusUpdateDto = new AccountStatusUpdateDto(Status.SUSPENDED);
 
         when(accountRepository.findById(accountId)).thenReturn(Optional.empty());
 

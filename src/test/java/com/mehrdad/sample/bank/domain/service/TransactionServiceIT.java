@@ -141,13 +141,13 @@ class TransactionServiceIT {
 
     void createSender() {
         var senderCustomer = customerService.createCustomer(
-                new CustomerCreateDto("Alice", "1111111111", Status.ACTIVE));
+                new CustomerCreateDto("Alice", "1111111111"));
         senderAccount = customerService.createAccount(senderCustomer.getId(), new AccountCreateDto(Currency.CAD));
     }
 
     void createReceiver() {
         var receiverCustomer = customerService.createCustomer(
-                new CustomerCreateDto("Bob", "2222222222", Status.ACTIVE));
+                new CustomerCreateDto("Bob", "2222222222"));
         receiverAccount = customerService.createAccount(receiverCustomer.getId(), new AccountCreateDto(Currency.CAD));
     }
 

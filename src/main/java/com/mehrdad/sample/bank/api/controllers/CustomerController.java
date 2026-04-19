@@ -90,8 +90,8 @@ public class CustomerController {
     }
 
     @GetMapping(CUSTOMER_ACCOUNTS_COLLECTION_PATH)
-    public ResponseEntity<List<AccountDto>> getAccountByCustomerId(@PathVariable UUID customerId) {
-        List<AccountDto> accounts = customerService.getAccountByCustomerId(customerId);
+    public ResponseEntity<List<AccountDto>> getCustomerAccounts(@PathVariable UUID customerId) {
+        List<AccountDto> accounts = customerService.getCustomerAccounts(customerId);
         return ResponseEntity.ok(accounts);
     }
 

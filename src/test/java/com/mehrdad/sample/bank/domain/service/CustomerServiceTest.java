@@ -306,21 +306,21 @@ class CustomerServiceTest {
     }
 
     @Test
-    void getAccountByCustomerIdShouldThrowWhenCustomerHasNoAccounts() {
+    void getCustomerAccountsShouldThrowWhenCustomerHasNoAccounts() {
         UUID customerId = UUID.randomUUID();
         CustomerEntity customer = customerEntity(45);
         customer.setAccounts(List.of());
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
 
-        assertThrows(AccountNotFoundException.class, () -> customerService.getAccountByCustomerId(customerId));
+        assertThrows(AccountNotFoundException.class, () -> customerService.getCustomerAccounts(customerId));
 
         verify(customerRepository).findById(customerId);
         verifyNoInteractions(accountMapper);
     }
 
     @Test
-    void getAccountByCustomerIdShouldReturnMappedAccounts() {
+    void getCustomerAccountsShouldReturnMappedAccounts() {
         UUID customerId = UUID.randomUUID();
         CustomerEntity customer = customerEntity(46);
         AccountEntity firstAccount = new AccountEntity();
@@ -337,7 +337,7 @@ class CustomerServiceTest {
         when(accountMapper.toAccountDto(firstAccount)).thenReturn(firstAccountDto);
         when(accountMapper.toAccountDto(secondAccount)).thenReturn(secondAccountDto);
 
-        List<AccountDto> result = customerService.getAccountByCustomerId(customerId);
+        List<AccountDto> result = customerService.getCustomerAccounts(customerId);
 
         assertEquals(List.of(firstAccountDto, secondAccountDto), result);
         verify(customerRepository).findById(customerId);

@@ -28,7 +28,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -151,7 +150,7 @@ public class CustomerService {
     }
 
     @Transactional(readOnly = true)
-    public List<AccountDto> getAccountByCustomerId(UUID customerId) {
+    public List<AccountDto> getCustomerAccounts(UUID customerId) {
 
         CustomerEntity foundCustomer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException(customerId));

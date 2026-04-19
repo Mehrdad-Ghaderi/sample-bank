@@ -1,4 +1,4 @@
-package com.mehrdad.sample.bank.api.dto;
+package com.mehrdad.sample.bank.api.dto.account;
 
 import com.mehrdad.sample.bank.domain.entity.Status;
 import jakarta.validation.constraints.NotNull;
@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class StatusUpdateDto {
+public class AccountStatusUpdateDto {
 
     @NotNull
     private Status status;
