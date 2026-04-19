@@ -29,6 +29,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +65,39 @@ class CustomerServiceTest {
 
     @InjectMocks
     private CustomerService customerService;
+
+    @Test
+    void getCustomersShouldSearchWithBusinessIdAndNormalizedPhoneNumber() {
+        Integer businessId = 1001;
+        String rawPhoneNumber = "(416) 555-6598";
+        CustomerEntity customer = customerEntity(1001);
+        CustomerDto customerDto = customerDto(customer.getId());
+        PageRequest pageable = PageRequest.of(0, 5);
+
+        when(customerRepository.searchCustomers(businessId, "+14165556598", pageable))
+                .thenReturn(new PageImpl<>(List.of(customer)));
+        when(customerMapper.toCustomerDto(customer)).thenReturn(customerDto);
+
+        var result = customerService.getCustomers(businessId, rawPhoneNumber, pageable);
+
+        assertEquals(List.of(customerDto), result.getContent());
+        verify(customerRepository).searchCustomers(businessId, "+14165556598", pageable);
+        verify(customerMapper).toCustomerDto(customer);
+    }
+
+    @Test
+    void getCustomersShouldTreatBlankPhoneNumberAsNoPhoneFilter() {
+        PageRequest pageable = PageRequest.of(0, 5);
+
+        when(customerRepository.searchCustomers(null, null, pageable))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        var result = customerService.getCustomers(null, "   ", pageable);
+
+        assertTrue(result.isEmpty());
+        verify(customerRepository).searchCustomers(null, null, pageable);
+        verifyNoInteractions(customerMapper);
+    }
 
     @Test
     void getCustomerByIdShouldThrowWhenCustomerDoesNotExist() {

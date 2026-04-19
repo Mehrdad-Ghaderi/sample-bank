@@ -43,8 +43,11 @@ public class CustomerService {
     private final AccountMapper accountMapper;
 
     @Transactional(readOnly = true)
-    public Page<CustomerDto> getCustomers(Pageable pageable) {
-        return customerRepository.findAll(pageable).map(customerMapper::toCustomerDto);
+    public Page<CustomerDto> getCustomers(Integer businessId, String phoneNumber, Pageable pageable) {
+        String normalizedPhoneNumber = normalizeOptionalPhoneNumber(phoneNumber);
+
+        return customerRepository.searchCustomers(businessId, normalizedPhoneNumber, pageable)
+                .map(customerMapper::toCustomerDto);
     }
 
     @Transactional(readOnly = true)
@@ -68,6 +71,13 @@ public class CustomerService {
         customerEntity.setBusinessId(customerBusinessIdGenerator.getNextBusinessId());
         CustomerEntity savedCustomerEntity = customerRepository.saveAndFlush(customerEntity);
         return customerMapper.toCustomerDto(savedCustomerEntity);
+    }
+
+    private String normalizeOptionalPhoneNumber(String phoneNumber) {
+        if (phoneNumber == null || phoneNumber.isBlank()) {
+            return null;
+        }
+        return PhoneNumberNormalizer.normalizePhoneNumber(phoneNumber);
     }
 
     public void activateCustomer(UUID id) {
