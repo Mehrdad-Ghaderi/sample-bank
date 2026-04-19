@@ -37,8 +37,6 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, UUID> 
 
     boolean existsByPhoneNumber(@Pattern(regexp = "^\\+?[0-9]{10,15}$") String phoneNumber);
 
-    Optional<CustomerEntity> findByBusinessId(Integer businessId);
-
     @Query("""
             select distinct c
             from CustomerEntity c

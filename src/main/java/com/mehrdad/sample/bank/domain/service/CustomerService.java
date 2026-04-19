@@ -6,11 +6,9 @@ import com.mehrdad.sample.bank.api.dto.customer.CustomerCreateDto;
 import com.mehrdad.sample.bank.api.dto.customer.CustomerDto;
 import com.mehrdad.sample.bank.api.dto.customer.CustomerUpdateDto;
 import com.mehrdad.sample.bank.domain.entity.AccountEntity;
-import com.mehrdad.sample.bank.domain.entity.Currency;
 import com.mehrdad.sample.bank.domain.entity.CustomerEntity;
 import com.mehrdad.sample.bank.domain.entity.Status;
 import com.mehrdad.sample.bank.domain.exception.ConcurrentUpdateException;
-import com.mehrdad.sample.bank.domain.exception.account.AccountNotFoundException;
 import com.mehrdad.sample.bank.domain.exception.customer.*;
 import com.mehrdad.sample.bank.domain.mapper.AccountMapper;
 import com.mehrdad.sample.bank.domain.mapper.CustomerMapper;
@@ -18,7 +16,6 @@ import com.mehrdad.sample.bank.domain.repository.CustomerRepository;
 import com.mehrdad.sample.bank.domain.util.AccountNumberGenerator;
 import com.mehrdad.sample.bank.domain.util.CustomerBusinessIdGenerator;
 import com.mehrdad.sample.bank.domain.util.PhoneNumberNormalizer;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -51,10 +48,8 @@ public class CustomerService {
     }
 
     @Transactional(readOnly = true)
-    public CustomerDto getCustomerById(UUID businessId) {
-        return customerRepository.findById(businessId)
-                .map(customerMapper::toCustomerDto)
-                .orElseThrow(() -> new CustomerNotFoundException(businessId));
+    public CustomerDto getCustomerById(UUID customerId) {
+        return customerMapper.toCustomerDto(loadCustomerById(customerId));
     }
 
     public CustomerDto createCustomer(CustomerCreateDto customerCreateDto) {
@@ -89,8 +84,7 @@ public class CustomerService {
     }
 
     private void activateOrDeactivateCustomer(UUID id, Status status) {
-        CustomerEntity foundCustomerEntity = customerRepository.findById(id)
-                .orElseThrow(() -> new CustomerNotFoundException(id));
+        CustomerEntity foundCustomerEntity = loadCustomerById(id);
 
         if (status == Status.ACTIVE && foundCustomerEntity.getStatus() == Status.ACTIVE) {
             throw new CustomerAlreadyActiveException(id);
@@ -103,30 +97,27 @@ public class CustomerService {
         customerRepository.save(foundCustomerEntity);
     }
 
-    @Transactional
-    public CustomerDto updateCustomer(UUID customerId, @Valid CustomerUpdateDto customerUpdateDto) {
+    public CustomerDto updateCustomer(UUID customerId, CustomerUpdateDto customerUpdateDto) {
         try {
-        CustomerEntity foundCustomer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new CustomerNotFoundException(customerId));
+            CustomerEntity foundCustomer = loadCustomerById(customerId);
 
-        // update update if value exists
-        if (customerUpdateDto.getName() != null) {
-            if (foundCustomer.getName().equals(customerUpdateDto.getName())) {
-                throw new CustomerNameAlreadyExistsException(foundCustomer.getName());
+            if (customerUpdateDto.getName() != null
+                    && !customerUpdateDto.getName().equals(foundCustomer.getName())) {
+                foundCustomer.setName(customerUpdateDto.getName());
             }
-            foundCustomer.setName(customerUpdateDto.getName());
-        }
 
-        // update phone number if value provided
-        if (customerUpdateDto.getPhoneNumber() != null) {
-            String normalizedPhoneNumber = PhoneNumberNormalizer.normalizePhoneNumber(customerUpdateDto.getPhoneNumber());
-            // uniqueness check
-            if (customerRepository.existsByPhoneNumber(normalizedPhoneNumber)) {
-                throw new PhoneNumberAlreadyExists(customerUpdateDto.getPhoneNumber());
+            if (customerUpdateDto.getPhoneNumber() != null) {
+                String normalizedPhoneNumber = PhoneNumberNormalizer.normalizePhoneNumber(customerUpdateDto.getPhoneNumber());
+
+                if (!normalizedPhoneNumber.equals(foundCustomer.getPhoneNumber())) {
+                    if (customerRepository.existsByPhoneNumber(normalizedPhoneNumber)) {
+                        throw new PhoneNumberAlreadyExists(customerUpdateDto.getPhoneNumber());
+                    }
+                    foundCustomer.setPhoneNumber(normalizedPhoneNumber);
+                }
             }
-            foundCustomer.setPhoneNumber(normalizedPhoneNumber);
-        }
-        return customerMapper.toCustomerDto(foundCustomer);
+
+            return customerMapper.toCustomerDto(foundCustomer);
         } catch (OptimisticLockingFailureException ex) {
             throw new ConcurrentUpdateException("Customer was updated concurrently. Please retry.", ex);
         } catch (DataIntegrityViolationException ex) {
@@ -138,41 +129,35 @@ public class CustomerService {
 
     @Transactional
     public AccountDto createAccount(UUID customerId, AccountCreateDto accountCreateDto) {
-        CustomerEntity foundCustomer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new CustomerNotFoundException(customerId));
+        CustomerEntity foundCustomer = loadCustomerById(customerId);
 
         AccountEntity newAccount = new AccountEntity();
         newAccount.setNumber(AccountNumberGenerator.generate(foundCustomer));
-
         newAccount.setCurrency(accountCreateDto.getCurrency());
 
         foundCustomer.addAccount(newAccount);
-
         customerRepository.saveAndFlush(foundCustomer);
 
         AccountEntity managedAccount = foundCustomer.getAccounts()
                 .stream()
                 .filter(a -> a.getNumber().equals(newAccount.getNumber()))
                 .findFirst()
-                .orElseThrow();
+                .orElseThrow(() -> new IllegalStateException("Created account was not attached to customer"));
 
         return accountMapper.toAccountDto(managedAccount);
     }
 
     @Transactional(readOnly = true)
     public List<AccountDto> getCustomerAccounts(UUID customerId) {
+        CustomerEntity foundCustomer = loadCustomerById(customerId);
 
-        CustomerEntity foundCustomer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new CustomerNotFoundException(customerId));
-
-        List<AccountDto> accounts = foundCustomer.getAccounts().stream()
+        return foundCustomer.getAccounts().stream()
                 .map(accountMapper::toAccountDto)
                 .toList();
+    }
 
-        if (accounts.isEmpty()) {
-            throw new AccountNotFoundException(customerId);
-        }
-
-        return accounts;
+    private CustomerEntity loadCustomerById(UUID customerId) {
+        return customerRepository.findById(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException(customerId));
     }
 }

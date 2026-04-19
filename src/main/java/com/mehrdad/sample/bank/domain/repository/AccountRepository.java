@@ -30,12 +30,15 @@ public interface AccountRepository extends JpaRepository<AccountEntity, UUID> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select a from AccountEntity a where a.id = :id")
-    Optional<AccountEntity> findByIdForUpdate(UUID id);
+    Optional<AccountEntity> findByIdForUpdate(@Param("id") UUID id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             select a from AccountEntity a
             where a.accountRole = :accountRole and a.currency = :currency
             """)
-    Optional<AccountEntity> findByAccountRoleAndCurrencyForUpdate(AccountRole accountRole, Currency currency);
+    Optional<AccountEntity> findByAccountRoleAndCurrencyForUpdate(
+            @Param("accountRole") AccountRole accountRole,
+            @Param("currency") Currency currency
+    );
 }

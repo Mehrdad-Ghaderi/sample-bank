@@ -45,6 +45,7 @@ public class TransactionService {
     private final IdempotencyRecordRepository idempotencyRecordRepository;
     private final TransactionMapper transactionMapper;
 
+    @Transactional(readOnly = true)
     public Page<TransactionDto> getTransactions(String accountNumber, Pageable pageable) {
         return transactionRepository.searchTransactions(normalizeOptionalAccountNumber(accountNumber), pageable)
                 .map(transactionMapper::toTransactionDto);

@@ -14,7 +14,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -27,6 +26,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
 
+    @Transactional(readOnly = true)
     public Page<AccountDto> getAccounts(String number, Pageable pageable) {
         return accountRepository.searchAccounts(normalizeOptionalAccountNumber(number), pageable)
                 .map(accountMapper::toAccountDto);
@@ -52,6 +52,7 @@ public class AccountService {
                 .orElseThrow(() -> new AccountNotFoundException(id));
     }
 
+    @Transactional
     public void setAccountStatus(UUID accountId, Status status) {
         AccountEntity foundAccount = loadAccountById(accountId);
 
@@ -59,6 +60,7 @@ public class AccountService {
         accountRepository.save(foundAccount);
     }
 
+    @Transactional(readOnly = true)
     public AccountDto getAccountById(UUID id) {
         return accountRepository.findById(id)
                 .map(accountMapper::toAccountDto)

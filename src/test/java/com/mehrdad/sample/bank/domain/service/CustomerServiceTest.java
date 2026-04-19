@@ -10,11 +10,9 @@ import com.mehrdad.sample.bank.domain.entity.Currency;
 import com.mehrdad.sample.bank.domain.entity.CustomerEntity;
 import com.mehrdad.sample.bank.domain.entity.Status;
 import com.mehrdad.sample.bank.domain.exception.ConcurrentUpdateException;
-import com.mehrdad.sample.bank.domain.exception.account.AccountNotFoundException;
 import com.mehrdad.sample.bank.domain.exception.customer.CustomerAlreadyActiveException;
 import com.mehrdad.sample.bank.domain.exception.customer.CustomerAlreadyExistException;
 import com.mehrdad.sample.bank.domain.exception.customer.CustomerAlreadyInactiveException;
-import com.mehrdad.sample.bank.domain.exception.customer.CustomerNameAlreadyExistsException;
 import com.mehrdad.sample.bank.domain.exception.customer.CustomerNotFoundException;
 import com.mehrdad.sample.bank.domain.exception.customer.PhoneNumberAlreadyExists;
 import com.mehrdad.sample.bank.domain.mapper.AccountMapper;
@@ -216,20 +214,27 @@ class CustomerServiceTest {
     }
 
     @Test
-    void updateCustomerShouldThrowWhenNewNameMatchesExistingName() {
+    void updateCustomerShouldIgnoreUnchangedNameAndPhoneNumber() {
         UUID customerId = UUID.randomUUID();
         CustomerEntity existingCustomer = customerEntity(40);
         existingCustomer.setName("Alice");
+        existingCustomer.setPhoneNumber("+14165550000");
+
         CustomerUpdateDto customerUpdateDto = new CustomerUpdateDto();
         customerUpdateDto.setName("Alice");
+        customerUpdateDto.setPhoneNumber("(416) 555-0000");
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(existingCustomer));
+        when(customerMapper.toCustomerDto(existingCustomer)).thenReturn(customerDto(customerId));
 
-        assertThrows(CustomerNameAlreadyExistsException.class,
-                () -> customerService.updateCustomer(customerId, customerUpdateDto));
+        CustomerDto result = customerService.updateCustomer(customerId, customerUpdateDto);
 
+        assertEquals(customerId, result.getId());
+        assertEquals("Alice", existingCustomer.getName());
+        assertEquals("+14165550000", existingCustomer.getPhoneNumber());
         verify(customerRepository).findById(customerId);
-        verifyNoInteractions(customerMapper);
+        verify(customerRepository, never()).existsByPhoneNumber(any());
+        verify(customerMapper).toCustomerDto(existingCustomer);
     }
 
     @Test
@@ -341,15 +346,16 @@ class CustomerServiceTest {
     }
 
     @Test
-    void getCustomerAccountsShouldThrowWhenCustomerHasNoAccounts() {
+    void getCustomerAccountsShouldReturnEmptyListWhenCustomerHasNoAccounts() {
         UUID customerId = UUID.randomUUID();
         CustomerEntity customer = customerEntity(45);
         customer.setAccounts(List.of());
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
 
-        assertThrows(AccountNotFoundException.class, () -> customerService.getCustomerAccounts(customerId));
+        List<AccountDto> result = customerService.getCustomerAccounts(customerId);
 
+        assertEquals(List.of(), result);
         verify(customerRepository).findById(customerId);
         verifyNoInteractions(accountMapper);
     }
