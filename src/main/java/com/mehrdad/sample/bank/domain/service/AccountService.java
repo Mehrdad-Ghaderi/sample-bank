@@ -27,8 +27,9 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
 
-    public Page<AccountDto> getAccounts(Pageable pageable) {
-        return accountRepository.findAll(pageable).map(accountMapper::toAccountDto);
+    public Page<AccountDto> getAccounts(String number, Pageable pageable) {
+        return accountRepository.searchAccounts(normalizeOptionalAccountNumber(number), pageable)
+                .map(accountMapper::toAccountDto);
     }
 
     @Transactional
@@ -62,5 +63,12 @@ public class AccountService {
         return accountRepository.findById(id)
                 .map(accountMapper::toAccountDto)
                 .orElseThrow(() -> new AccountNotFoundException(id));
+    }
+
+    private String normalizeOptionalAccountNumber(String number) {
+        if (number == null || number.isBlank()) {
+            return null;
+        }
+        return number.trim();
     }
 }

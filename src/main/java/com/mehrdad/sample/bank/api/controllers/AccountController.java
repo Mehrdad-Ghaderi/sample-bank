@@ -33,8 +33,9 @@ public class AccountController {
      */
     @GetMapping
     public ResponseEntity<Page<AccountDto>> getAccounts(
+            @RequestParam(required = false) String number,
             @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(accountService.getAccounts(pageable));
+        return ResponseEntity.ok(accountService.getAccounts(number, pageable));
     }
 
     @GetMapping(ACCOUNT_RESOURCE_PATH)
