@@ -41,7 +41,7 @@ class AccountServiceTest {
     private AccountService accountService;
 
     @Test
-    void updateStatusShouldChangeAccountStatusAndReturnMappedDto() {
+    void updateAccountStatusShouldChangeAccountStatusAndReturnMappedDto() {
         UUID accountId = UUID.randomUUID();
 
         AccountEntity account = new AccountEntity();
@@ -57,7 +57,7 @@ class AccountServiceTest {
         when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
         when(accountMapper.toAccountDto(account)).thenReturn(mappedDto);
 
-        AccountDto result = accountService.updateStatus(accountId, statusUpdateDto);
+        AccountDto result = accountService.updateAccountStatus(accountId, statusUpdateDto);
 
         assertEquals(Status.SUSPENDED, account.getStatus());
         assertEquals(Status.SUSPENDED, result.getStatus());
@@ -67,7 +67,7 @@ class AccountServiceTest {
     }
 
     @Test
-    void updateStatusShouldThrowWhenStatusIsAlreadySet() {
+    void updateAccountStatusShouldThrowWhenStatusIsAlreadySet() {
         UUID accountId = UUID.randomUUID();
 
         AccountEntity account = new AccountEntity();
@@ -80,7 +80,7 @@ class AccountServiceTest {
 
         assertThrows(
                 AccountStatusAlreadySetException.class,
-                () -> accountService.updateStatus(accountId, statusUpdateDto)
+                () -> accountService.updateAccountStatus(accountId, statusUpdateDto)
         );
 
         verify(accountRepository).findById(accountId);
@@ -89,7 +89,7 @@ class AccountServiceTest {
     }
 
     @Test
-    void updateStatusShouldThrowWhenAccountDoesNotExist() {
+    void updateAccountStatusShouldThrowWhenAccountDoesNotExist() {
         UUID accountId = UUID.randomUUID();
         StatusUpdateDto statusUpdateDto = new StatusUpdateDto(Status.SUSPENDED);
 
@@ -97,7 +97,7 @@ class AccountServiceTest {
 
         assertThrows(
                 AccountNotFoundException.class,
-                () -> accountService.updateStatus(accountId, statusUpdateDto)
+                () -> accountService.updateAccountStatus(accountId, statusUpdateDto)
         );
 
         verify(accountRepository).findById(accountId);

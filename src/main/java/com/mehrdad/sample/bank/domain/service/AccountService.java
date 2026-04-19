@@ -32,8 +32,8 @@ public class AccountService {
     }
 
     @Transactional
-    public AccountDto updateStatus(UUID id, StatusUpdateDto statusUpdateDto) {
-        AccountEntity foundAccount = loadAccountById(id);
+    public AccountDto updateAccountStatus(UUID accountId, StatusUpdateDto statusUpdateDto) {
+        AccountEntity foundAccount = loadAccountById(accountId);
 
         Status newStatus = statusUpdateDto.getStatus();
         Status currentStatus = foundAccount.getStatus();

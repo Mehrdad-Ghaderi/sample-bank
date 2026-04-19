@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,8 +33,7 @@ public class AccountController {
      */
     @GetMapping
     public ResponseEntity<Page<AccountDto>> getAccounts(
-            @PageableDefault(size = 5, sort = "createdAt") Pageable pageable) {
-
+            @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(accountService.getAccounts(pageable));
     }
 
@@ -47,9 +47,9 @@ public class AccountController {
      * update the status of an account
      */
     @PatchMapping(ACCOUNT_RESOURCE_PATH)
-    public ResponseEntity<AccountDto> updateStatus(@PathVariable UUID accountId,
-                                                   @Valid @RequestBody StatusUpdateDto statusUpdateDto) {
-        AccountDto accountDto = accountService.updateStatus(accountId, statusUpdateDto);
+    public ResponseEntity<AccountDto> updateAccountStatus(@PathVariable UUID accountId,
+                                                          @Valid @RequestBody StatusUpdateDto statusUpdateDto) {
+        AccountDto accountDto = accountService.updateAccountStatus(accountId, statusUpdateDto);
 
         return ResponseEntity.ok(accountDto);
     }
