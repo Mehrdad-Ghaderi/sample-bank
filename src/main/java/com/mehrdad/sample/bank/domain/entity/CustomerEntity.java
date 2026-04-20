@@ -57,6 +57,9 @@ public class CustomerEntity {
     @Column(length = 100, nullable = false)
     private String name;
 
+    @Column(name = "owner_username", length = 100, nullable = false)
+    private String ownerUsername;
+
     @Pattern(
             regexp = "^\\+[0-9]{10,16}$",
             message = "Phone number must be stored in international format"

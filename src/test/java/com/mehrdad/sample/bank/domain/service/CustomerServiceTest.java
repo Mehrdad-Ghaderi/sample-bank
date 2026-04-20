@@ -29,6 +29,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +49,9 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CustomerServiceTest {
+
+    private static final String OWNER_USERNAME = "user";
+    private static final String OTHER_USERNAME = "other-user";
 
     @Mock
     private CustomerRepository customerRepository;
@@ -72,14 +76,14 @@ class CustomerServiceTest {
         CustomerDto customerDto = customerDto(customer.getId());
         PageRequest pageable = PageRequest.of(0, 5);
 
-        when(customerRepository.searchCustomers(businessId, "+14165556598", pageable))
+        when(customerRepository.searchCustomers(OWNER_USERNAME, businessId, "+14165556598", pageable))
                 .thenReturn(new PageImpl<>(List.of(customer)));
         when(customerMapper.toCustomerDto(customer)).thenReturn(customerDto);
 
-        var result = customerService.getCustomers(businessId, rawPhoneNumber, pageable);
+        var result = customerService.getCustomers(OWNER_USERNAME, businessId, rawPhoneNumber, pageable);
 
         assertEquals(List.of(customerDto), result.getContent());
-        verify(customerRepository).searchCustomers(businessId, "+14165556598", pageable);
+        verify(customerRepository).searchCustomers(OWNER_USERNAME, businessId, "+14165556598", pageable);
         verify(customerMapper).toCustomerDto(customer);
     }
 
@@ -87,14 +91,31 @@ class CustomerServiceTest {
     void getCustomersShouldTreatBlankPhoneNumberAsNoPhoneFilter() {
         PageRequest pageable = PageRequest.of(0, 5);
 
-        when(customerRepository.searchCustomers(null, null, pageable))
+        when(customerRepository.searchCustomers(OWNER_USERNAME, null, null, pageable))
                 .thenReturn(new PageImpl<>(List.of()));
 
-        var result = customerService.getCustomers(null, "   ", pageable);
+        var result = customerService.getCustomers(OWNER_USERNAME, null, "   ", pageable);
 
         assertTrue(result.isEmpty());
-        verify(customerRepository).searchCustomers(null, null, pageable);
+        verify(customerRepository).searchCustomers(OWNER_USERNAME, null, null, pageable);
         verifyNoInteractions(customerMapper);
+    }
+
+    @Test
+    void getCustomerByIdShouldReturnCustomerWhenOwnedByAuthenticatedUser() {
+        UUID customerId = UUID.randomUUID();
+        CustomerEntity customer = customerEntity(10);
+        customer.setId(customerId);
+        CustomerDto expectedCustomer = customerDto(customerId);
+
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+        when(customerMapper.toCustomerDto(customer)).thenReturn(expectedCustomer);
+
+        CustomerDto result = customerService.getCustomerById(customerId, OWNER_USERNAME);
+
+        assertEquals(expectedCustomer, result);
+        verify(customerRepository).findById(customerId);
+        verify(customerMapper).toCustomerDto(customer);
     }
 
     @Test
@@ -103,7 +124,22 @@ class CustomerServiceTest {
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.empty());
 
-        assertThrows(CustomerNotFoundException.class, () -> customerService.getCustomerById(customerId));
+        assertThrows(CustomerNotFoundException.class, () -> customerService.getCustomerById(customerId, OWNER_USERNAME));
+
+        verify(customerRepository).findById(customerId);
+        verifyNoInteractions(customerMapper);
+    }
+
+    @Test
+    void getCustomerByIdShouldThrowAccessDeniedWhenCustomerBelongsToAnotherUser() {
+        UUID customerId = UUID.randomUUID();
+        CustomerEntity customer = customerEntity(11);
+        customer.setOwnerUsername(OTHER_USERNAME);
+
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+
+        assertThrows(AccessDeniedException.class,
+                () -> customerService.getCustomerById(customerId, OWNER_USERNAME));
 
         verify(customerRepository).findById(customerId);
         verifyNoInteractions(customerMapper);
@@ -120,7 +156,7 @@ class CustomerServiceTest {
         when(customerRepository.findByPhoneNumber(normalizedPhoneNumber))
                 .thenReturn(Optional.of(customerEntity(20)));
 
-        assertThrows(CustomerAlreadyExistException.class, () -> customerService.createCustomer(customerCreateDto));
+        assertThrows(CustomerAlreadyExistException.class, () -> customerService.createCustomer(customerCreateDto, OWNER_USERNAME));
 
         verify(customerRepository).findByPhoneNumber(normalizedPhoneNumber);
         verifyNoInteractions(customerMapper);
@@ -143,10 +179,11 @@ class CustomerServiceTest {
         when(customerRepository.saveAndFlush(mappedCustomer)).thenReturn(savedCustomer);
         when(customerMapper.toCustomerDto(savedCustomer)).thenReturn(expectedCustomer);
 
-        CustomerDto result = customerService.createCustomer(customerCreateDto);
+        CustomerDto result = customerService.createCustomer(customerCreateDto, OWNER_USERNAME);
 
         assertEquals(expectedCustomer, result);
         assertEquals("+14165556598", mappedCustomer.getPhoneNumber());
+        assertEquals(OWNER_USERNAME, mappedCustomer.getOwnerUsername());
         assertEquals(1001, mappedCustomer.getBusinessId());
         verify(customerRepository).findByPhoneNumber("+14165556598");
         verify(customerMapper).toCustomerEntity(customerCreateDto);
@@ -391,6 +428,7 @@ class CustomerServiceTest {
         customer.setId(UUID.randomUUID());
         customer.setBusinessId(businessId);
         customer.setName("Customer-" + businessId);
+        customer.setOwnerUsername(OWNER_USERNAME);
         customer.setPhoneNumber("+1416555" + String.format("%04d", businessId));
         customer.setStatus(Status.ACTIVE);
         customer.setAccounts(new ArrayList<>());

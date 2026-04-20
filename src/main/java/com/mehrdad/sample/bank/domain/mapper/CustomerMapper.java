@@ -19,6 +19,7 @@ public interface CustomerMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "businessId", ignore = true)
     @Mapping(target = "version", ignore = true)
+    @Mapping(target = "ownerUsername", ignore = true)
     @Mapping(target = "accounts", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)

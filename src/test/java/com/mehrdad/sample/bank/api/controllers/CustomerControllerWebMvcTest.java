@@ -20,6 +20,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -47,6 +48,7 @@ class CustomerControllerWebMvcTest {
     private static final String CUSTOMERS_PATH = ApiPaths.API_BASE_PATH + ApiPaths.CUSTOMERS;
     private static final String CUSTOMER_PHONE_NUMBER = "5554443322";
     private static final String INVALID_PHONE_NUMBER = "abc";
+    private static final String AUTHENTICATED_USERNAME = "user";
     private static final String BEARER_TOKEN = TestJwtTokens.bearerToken();
 
     @Autowired
@@ -70,7 +72,7 @@ class CustomerControllerWebMvcTest {
     void getCustomersSearchesByBusinessIdAndPhoneNumber() throws Exception {
         CustomerDto customer = buildCustomerDto();
 
-        when(customerService.getCustomers(eq(1001), eq(CUSTOMER_PHONE_NUMBER), any(Pageable.class)))
+        when(customerService.getCustomers(eq(AUTHENTICATED_USERNAME), eq(1001), eq(CUSTOMER_PHONE_NUMBER), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(customer)));
 
         mockMvc.perform(get(CUSTOMERS_PATH)
@@ -85,7 +87,7 @@ class CustomerControllerWebMvcTest {
                 .andExpect(jsonPath("$.content[0].status").value("ACTIVE"));
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        verify(customerService).getCustomers(eq(1001), eq(CUSTOMER_PHONE_NUMBER), pageableCaptor.capture());
+        verify(customerService).getCustomers(eq(AUTHENTICATED_USERNAME), eq(1001), eq(CUSTOMER_PHONE_NUMBER), pageableCaptor.capture());
         assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(5);
         assertThat(pageableCaptor.getValue().getSort().getOrderFor("createdAt")).isNotNull();
     }
@@ -94,7 +96,7 @@ class CustomerControllerWebMvcTest {
     void getCustomerByIdReturnsCustomer() throws Exception {
         CustomerDto customer = buildCustomerDto();
 
-        when(customerService.getCustomerById(customer.getId())).thenReturn(customer);
+        when(customerService.getCustomerById(customer.getId(), AUTHENTICATED_USERNAME)).thenReturn(customer);
 
         mockMvc.perform(get(CUSTOMERS_PATH + "/" + customer.getId())
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
@@ -103,7 +105,21 @@ class CustomerControllerWebMvcTest {
                 .andExpect(jsonPath("$.businessId").value(1001))
                 .andExpect(jsonPath("$.name").value(customer.getName()));
 
-        verify(customerService).getCustomerById(customer.getId());
+        verify(customerService).getCustomerById(customer.getId(), AUTHENTICATED_USERNAME);
+    }
+
+    @Test
+    void getCustomerByIdRejectsCustomerOwnedByAnotherUser() throws Exception {
+        UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+        when(customerService.getCustomerById(customerId, AUTHENTICATED_USERNAME))
+                .thenThrow(new AccessDeniedException("Customer does not belong to authenticated user"));
+
+        mockMvc.perform(get(CUSTOMERS_PATH + "/" + customerId)
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
+                .andExpect(status().isForbidden());
+
+        verify(customerService).getCustomerById(customerId, AUTHENTICATED_USERNAME);
     }
 
     @Test
@@ -116,7 +132,7 @@ class CustomerControllerWebMvcTest {
         savedCustomerDto.setName(customerCreateDto.getName());
         savedCustomerDto.setPhoneNumber(customerCreateDto.getPhoneNumber());
 
-        when(customerService.createCustomer(any(CustomerCreateDto.class))).thenReturn(savedCustomerDto);
+        when(customerService.createCustomer(any(CustomerCreateDto.class), eq(AUTHENTICATED_USERNAME))).thenReturn(savedCustomerDto);
 
         mockMvc.perform(post(CUSTOMERS_PATH)
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
@@ -128,7 +144,7 @@ class CustomerControllerWebMvcTest {
                 .andExpect(header().string("Location", endsWith(CUSTOMERS_PATH + "/" + savedCustomerDto.getId())));
 
         ArgumentCaptor<CustomerCreateDto> customerCreateCaptor = ArgumentCaptor.forClass(CustomerCreateDto.class);
-        verify(customerService).createCustomer(customerCreateCaptor.capture());
+        verify(customerService).createCustomer(customerCreateCaptor.capture(), eq(AUTHENTICATED_USERNAME));
         assertThat(customerCreateCaptor.getValue().getName()).isEqualTo(customerCreateDto.getName());
         assertThat(customerCreateCaptor.getValue().getPhoneNumber()).isEqualTo(customerCreateDto.getPhoneNumber());
     }
