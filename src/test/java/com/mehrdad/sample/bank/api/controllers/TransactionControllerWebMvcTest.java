@@ -14,21 +14,26 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.MediaType;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -49,6 +54,33 @@ class TransactionControllerWebMvcTest {
 
     @MockitoBean
     private TransactionService transactionService;
+
+    @Test
+    void getTransactionsSearchesByAccountNumber() throws Exception {
+        String accountNumber = "2026-101-000046-001";
+        TransactionDto transaction = buildTransactionDto();
+
+        when(transactionService.getTransactions(eq(accountNumber), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(transaction)));
+
+        mockMvc.perform(get(TRANSACTIONS_PATH)
+                        .header("Authorization", BASIC_AUTH)
+                        .param("accountNumber", accountNumber))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(transaction.getId().toString()))
+                .andExpect(jsonPath("$.content[0].senderAccountId").value(transaction.getSenderAccountId().toString()))
+                .andExpect(jsonPath("$.content[0].receiverAccountId").value(transaction.getReceiverAccountId().toString()))
+                .andExpect(jsonPath("$.content[0].amount").value(25.50))
+                .andExpect(jsonPath("$.content[0].currency").value("CAD"))
+                .andExpect(jsonPath("$.content[0].type").value("TRANSFER"));
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(transactionService).getTransactions(eq(accountNumber), pageableCaptor.capture());
+
+        Pageable pageable = pageableCaptor.getValue();
+        assertThat(pageable.getPageSize()).isEqualTo(5);
+        assertThat(pageable.getSort().getOrderFor("transactionTime")).isNotNull();
+    }
 
     @Test
     void transferRequiresAuthentication() throws Exception {
@@ -85,7 +117,7 @@ class TransactionControllerWebMvcTest {
         CreateTransferRequest request = buildTransferRequest();
         TransactionDto response = buildTransferResponse(request);
 
-        when(transactionService.transfer(org.mockito.ArgumentMatchers.any(CreateTransferRequest.class), eq(IDEMPOTENCY_KEY)))
+        when(transactionService.transfer(any(CreateTransferRequest.class), eq(IDEMPOTENCY_KEY)))
                 .thenReturn(response);
 
         mockMvc.perform(post(TRANSACTIONS_PATH + "/transfers")
@@ -124,7 +156,7 @@ class TransactionControllerWebMvcTest {
                 Instant.parse("2026-04-15T12:00:00Z")
         );
 
-        when(transactionService.deposit(org.mockito.ArgumentMatchers.any(CreateDepositRequest.class), eq(IDEMPOTENCY_KEY)))
+        when(transactionService.deposit(any(CreateDepositRequest.class), eq(IDEMPOTENCY_KEY)))
                 .thenReturn(response);
 
         mockMvc.perform(post(TRANSACTIONS_PATH + "/deposits")
@@ -136,7 +168,7 @@ class TransactionControllerWebMvcTest {
                 .andExpect(jsonPath("$.type").value("DEPOSIT"))
                 .andExpect(jsonPath("$.receiverAccountId").value(request.getReceiverAccountId().toString()));
 
-        verify(transactionService).deposit(org.mockito.ArgumentMatchers.any(CreateDepositRequest.class), eq(IDEMPOTENCY_KEY));
+        verify(transactionService).deposit(any(CreateDepositRequest.class), eq(IDEMPOTENCY_KEY));
     }
 
     @Test
@@ -152,7 +184,7 @@ class TransactionControllerWebMvcTest {
                 Instant.parse("2026-04-15T12:00:00Z")
         );
 
-        when(transactionService.withdraw(org.mockito.ArgumentMatchers.any(CreateWithdrawalRequest.class), eq(IDEMPOTENCY_KEY)))
+        when(transactionService.withdraw(any(CreateWithdrawalRequest.class), eq(IDEMPOTENCY_KEY)))
                 .thenReturn(response);
 
         mockMvc.perform(post(TRANSACTIONS_PATH + "/withdrawals")
@@ -164,7 +196,7 @@ class TransactionControllerWebMvcTest {
                 .andExpect(jsonPath("$.type").value("WITHDRAW"))
                 .andExpect(jsonPath("$.senderAccountId").value(request.getSenderAccountId().toString()));
 
-        verify(transactionService).withdraw(org.mockito.ArgumentMatchers.any(CreateWithdrawalRequest.class), eq(IDEMPOTENCY_KEY));
+        verify(transactionService).withdraw(any(CreateWithdrawalRequest.class), eq(IDEMPOTENCY_KEY));
     }
 
     private static CreateWithdrawalRequest buildWithdrawalRequest() {
@@ -189,6 +221,18 @@ class TransactionControllerWebMvcTest {
                 UUID.fromString("22222222-2222-2222-2222-222222222222"),
                 new BigDecimal("25.50"),
                 Currency.CAD
+        );
+    }
+
+    private static TransactionDto buildTransactionDto() {
+        return new TransactionDto(
+                UUID.fromString("33333333-3333-3333-3333-333333333333"),
+                UUID.fromString("11111111-1111-1111-1111-111111111111"),
+                UUID.fromString("22222222-2222-2222-2222-222222222222"),
+                new BigDecimal("25.50"),
+                Currency.CAD,
+                TransactionType.TRANSFER,
+                Instant.parse("2026-04-15T12:00:00Z")
         );
     }
 
