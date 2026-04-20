@@ -47,6 +47,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class CustomerControllerWebMvcTest {
 
     private static final String CUSTOMERS_PATH = ApiPaths.API_BASE_PATH + ApiPaths.CUSTOMERS;
+    private static final String CUSTOMER_PHONE_NUMBER = "5554443322";
+    private static final String INVALID_PHONE_NUMBER = "abc";
     private static final String BASIC_AUTH = "Basic " + Base64.getEncoder()
             .encodeToString("user:pass".getBytes(StandardCharsets.UTF_8));
 
@@ -71,13 +73,13 @@ class CustomerControllerWebMvcTest {
     void getCustomersSearchesByBusinessIdAndPhoneNumber() throws Exception {
         CustomerDto customer = buildCustomerDto();
 
-        when(customerService.getCustomers(eq(1001), eq("5554443322"), any(Pageable.class)))
+        when(customerService.getCustomers(eq(1001), eq(CUSTOMER_PHONE_NUMBER), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(customer)));
 
         mockMvc.perform(get(CUSTOMERS_PATH)
                         .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH)
                         .param("businessId", "1001")
-                        .param("phoneNumber", "5554443322"))
+                        .param("phoneNumber", CUSTOMER_PHONE_NUMBER))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(customer.getId().toString()))
                 .andExpect(jsonPath("$.content[0].businessId").value(1001))
@@ -86,7 +88,7 @@ class CustomerControllerWebMvcTest {
                 .andExpect(jsonPath("$.content[0].status").value("ACTIVE"));
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        verify(customerService).getCustomers(eq(1001), eq("5554443322"), pageableCaptor.capture());
+        verify(customerService).getCustomers(eq(1001), eq(CUSTOMER_PHONE_NUMBER), pageableCaptor.capture());
         assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(5);
         assertThat(pageableCaptor.getValue().getSort().getOrderFor("createdAt")).isNotNull();
     }
@@ -155,11 +157,11 @@ class CustomerControllerWebMvcTest {
     @Test
     void updateCustomerPassesRequestToService() throws Exception {
         UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-        CustomerUpdateDto request = new CustomerUpdateDto("Jane Doe", "(416) 555-9999");
+        CustomerUpdateDto request = new CustomerUpdateDto("Jane Doe", CUSTOMER_PHONE_NUMBER);
         CustomerDto response = buildCustomerDto();
         response.setId(customerId);
         response.setName(request.getName());
-        response.setPhoneNumber("+14165559999");
+        response.setPhoneNumber(request.getPhoneNumber());
 
         when(customerService.updateCustomer(eq(customerId), any(CustomerUpdateDto.class))).thenReturn(response);
 
@@ -170,7 +172,7 @@ class CustomerControllerWebMvcTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(customerId.toString()))
                 .andExpect(jsonPath("$.name").value(request.getName()))
-                .andExpect(jsonPath("$.phoneNumber").value("+14165559999"));
+                .andExpect(jsonPath("$.phoneNumber").value(CUSTOMER_PHONE_NUMBER));
 
         ArgumentCaptor<CustomerUpdateDto> requestCaptor = ArgumentCaptor.forClass(CustomerUpdateDto.class);
         verify(customerService).updateCustomer(eq(customerId), requestCaptor.capture());
@@ -181,7 +183,7 @@ class CustomerControllerWebMvcTest {
     @Test
     void updateCustomerRejectsInvalidPhoneNumber() throws Exception {
         UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-        CustomerUpdateDto request = new CustomerUpdateDto("Jane Doe", "abc");
+        CustomerUpdateDto request = new CustomerUpdateDto("Jane Doe", INVALID_PHONE_NUMBER);
 
         mockMvc.perform(patch(CUSTOMERS_PATH + "/" + customerId)
                         .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH)
@@ -282,7 +284,7 @@ class CustomerControllerWebMvcTest {
     private static CustomerCreateDto buildCustomerCreateDto() {
         CustomerCreateDto customerCreateDto = new CustomerCreateDto();
         customerCreateDto.setName("John Doe");
-        customerCreateDto.setPhoneNumber("5554443322");
+        customerCreateDto.setPhoneNumber(CUSTOMER_PHONE_NUMBER);
         return customerCreateDto;
     }
 
@@ -291,7 +293,7 @@ class CustomerControllerWebMvcTest {
         customer.setId(UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"));
         customer.setBusinessId(1001);
         customer.setName("John Doe");
-        customer.setPhoneNumber("+14165551234");
+        customer.setPhoneNumber(CUSTOMER_PHONE_NUMBER);
         customer.setStatus(Status.ACTIVE);
         customer.setCreatedAt(Instant.parse("2026-04-19T12:00:00Z"));
         customer.setUpdatedAt(Instant.parse("2026-04-19T12:30:00Z"));
