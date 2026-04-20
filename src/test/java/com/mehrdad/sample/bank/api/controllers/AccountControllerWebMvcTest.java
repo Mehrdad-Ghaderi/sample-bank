@@ -21,9 +21,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,8 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AccountControllerWebMvcTest {
 
     private static final String ACCOUNTS_PATH = ApiPaths.API_BASE_PATH + ApiPaths.ACCOUNTS;
-    private static final String BASIC_AUTH = "Basic " + Base64.getEncoder()
-            .encodeToString("user:pass".getBytes(StandardCharsets.UTF_8));
+    private static final String BEARER_TOKEN = TestJwtTokens.bearerToken();
 
     @Autowired
     private MockMvc mockMvc;
@@ -72,7 +69,7 @@ class AccountControllerWebMvcTest {
                 .thenReturn(new PageImpl<>(List.of(account)));
 
         mockMvc.perform(get(ACCOUNTS_PATH)
-                        .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH)
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
                         .param("number", accountNumber))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(account.getId().toString()))
@@ -96,7 +93,7 @@ class AccountControllerWebMvcTest {
         when(accountService.getAccountById(account.getId())).thenReturn(account);
 
         mockMvc.perform(get(ACCOUNTS_PATH + "/" + account.getId())
-                        .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH))
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(account.getId().toString()))
                 .andExpect(jsonPath("$.number").value(account.getNumber()))
@@ -117,7 +114,7 @@ class AccountControllerWebMvcTest {
                 .thenReturn(response);
 
         mockMvc.perform(patch(ACCOUNTS_PATH + "/" + accountId)
-                        .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH)
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -135,7 +132,7 @@ class AccountControllerWebMvcTest {
         AccountStatusUpdateDto request = new AccountStatusUpdateDto(null);
 
         mockMvc.perform(patch(ACCOUNTS_PATH + "/" + accountId)
-                        .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH)
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
