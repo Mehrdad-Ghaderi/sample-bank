@@ -50,6 +50,9 @@ import static org.junit.jupiter.api.Assertions.*;
 @Testcontainers
 class TransactionServiceIT {
 
+    private static final String OWNER_USERNAME = "user";
+    private static final String BANK_OWNER_USERNAME = "system";
+
     @Container
     static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("sample_bank")
@@ -101,6 +104,7 @@ class TransactionServiceIT {
     void loadBank() {
         CustomerEntity bankEntity = new CustomerEntity();
         bankEntity.setName("BANK");
+        bankEntity.setOwnerUsername(BANK_OWNER_USERNAME);
         bankEntity.setPhoneNumber("+10000000000");
         bankEntity.setStatus(Status.ACTIVE);
         bankEntity.setAccounts(new ArrayList<>());
@@ -141,13 +145,13 @@ class TransactionServiceIT {
 
     void createSender() {
         var senderCustomer = customerService.createCustomer(
-                new CustomerCreateDto("Alice", "1111111111"));
+                new CustomerCreateDto("Alice", "1111111111"), OWNER_USERNAME);
         senderAccount = customerService.createAccount(senderCustomer.getId(), new AccountCreateDto(Currency.CAD));
     }
 
     void createReceiver() {
         var receiverCustomer = customerService.createCustomer(
-                new CustomerCreateDto("Bob", "2222222222"));
+                new CustomerCreateDto("Bob", "2222222222"), OWNER_USERNAME);
         receiverAccount = customerService.createAccount(receiverCustomer.getId(), new AccountCreateDto(Currency.CAD));
     }
 

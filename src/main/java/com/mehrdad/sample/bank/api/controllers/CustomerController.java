@@ -15,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -41,19 +42,22 @@ public class CustomerController {
     public ResponseEntity<Page<CustomerDto>> getCustomers(
             @RequestParam(required = false) Integer businessId,
             @RequestParam(required = false) String phoneNumber,
-            @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(customerService.getCustomers(businessId, phoneNumber, pageable));
+            @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            Authentication authentication) {
+        return ResponseEntity.ok(customerService.getCustomers(authentication.getName(), businessId, phoneNumber, pageable));
     }
 
     @GetMapping(CUSTOMER_RESOURCE_PATH)
-    public ResponseEntity<CustomerDto> getCustomerById(@PathVariable UUID customerId) {
-        return ResponseEntity.ok(customerService.getCustomerById(customerId));
+    public ResponseEntity<CustomerDto> getCustomerById(@PathVariable UUID customerId,
+                                                       Authentication authentication) {
+        return ResponseEntity.ok(customerService.getCustomerById(customerId, authentication.getName()));
     }
 
     @PostMapping
     public ResponseEntity<CustomerDto> createCustomer(
-            @Valid @RequestBody CustomerCreateDto customerCreateDto) {
-        CustomerDto createdCustomer = customerService.createCustomer(customerCreateDto);
+            @Valid @RequestBody CustomerCreateDto customerCreateDto,
+            Authentication authentication) {
+        CustomerDto createdCustomer = customerService.createCustomer(customerCreateDto, authentication.getName());
 
         URI location = buildResourceLocation(ApiPaths.CUSTOMER_RESOURCE, createdCustomer.getId());
         return ResponseEntity.created(location).body(createdCustomer);

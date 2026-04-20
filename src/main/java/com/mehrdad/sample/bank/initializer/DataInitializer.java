@@ -32,6 +32,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private static final String BANK_NAME = "BANK";
     private static final String BANK_PHONE = "1234567890";
+    private static final String BANK_OWNER_USERNAME = "system";
     private static final BigDecimal INITIAL_BALANCE = new BigDecimal("1000000000");
     private final CustomerRepository customerRepository;
 
@@ -48,6 +49,7 @@ public class DataInitializer implements CommandLineRunner {
         String normalizedPhoneNumber = PhoneNumberNormalizer.normalizePhoneNumber(BANK_PHONE);
         CustomerEntity bank = new CustomerEntity();
         bank.setName(BANK_NAME);
+        bank.setOwnerUsername(BANK_OWNER_USERNAME);
         bank.setPhoneNumber(normalizedPhoneNumber);
         bank.setStatus(Status.ACTIVE);
         bank.setAccounts(new ArrayList<>());

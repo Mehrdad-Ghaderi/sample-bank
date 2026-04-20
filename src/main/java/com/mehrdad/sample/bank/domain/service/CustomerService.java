@@ -21,6 +21,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,19 +41,21 @@ public class CustomerService {
     private final AccountMapper accountMapper;
 
     @Transactional(readOnly = true)
-    public Page<CustomerDto> getCustomers(Integer businessId, String phoneNumber, Pageable pageable) {
+    public Page<CustomerDto> getCustomers(String ownerUsername, Integer businessId, String phoneNumber, Pageable pageable) {
         String normalizedPhoneNumber = normalizeOptionalPhoneNumber(phoneNumber);
 
-        return customerRepository.searchCustomers(businessId, normalizedPhoneNumber, pageable)
+        return customerRepository.searchCustomers(ownerUsername, businessId, normalizedPhoneNumber, pageable)
                 .map(customerMapper::toCustomerDto);
     }
 
     @Transactional(readOnly = true)
-    public CustomerDto getCustomerById(UUID customerId) {
-        return customerMapper.toCustomerDto(loadCustomerById(customerId));
+    public CustomerDto getCustomerById(UUID customerId, String ownerUsername) {
+        CustomerEntity customer = loadCustomerById(customerId);
+        validateCustomerOwnership(customer, ownerUsername);
+        return customerMapper.toCustomerDto(customer);
     }
 
-    public CustomerDto createCustomer(CustomerCreateDto customerCreateDto) {
+    public CustomerDto createCustomer(CustomerCreateDto customerCreateDto, String ownerUsername) {
 
         String normalizedPhoneNumber = PhoneNumberNormalizer.normalizePhoneNumber(
                 customerCreateDto.getPhoneNumber());
@@ -63,6 +66,7 @@ public class CustomerService {
 
         CustomerEntity customerEntity = customerMapper.toCustomerEntity(customerCreateDto);
         customerEntity.setPhoneNumber(normalizedPhoneNumber);
+        customerEntity.setOwnerUsername(ownerUsername);
         customerEntity.setBusinessId(customerBusinessIdGenerator.getNextBusinessId());
         CustomerEntity savedCustomerEntity = customerRepository.saveAndFlush(customerEntity);
         return customerMapper.toCustomerDto(savedCustomerEntity);
@@ -159,5 +163,11 @@ public class CustomerService {
     private CustomerEntity loadCustomerById(UUID customerId) {
         return customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException(customerId));
+    }
+
+    private void validateCustomerOwnership(CustomerEntity customer, String ownerUsername) {
+        if (!ownerUsername.equals(customer.getOwnerUsername())) {
+            throw new AccessDeniedException("Customer does not belong to authenticated user");
+        }
     }
 }

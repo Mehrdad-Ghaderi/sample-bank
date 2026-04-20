@@ -24,10 +24,12 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, UUID> 
     @Query("""
             select c
             from CustomerEntity c
-            where (:businessId is null or c.businessId = :businessId)
+            where c.ownerUsername = :ownerUsername
+              and (:businessId is null or c.businessId = :businessId)
               and (:phoneNumber is null or c.phoneNumber = :phoneNumber)
             """)
     Page<CustomerEntity> searchCustomers(
+            @Param("ownerUsername") String ownerUsername,
             @Param("businessId") Integer businessId,
             @Param("phoneNumber") String phoneNumber,
             Pageable pageable
