@@ -23,7 +23,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,7 +43,7 @@ class TransactionControllerWebMvcTest {
 
     private static final String TRANSACTIONS_PATH = ApiPaths.API_BASE_PATH + ApiPaths.TRANSACTIONS;
     private static final String IDEMPOTENCY_KEY = "transfer-key-1";
-    private static final String BASIC_AUTH = "Basic " + Base64.getEncoder().encodeToString("user:pass".getBytes());
+    private static final String BEARER_TOKEN = TestJwtTokens.bearerToken();
 
     @Autowired
     private MockMvc mockMvc;
@@ -64,7 +63,7 @@ class TransactionControllerWebMvcTest {
                 .thenReturn(new PageImpl<>(List.of(transaction)));
 
         mockMvc.perform(get(TRANSACTIONS_PATH)
-                        .header("Authorization", BASIC_AUTH)
+                        .header("Authorization", BEARER_TOKEN)
                         .param("accountNumber", accountNumber))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(transaction.getId().toString()))
@@ -100,7 +99,7 @@ class TransactionControllerWebMvcTest {
         CreateTransferRequest request = buildTransferRequest();
 
         mockMvc.perform(post(TRANSACTIONS_PATH + "/transfers")
-                        .header("Authorization", BASIC_AUTH)
+                        .header("Authorization", BEARER_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -121,7 +120,7 @@ class TransactionControllerWebMvcTest {
                 .thenReturn(response);
 
         mockMvc.perform(post(TRANSACTIONS_PATH + "/transfers")
-                        .header("Authorization", BASIC_AUTH)
+                        .header("Authorization", BEARER_TOKEN)
                         .header("Idempotency-Key", IDEMPOTENCY_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -160,7 +159,7 @@ class TransactionControllerWebMvcTest {
                 .thenReturn(response);
 
         mockMvc.perform(post(TRANSACTIONS_PATH + "/deposits")
-                        .header("Authorization", BASIC_AUTH)
+                        .header("Authorization", BEARER_TOKEN)
                         .header("Idempotency-Key", IDEMPOTENCY_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -188,7 +187,7 @@ class TransactionControllerWebMvcTest {
                 .thenReturn(response);
 
         mockMvc.perform(post(TRANSACTIONS_PATH + "/withdrawals")
-                        .header("Authorization", BASIC_AUTH)
+                        .header("Authorization", BEARER_TOKEN)
                         .header("Idempotency-Key", IDEMPOTENCY_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

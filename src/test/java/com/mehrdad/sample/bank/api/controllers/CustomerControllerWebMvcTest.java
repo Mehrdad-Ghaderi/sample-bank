@@ -24,9 +24,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
@@ -49,8 +47,7 @@ class CustomerControllerWebMvcTest {
     private static final String CUSTOMERS_PATH = ApiPaths.API_BASE_PATH + ApiPaths.CUSTOMERS;
     private static final String CUSTOMER_PHONE_NUMBER = "5554443322";
     private static final String INVALID_PHONE_NUMBER = "abc";
-    private static final String BASIC_AUTH = "Basic " + Base64.getEncoder()
-            .encodeToString("user:pass".getBytes(StandardCharsets.UTF_8));
+    private static final String BEARER_TOKEN = TestJwtTokens.bearerToken();
 
     @Autowired
     private MockMvc mockMvc;
@@ -77,7 +74,7 @@ class CustomerControllerWebMvcTest {
                 .thenReturn(new PageImpl<>(List.of(customer)));
 
         mockMvc.perform(get(CUSTOMERS_PATH)
-                        .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH)
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
                         .param("businessId", "1001")
                         .param("phoneNumber", CUSTOMER_PHONE_NUMBER))
                 .andExpect(status().isOk())
@@ -100,7 +97,7 @@ class CustomerControllerWebMvcTest {
         when(customerService.getCustomerById(customer.getId())).thenReturn(customer);
 
         mockMvc.perform(get(CUSTOMERS_PATH + "/" + customer.getId())
-                        .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH))
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(customer.getId().toString()))
                 .andExpect(jsonPath("$.businessId").value(1001))
@@ -122,7 +119,7 @@ class CustomerControllerWebMvcTest {
         when(customerService.createCustomer(any(CustomerCreateDto.class))).thenReturn(savedCustomerDto);
 
         mockMvc.perform(post(CUSTOMERS_PATH)
-                        .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH)
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(customerCreateDto)))
                 .andExpect(status().isCreated())
@@ -142,7 +139,7 @@ class CustomerControllerWebMvcTest {
         customerCreateDto.setName(null);
 
         mockMvc.perform(post(CUSTOMERS_PATH)
-                        .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH)
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(customerCreateDto)))
                 .andExpect(status().isBadRequest())
@@ -166,7 +163,7 @@ class CustomerControllerWebMvcTest {
         when(customerService.updateCustomer(eq(customerId), any(CustomerUpdateDto.class))).thenReturn(response);
 
         mockMvc.perform(patch(CUSTOMERS_PATH + "/" + customerId)
-                        .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH)
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -186,7 +183,7 @@ class CustomerControllerWebMvcTest {
         CustomerUpdateDto request = new CustomerUpdateDto("Jane Doe", INVALID_PHONE_NUMBER);
 
         mockMvc.perform(patch(CUSTOMERS_PATH + "/" + customerId)
-                        .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH)
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -203,7 +200,7 @@ class CustomerControllerWebMvcTest {
         UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
         mockMvc.perform(patch(CUSTOMERS_PATH + "/" + customerId + "/activation")
-                        .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH))
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
                 .andExpect(status().isNoContent());
 
         verify(customerService).activateCustomer(customerId);
@@ -214,7 +211,7 @@ class CustomerControllerWebMvcTest {
         UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
         mockMvc.perform(patch(CUSTOMERS_PATH + "/" + customerId + "/deactivation")
-                        .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH))
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
                 .andExpect(status().isNoContent());
 
         verify(customerService).deactivateCustomer(customerId);
@@ -229,7 +226,7 @@ class CustomerControllerWebMvcTest {
         when(customerService.createAccount(eq(customerId), any(AccountCreateDto.class))).thenReturn(response);
 
         mockMvc.perform(post(CUSTOMERS_PATH + "/" + customerId + "/accounts")
-                        .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH)
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -252,7 +249,7 @@ class CustomerControllerWebMvcTest {
         AccountCreateDto request = new AccountCreateDto(null);
 
         mockMvc.perform(post(CUSTOMERS_PATH + "/" + customerId + "/accounts")
-                        .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH)
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -273,7 +270,7 @@ class CustomerControllerWebMvcTest {
         when(customerService.getCustomerAccounts(customerId)).thenReturn(List.of(firstAccount, secondAccount));
 
         mockMvc.perform(get(CUSTOMERS_PATH + "/" + customerId + "/accounts")
-                        .header(HttpHeaders.AUTHORIZATION, BASIC_AUTH))
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].number").value(firstAccount.getNumber()))
                 .andExpect(jsonPath("$[1].number").value(secondAccount.getNumber()));

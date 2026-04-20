@@ -8,6 +8,11 @@ resource "random_password" "app_db_password" {
   special = false
 }
 
+resource "random_password" "jwt_secret" {
+  length  = 48
+  special = false
+}
+
 resource "docker_image" "postgres" {
   name = var.postgres_image
 }
