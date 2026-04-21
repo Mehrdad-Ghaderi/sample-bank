@@ -1,12 +1,12 @@
 package com.mehrdad.sample.bank.api.controllers;
 
 import com.mehrdad.sample.bank.api.ApiPaths;
+import com.mehrdad.sample.bank.api.dto.PageResponse;
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.api.dto.account.AccountStatusUpdateDto;
 import com.mehrdad.sample.bank.domain.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -30,11 +30,11 @@ public class AccountController {
     private final AccountService accountService;
 
     @GetMapping
-    public ResponseEntity<Page<AccountDto>> getAccounts(
+    public ResponseEntity<PageResponse<AccountDto>> getAccounts(
             @RequestParam(required = false) String number,
             @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             Authentication authentication) {
-        return ResponseEntity.ok(accountService.getAccounts(authentication.getName(), number, pageable));
+        return ResponseEntity.ok(PageResponse.from(accountService.getAccounts(authentication.getName(), number, pageable)));
     }
 
     @GetMapping(ACCOUNT_RESOURCE_PATH)

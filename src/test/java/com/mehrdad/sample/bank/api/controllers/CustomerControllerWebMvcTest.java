@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -73,7 +74,7 @@ class CustomerControllerWebMvcTest {
         CustomerDto customer = buildCustomerDto();
 
         when(customerService.getCustomers(eq(AUTHENTICATED_USERNAME), eq(1001), eq(CUSTOMER_PHONE_NUMBER), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(customer)));
+                .thenReturn(new PageImpl<>(List.of(customer), PageRequest.of(0, 5), 8));
 
         mockMvc.perform(get(CUSTOMERS_PATH)
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
@@ -84,7 +85,13 @@ class CustomerControllerWebMvcTest {
                 .andExpect(jsonPath("$.content[0].businessId").value(1001))
                 .andExpect(jsonPath("$.content[0].name").value(customer.getName()))
                 .andExpect(jsonPath("$.content[0].phoneNumber").value(customer.getPhoneNumber()))
-                .andExpect(jsonPath("$.content[0].status").value("ACTIVE"));
+                .andExpect(jsonPath("$.content[0].status").value("ACTIVE"))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.totalElements").value(8))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.first").value(true))
+                .andExpect(jsonPath("$.last").value(false));
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
         verify(customerService).getCustomers(eq(AUTHENTICATED_USERNAME), eq(1001), eq(CUSTOMER_PHONE_NUMBER), pageableCaptor.capture());

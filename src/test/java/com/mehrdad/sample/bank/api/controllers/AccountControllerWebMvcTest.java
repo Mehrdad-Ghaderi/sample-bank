@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -68,7 +69,7 @@ class AccountControllerWebMvcTest {
         AccountDto account = buildAccountDto(accountNumber);
 
         when(accountService.getAccounts(eq(AUTHENTICATED_USERNAME), eq(accountNumber), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(account)));
+                .thenReturn(new PageImpl<>(List.of(account), PageRequest.of(0, 5), 12));
 
         mockMvc.perform(get(ACCOUNTS_PATH)
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
@@ -78,7 +79,13 @@ class AccountControllerWebMvcTest {
                 .andExpect(jsonPath("$.content[0].number").value(accountNumber))
                 .andExpect(jsonPath("$.content[0].status").value("ACTIVE"))
                 .andExpect(jsonPath("$.content[0].currency").value("CAD"))
-                .andExpect(jsonPath("$.content[0].balance").value(125.75));
+                .andExpect(jsonPath("$.content[0].balance").value(125.75))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.totalElements").value(12))
+                .andExpect(jsonPath("$.totalPages").value(3))
+                .andExpect(jsonPath("$.first").value(true))
+                .andExpect(jsonPath("$.last").value(false));
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
         verify(accountService).getAccounts(eq(AUTHENTICATED_USERNAME), eq(accountNumber), pageableCaptor.capture());

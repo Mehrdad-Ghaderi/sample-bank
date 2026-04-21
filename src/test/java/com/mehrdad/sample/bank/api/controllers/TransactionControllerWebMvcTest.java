@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -63,7 +64,7 @@ class TransactionControllerWebMvcTest {
         TransactionDto transaction = buildTransactionDto();
 
         when(transactionService.getTransactions(eq(AUTHENTICATED_USERNAME), eq(accountNumber), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(transaction)));
+                .thenReturn(new PageImpl<>(List.of(transaction), PageRequest.of(0, 5), 6));
 
         mockMvc.perform(get(TRANSACTIONS_PATH)
                         .header("Authorization", BEARER_TOKEN)
@@ -74,7 +75,13 @@ class TransactionControllerWebMvcTest {
                 .andExpect(jsonPath("$.content[0].receiverAccountId").value(transaction.getReceiverAccountId().toString()))
                 .andExpect(jsonPath("$.content[0].amount").value(25.50))
                 .andExpect(jsonPath("$.content[0].currency").value("CAD"))
-                .andExpect(jsonPath("$.content[0].type").value("TRANSFER"));
+                .andExpect(jsonPath("$.content[0].type").value("TRANSFER"))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.totalElements").value(6))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.first").value(true))
+                .andExpect(jsonPath("$.last").value(false));
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
         verify(transactionService).getTransactions(eq(AUTHENTICATED_USERNAME), eq(accountNumber), pageableCaptor.capture());
