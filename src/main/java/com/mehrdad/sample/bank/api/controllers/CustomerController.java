@@ -1,6 +1,7 @@
 package com.mehrdad.sample.bank.api.controllers;
 
 import com.mehrdad.sample.bank.api.ApiPaths;
+import com.mehrdad.sample.bank.api.dto.PageResponse;
 import com.mehrdad.sample.bank.api.dto.account.AccountCreateDto;
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.api.dto.customer.CustomerCreateDto;
@@ -9,7 +10,6 @@ import com.mehrdad.sample.bank.api.dto.customer.CustomerUpdateDto;
 import com.mehrdad.sample.bank.domain.service.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -39,12 +39,12 @@ public class CustomerController {
     private final CustomerService customerService;
 
     @GetMapping
-    public ResponseEntity<Page<CustomerDto>> getCustomers(
+    public ResponseEntity<PageResponse<CustomerDto>> getCustomers(
             @RequestParam(required = false) Integer businessId,
             @RequestParam(required = false) String phoneNumber,
             @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             Authentication authentication) {
-        return ResponseEntity.ok(customerService.getCustomers(authentication.getName(), businessId, phoneNumber, pageable));
+        return ResponseEntity.ok(PageResponse.from(customerService.getCustomers(authentication.getName(), businessId, phoneNumber, pageable)));
     }
 
     @GetMapping(CUSTOMER_RESOURCE_PATH)
