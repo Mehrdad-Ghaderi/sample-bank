@@ -1,15 +1,14 @@
 package com.mehrdad.sample.bank.domain.service;
 
-import com.mehrdad.sample.bank.api.dto.CreateDepositRequest;
-import com.mehrdad.sample.bank.api.dto.CreateTransferRequest;
-import com.mehrdad.sample.bank.api.dto.CreateWithdrawalRequest;
-import com.mehrdad.sample.bank.api.dto.TransactionResponse;
+import com.mehrdad.sample.bank.api.dto.transaction.CreateDepositRequest;
+import com.mehrdad.sample.bank.api.dto.transaction.CreateTransferRequest;
+import com.mehrdad.sample.bank.api.dto.transaction.CreateWithdrawalRequest;
+import com.mehrdad.sample.bank.api.dto.transaction.TransactionResponse;
 import com.mehrdad.sample.bank.domain.entity.AccountEntity;
 import com.mehrdad.sample.bank.domain.entity.AccountRole;
 import com.mehrdad.sample.bank.domain.entity.Currency;
 import com.mehrdad.sample.bank.domain.entity.CustomerEntity;
 import com.mehrdad.sample.bank.domain.entity.TransactionEntity;
-import com.mehrdad.sample.bank.domain.exception.transaction.InvalidIdempotencyKeyException;
 import com.mehrdad.sample.bank.domain.mapper.TransactionMapper;
 import com.mehrdad.sample.bank.domain.repository.AccountRepository;
 import com.mehrdad.sample.bank.domain.repository.IdempotencyRecordRepository;
@@ -32,7 +31,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 

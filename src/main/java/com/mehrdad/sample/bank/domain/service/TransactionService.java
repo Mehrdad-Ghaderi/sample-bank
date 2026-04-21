@@ -1,9 +1,9 @@
 package com.mehrdad.sample.bank.domain.service;
 
-import com.mehrdad.sample.bank.api.dto.CreateDepositRequest;
-import com.mehrdad.sample.bank.api.dto.CreateTransferRequest;
-import com.mehrdad.sample.bank.api.dto.CreateWithdrawalRequest;
-import com.mehrdad.sample.bank.api.dto.TransactionResponse;
+import com.mehrdad.sample.bank.api.dto.transaction.CreateDepositRequest;
+import com.mehrdad.sample.bank.api.dto.transaction.CreateTransferRequest;
+import com.mehrdad.sample.bank.api.dto.transaction.CreateWithdrawalRequest;
+import com.mehrdad.sample.bank.api.dto.transaction.TransactionResponse;
 import com.mehrdad.sample.bank.domain.entity.AccountEntity;
 import com.mehrdad.sample.bank.domain.entity.AccountRole;
 import com.mehrdad.sample.bank.domain.entity.Currency;

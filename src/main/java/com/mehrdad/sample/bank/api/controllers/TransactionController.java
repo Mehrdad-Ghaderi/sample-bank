@@ -1,11 +1,11 @@
 package com.mehrdad.sample.bank.api.controllers;
 
 import com.mehrdad.sample.bank.api.ApiPaths;
-import com.mehrdad.sample.bank.api.dto.CreateDepositRequest;
+import com.mehrdad.sample.bank.api.dto.transaction.CreateDepositRequest;
 import com.mehrdad.sample.bank.api.dto.PageResponse;
-import com.mehrdad.sample.bank.api.dto.CreateTransferRequest;
-import com.mehrdad.sample.bank.api.dto.CreateWithdrawalRequest;
-import com.mehrdad.sample.bank.api.dto.TransactionResponse;
+import com.mehrdad.sample.bank.api.dto.transaction.CreateTransferRequest;
+import com.mehrdad.sample.bank.api.dto.transaction.CreateWithdrawalRequest;
+import com.mehrdad.sample.bank.api.dto.transaction.TransactionResponse;
 import com.mehrdad.sample.bank.domain.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

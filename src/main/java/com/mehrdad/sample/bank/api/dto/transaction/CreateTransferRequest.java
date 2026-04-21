@@ -1,4 +1,4 @@
-package com.mehrdad.sample.bank.api.dto;
+package com.mehrdad.sample.bank.api.dto.transaction;
 
 import com.mehrdad.sample.bank.domain.entity.Currency;
 import jakarta.validation.constraints.NotNull;

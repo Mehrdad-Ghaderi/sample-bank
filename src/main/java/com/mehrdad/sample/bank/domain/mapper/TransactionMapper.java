@@ -1,6 +1,6 @@
 package com.mehrdad.sample.bank.domain.mapper;
 
-import com.mehrdad.sample.bank.api.dto.TransactionResponse;
+import com.mehrdad.sample.bank.api.dto.transaction.TransactionResponse;
 import com.mehrdad.sample.bank.domain.entity.TransactionEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
