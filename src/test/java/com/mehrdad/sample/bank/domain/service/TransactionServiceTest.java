@@ -3,7 +3,7 @@ package com.mehrdad.sample.bank.domain.service;
 import com.mehrdad.sample.bank.api.dto.CreateDepositRequest;
 import com.mehrdad.sample.bank.api.dto.CreateTransferRequest;
 import com.mehrdad.sample.bank.api.dto.CreateWithdrawalRequest;
-import com.mehrdad.sample.bank.api.dto.TransactionDto;
+import com.mehrdad.sample.bank.api.dto.TransactionResponse;
 import com.mehrdad.sample.bank.domain.entity.AccountEntity;
 import com.mehrdad.sample.bank.domain.entity.AccountRole;
 import com.mehrdad.sample.bank.domain.entity.Currency;
@@ -62,19 +62,19 @@ class TransactionServiceTest {
         String accountNumber = "2026-101-000046-001";
         PageRequest pageable = PageRequest.of(0, 5);
         TransactionEntity transaction = new TransactionEntity();
-        TransactionDto transactionDto = new TransactionDto();
+        TransactionResponse transactionResponse = new TransactionResponse();
 
         when(accountRepository.findByNumber(accountNumber)).thenReturn(Optional.of(customerAccount(OWNER_USERNAME)));
         when(transactionRepository.searchTransactionsByOwner(OWNER_USERNAME, accountNumber, pageable))
                 .thenReturn(new PageImpl<>(List.of(transaction)));
-        when(transactionMapper.toTransactionDto(transaction)).thenReturn(transactionDto);
+        when(transactionMapper.mapToTransactionResponse(transaction)).thenReturn(transactionResponse);
 
         var result = transactionService.getTransactions(OWNER_USERNAME, "  " + accountNumber + "  ", pageable);
 
-        assertEquals(List.of(transactionDto), result.getContent());
+        assertEquals(List.of(transactionResponse), result.getContent());
         verify(accountRepository).findByNumber(accountNumber);
         verify(transactionRepository).searchTransactionsByOwner(OWNER_USERNAME, accountNumber, pageable);
-        verify(transactionMapper).toTransactionDto(transaction);
+        verify(transactionMapper).mapToTransactionResponse(transaction);
     }
 
     @Test

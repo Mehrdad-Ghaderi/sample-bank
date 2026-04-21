@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CustomerUpdateDto {
+public class UpdateCustomerRequest {
 
     @Size(max = 70)
     private String name;

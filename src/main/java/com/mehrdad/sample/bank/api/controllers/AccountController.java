@@ -2,8 +2,8 @@ package com.mehrdad.sample.bank.api.controllers;
 
 import com.mehrdad.sample.bank.api.ApiPaths;
 import com.mehrdad.sample.bank.api.dto.PageResponse;
-import com.mehrdad.sample.bank.api.dto.account.AccountDto;
-import com.mehrdad.sample.bank.api.dto.account.AccountStatusUpdateDto;
+import com.mehrdad.sample.bank.api.dto.account.AccountResponse;
+import com.mehrdad.sample.bank.api.dto.account.UpdateAccountStatusRequest;
 import com.mehrdad.sample.bank.domain.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,26 +30,26 @@ public class AccountController {
     private final AccountService accountService;
 
     @GetMapping
-    public ResponseEntity<PageResponse<AccountDto>> getAccounts(
+    public ResponseEntity<PageResponse<AccountResponse>> getAccounts(
             @RequestParam(required = false) String number,
             @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             Authentication authentication) {
-        return ResponseEntity.ok(PageResponse.from(accountService.getAccounts(authentication.getName(), number, pageable)));
+        return ResponseEntity.ok(PageResponse.createFrom(accountService.getAccounts(authentication.getName(), number, pageable)));
     }
 
     @GetMapping(ACCOUNT_RESOURCE_PATH)
-    public ResponseEntity<AccountDto> getAccountById(@PathVariable UUID accountId,
+    public ResponseEntity<AccountResponse> getAccountById(@PathVariable UUID accountId,
                                                      Authentication authentication) {
-        AccountDto accountDto = accountService.getAccountById(accountId, authentication.getName());
-        return ResponseEntity.ok(accountDto);
+        AccountResponse accountResponse = accountService.getAccountById(accountId, authentication.getName());
+        return ResponseEntity.ok(accountResponse);
     }
 
     @PatchMapping(ACCOUNT_RESOURCE_PATH)
-    public ResponseEntity<AccountDto> updateAccountStatus(@PathVariable UUID accountId,
-                                                          @Valid @RequestBody AccountStatusUpdateDto statusUpdateDto,
+    public ResponseEntity<AccountResponse> updateAccountStatus(@PathVariable UUID accountId,
+                                                          @Valid @RequestBody UpdateAccountStatusRequest updateAccountStatusRequest,
                                                           Authentication authentication) {
-        AccountDto accountDto = accountService.updateAccountStatus(accountId, statusUpdateDto, authentication.getName());
+        AccountResponse accountResponse = accountService.updateAccountStatus(accountId, updateAccountStatusRequest, authentication.getName());
 
-        return ResponseEntity.ok(accountDto);
+        return ResponseEntity.ok(accountResponse);
     }
 }

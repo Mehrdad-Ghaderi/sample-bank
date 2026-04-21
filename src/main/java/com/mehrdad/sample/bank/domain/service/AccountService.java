@@ -1,7 +1,7 @@
 package com.mehrdad.sample.bank.domain.service;
 
-import com.mehrdad.sample.bank.api.dto.account.AccountStatusUpdateDto;
-import com.mehrdad.sample.bank.api.dto.account.AccountDto;
+import com.mehrdad.sample.bank.api.dto.account.UpdateAccountStatusRequest;
+import com.mehrdad.sample.bank.api.dto.account.AccountResponse;
 import com.mehrdad.sample.bank.domain.entity.AccountEntity;
 import com.mehrdad.sample.bank.domain.entity.Status;
 import com.mehrdad.sample.bank.domain.exception.account.AccountStatusAlreadySetException;
@@ -28,7 +28,7 @@ public class AccountService {
     private final AccountMapper accountMapper;
 
     @Transactional(readOnly = true)
-    public Page<AccountDto> getAccounts(String ownerUsername, String number, Pageable pageable) {
+    public Page<AccountResponse> getAccounts(String ownerUsername, String number, Pageable pageable) {
         String normalizedAccountNumber = normalizeOptionalAccountNumber(number);
 
         if (normalizedAccountNumber != null) {
@@ -36,15 +36,15 @@ public class AccountService {
         }
 
         return accountRepository.searchAccountsByOwner(ownerUsername, normalizedAccountNumber, pageable)
-                .map(accountMapper::toAccountDto);
+                .map(accountMapper::mapToAccountResponse);
     }
 
     @Transactional
-    public AccountDto updateAccountStatus(UUID accountId, AccountStatusUpdateDto statusUpdateDto, String ownerUsername) {
+    public AccountResponse updateAccountStatus(UUID accountId, UpdateAccountStatusRequest updateAccountStatusRequest, String ownerUsername) {
         AccountEntity foundAccount = loadAccountById(accountId);
         validateAccountOwnership(foundAccount, ownerUsername);
 
-        Status newStatus = statusUpdateDto.getStatus();
+        Status newStatus = updateAccountStatusRequest.getStatus();
         Status currentStatus = foundAccount.getStatus();
         if (currentStatus.equals(newStatus)) {
             throw new AccountStatusAlreadySetException(newStatus);
@@ -52,7 +52,7 @@ public class AccountService {
 
         foundAccount.setStatus(newStatus);
         accountRepository.save(foundAccount);
-        return accountMapper.toAccountDto(foundAccount);
+        return accountMapper.mapToAccountResponse(foundAccount);
     }
 
     private AccountEntity loadAccountById(UUID id) {
@@ -69,10 +69,10 @@ public class AccountService {
     }
 
     @Transactional(readOnly = true)
-    public AccountDto getAccountById(UUID id, String ownerUsername) {
+    public AccountResponse getAccountById(UUID id, String ownerUsername) {
         AccountEntity account = loadAccountById(id);
         validateAccountOwnership(account, ownerUsername);
-        return accountMapper.toAccountDto(account);
+        return accountMapper.mapToAccountResponse(account);
     }
 
     private String normalizeOptionalAccountNumber(String number) {

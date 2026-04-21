@@ -5,7 +5,7 @@ import com.mehrdad.sample.bank.api.ApiPaths;
 import com.mehrdad.sample.bank.api.dto.CreateDepositRequest;
 import com.mehrdad.sample.bank.api.dto.CreateTransferRequest;
 import com.mehrdad.sample.bank.api.dto.CreateWithdrawalRequest;
-import com.mehrdad.sample.bank.api.dto.TransactionDto;
+import com.mehrdad.sample.bank.api.dto.TransactionResponse;
 import com.mehrdad.sample.bank.domain.entity.Currency;
 import com.mehrdad.sample.bank.domain.entity.TransactionType;
 import com.mehrdad.sample.bank.domain.service.TransactionService;
@@ -61,7 +61,7 @@ class TransactionControllerWebMvcTest {
     @Test
     void getTransactionsSearchesByAccountNumber() throws Exception {
         String accountNumber = "2026-101-000046-001";
-        TransactionDto transaction = buildTransactionDto();
+        TransactionResponse transaction = buildTransactionResponse();
 
         when(transactionService.getTransactions(eq(AUTHENTICATED_USERNAME), eq(accountNumber), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(transaction), PageRequest.of(0, 5), 6));
@@ -124,7 +124,7 @@ class TransactionControllerWebMvcTest {
     @Test
     void transferPassesRequestAndIdempotencyKeyToService() throws Exception {
         CreateTransferRequest request = buildTransferRequest();
-        TransactionDto response = buildTransferResponse(request);
+        TransactionResponse response = buildTransferResponse(request);
 
         when(transactionService.transfer(any(CreateTransferRequest.class), eq(IDEMPOTENCY_KEY), eq(AUTHENTICATED_USERNAME)))
                 .thenReturn(response);
@@ -155,7 +155,7 @@ class TransactionControllerWebMvcTest {
     @Test
     void depositPassesRequestAndIdempotencyKeyToService() throws Exception {
         CreateDepositRequest request = buildDepositRequest();
-        TransactionDto response = new TransactionDto(
+        TransactionResponse response = new TransactionResponse(
                 UUID.fromString("44444444-4444-4444-4444-444444444444"),
                 UUID.fromString("99999999-9999-9999-9999-999999999999"),
                 request.getReceiverAccountId(),
@@ -183,7 +183,7 @@ class TransactionControllerWebMvcTest {
     @Test
     void withdrawalPassesRequestAndIdempotencyKeyToService() throws Exception {
         CreateWithdrawalRequest request = buildWithdrawalRequest();
-        TransactionDto response = new TransactionDto(
+        TransactionResponse response = new TransactionResponse(
                 UUID.fromString("55555555-5555-5555-5555-555555555555"),
                 request.getSenderAccountId(),
                 UUID.fromString("99999999-9999-9999-9999-999999999999"),
@@ -267,8 +267,8 @@ class TransactionControllerWebMvcTest {
         );
     }
 
-    private static TransactionDto buildTransactionDto() {
-        return new TransactionDto(
+    private static TransactionResponse buildTransactionResponse() {
+        return new TransactionResponse(
                 UUID.fromString("33333333-3333-3333-3333-333333333333"),
                 UUID.fromString("11111111-1111-1111-1111-111111111111"),
                 UUID.fromString("22222222-2222-2222-2222-222222222222"),
@@ -279,8 +279,8 @@ class TransactionControllerWebMvcTest {
         );
     }
 
-    private static TransactionDto buildTransferResponse(CreateTransferRequest request) {
-        return new TransactionDto(
+    private static TransactionResponse buildTransferResponse(CreateTransferRequest request) {
+        return new TransactionResponse(
                 UUID.fromString("33333333-3333-3333-3333-333333333333"),
                 request.getSenderAccountId(),
                 request.getReceiverAccountId(),

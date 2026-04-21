@@ -1,10 +1,10 @@
 package com.mehrdad.sample.bank.domain.service;
 
-import com.mehrdad.sample.bank.api.dto.account.AccountCreateDto;
-import com.mehrdad.sample.bank.api.dto.account.AccountDto;
-import com.mehrdad.sample.bank.api.dto.customer.CustomerCreateDto;
-import com.mehrdad.sample.bank.api.dto.customer.CustomerDto;
-import com.mehrdad.sample.bank.api.dto.customer.CustomerUpdateDto;
+import com.mehrdad.sample.bank.api.dto.account.CreateAccountRequest;
+import com.mehrdad.sample.bank.api.dto.account.AccountResponse;
+import com.mehrdad.sample.bank.api.dto.customer.CreateCustomerRequest;
+import com.mehrdad.sample.bank.api.dto.customer.CustomerResponse;
+import com.mehrdad.sample.bank.api.dto.customer.UpdateCustomerRequest;
 import com.mehrdad.sample.bank.domain.entity.AccountEntity;
 import com.mehrdad.sample.bank.domain.entity.CustomerEntity;
 import com.mehrdad.sample.bank.domain.entity.Status;
@@ -41,35 +41,35 @@ public class CustomerService {
     private final AccountMapper accountMapper;
 
     @Transactional(readOnly = true)
-    public Page<CustomerDto> getCustomers(String ownerUsername, Integer businessId, String phoneNumber, Pageable pageable) {
+    public Page<CustomerResponse> getCustomers(String ownerUsername, Integer businessId, String phoneNumber, Pageable pageable) {
         String normalizedPhoneNumber = normalizeOptionalPhoneNumber(phoneNumber);
 
         return customerRepository.searchCustomers(ownerUsername, businessId, normalizedPhoneNumber, pageable)
-                .map(customerMapper::toCustomerDto);
+                .map(customerMapper::mapToCustomerResponse);
     }
 
     @Transactional(readOnly = true)
-    public CustomerDto getCustomerById(UUID customerId, String ownerUsername) {
+    public CustomerResponse getCustomerById(UUID customerId, String ownerUsername) {
         CustomerEntity customer = loadCustomerById(customerId);
         validateCustomerOwnership(customer, ownerUsername);
-        return customerMapper.toCustomerDto(customer);
+        return customerMapper.mapToCustomerResponse(customer);
     }
 
-    public CustomerDto createCustomer(CustomerCreateDto customerCreateDto, String ownerUsername) {
+    public CustomerResponse createCustomer(CreateCustomerRequest createCustomerRequest, String ownerUsername) {
 
         String normalizedPhoneNumber = PhoneNumberNormalizer.normalizePhoneNumber(
-                customerCreateDto.getPhoneNumber());
+                createCustomerRequest.getPhoneNumber());
 
         if (customerRepository.findByPhoneNumber(normalizedPhoneNumber).isPresent()) {
             throw new CustomerAlreadyExistException(normalizedPhoneNumber);
         }
 
-        CustomerEntity customerEntity = customerMapper.toCustomerEntity(customerCreateDto);
+        CustomerEntity customerEntity = customerMapper.mapToCustomerEntity(createCustomerRequest);
         customerEntity.setPhoneNumber(normalizedPhoneNumber);
         customerEntity.setOwnerUsername(ownerUsername);
         customerEntity.setBusinessId(customerBusinessIdGenerator.getNextBusinessId());
         CustomerEntity savedCustomerEntity = customerRepository.saveAndFlush(customerEntity);
-        return customerMapper.toCustomerDto(savedCustomerEntity);
+        return customerMapper.mapToCustomerResponse(savedCustomerEntity);
     }
 
     private String normalizeOptionalPhoneNumber(String phoneNumber) {
@@ -110,32 +110,32 @@ public class CustomerService {
         customerRepository.save(foundCustomerEntity);
     }
 
-    public CustomerDto updateCustomer(UUID customerId, CustomerUpdateDto customerUpdateDto) {
-        return updateCustomer(customerId, customerUpdateDto, null);
+    public CustomerResponse updateCustomer(UUID customerId, UpdateCustomerRequest updateCustomerRequest) {
+        return updateCustomer(customerId, updateCustomerRequest, null);
     }
 
-    public CustomerDto updateCustomer(UUID customerId, CustomerUpdateDto customerUpdateDto, String ownerUsername) {
+    public CustomerResponse updateCustomer(UUID customerId, UpdateCustomerRequest updateCustomerRequest, String ownerUsername) {
         try {
             CustomerEntity foundCustomer = loadCustomerById(customerId);
             validateCustomerOwnershipIfPresent(foundCustomer, ownerUsername);
 
-            if (customerUpdateDto.getName() != null
-                    && !customerUpdateDto.getName().equals(foundCustomer.getName())) {
-                foundCustomer.setName(customerUpdateDto.getName());
+            if (updateCustomerRequest.getName() != null
+                    && !updateCustomerRequest.getName().equals(foundCustomer.getName())) {
+                foundCustomer.setName(updateCustomerRequest.getName());
             }
 
-            if (customerUpdateDto.getPhoneNumber() != null) {
-                String normalizedPhoneNumber = PhoneNumberNormalizer.normalizePhoneNumber(customerUpdateDto.getPhoneNumber());
+            if (updateCustomerRequest.getPhoneNumber() != null) {
+                String normalizedPhoneNumber = PhoneNumberNormalizer.normalizePhoneNumber(updateCustomerRequest.getPhoneNumber());
 
                 if (!normalizedPhoneNumber.equals(foundCustomer.getPhoneNumber())) {
                     if (customerRepository.existsByPhoneNumber(normalizedPhoneNumber)) {
-                        throw new PhoneNumberAlreadyExists(customerUpdateDto.getPhoneNumber());
+                        throw new PhoneNumberAlreadyExists(updateCustomerRequest.getPhoneNumber());
                     }
                     foundCustomer.setPhoneNumber(normalizedPhoneNumber);
                 }
             }
 
-            return customerMapper.toCustomerDto(foundCustomer);
+            return customerMapper.mapToCustomerResponse(foundCustomer);
         } catch (OptimisticLockingFailureException ex) {
             throw new ConcurrentUpdateException("Customer was updated concurrently. Please retry.", ex);
         } catch (DataIntegrityViolationException ex) {
@@ -146,13 +146,13 @@ public class CustomerService {
     // ACCOUNT ***************************************
 
     @Transactional
-    public AccountDto createAccount(UUID customerId, AccountCreateDto accountCreateDto, String ownerUsername) {
+    public AccountResponse createAccount(UUID customerId, CreateAccountRequest createAccountRequest, String ownerUsername) {
         CustomerEntity foundCustomer = loadCustomerById(customerId);
         validateCustomerOwnership(foundCustomer, ownerUsername);
 
         AccountEntity newAccount = new AccountEntity();
         newAccount.setNumber(AccountNumberGenerator.generate(foundCustomer));
-        newAccount.setCurrency(accountCreateDto.getCurrency());
+        newAccount.setCurrency(createAccountRequest.getCurrency());
 
         foundCustomer.addAccount(newAccount);
         customerRepository.saveAndFlush(foundCustomer);
@@ -163,16 +163,16 @@ public class CustomerService {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Created account was not attached to customer"));
 
-        return accountMapper.toAccountDto(managedAccount);
+        return accountMapper.mapToAccountResponse(managedAccount);
     }
 
     @Transactional(readOnly = true)
-    public List<AccountDto> getCustomerAccounts(UUID customerId, String ownerUsername) {
+    public List<AccountResponse> getCustomerAccounts(UUID customerId, String ownerUsername) {
         CustomerEntity foundCustomer = loadCustomerById(customerId);
         validateCustomerOwnership(foundCustomer, ownerUsername);
 
         return foundCustomer.getAccounts().stream()
-                .map(accountMapper::toAccountDto)
+                .map(accountMapper::mapToAccountResponse)
                 .toList();
     }
 

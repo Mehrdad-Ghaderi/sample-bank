@@ -1,10 +1,10 @@
 package com.mehrdad.sample.bank.domain.service;
 
-import com.mehrdad.sample.bank.api.dto.account.AccountCreateDto;
-import com.mehrdad.sample.bank.api.dto.account.AccountDto;
-import com.mehrdad.sample.bank.api.dto.customer.CustomerCreateDto;
-import com.mehrdad.sample.bank.api.dto.customer.CustomerDto;
-import com.mehrdad.sample.bank.api.dto.customer.CustomerUpdateDto;
+import com.mehrdad.sample.bank.api.dto.account.CreateAccountRequest;
+import com.mehrdad.sample.bank.api.dto.account.AccountResponse;
+import com.mehrdad.sample.bank.api.dto.customer.CreateCustomerRequest;
+import com.mehrdad.sample.bank.api.dto.customer.CustomerResponse;
+import com.mehrdad.sample.bank.api.dto.customer.UpdateCustomerRequest;
 import com.mehrdad.sample.bank.domain.entity.AccountEntity;
 import com.mehrdad.sample.bank.domain.entity.Currency;
 import com.mehrdad.sample.bank.domain.entity.CustomerEntity;
@@ -73,18 +73,18 @@ class CustomerServiceTest {
         Integer businessId = 1001;
         String rawPhoneNumber = "(416) 555-6598";
         CustomerEntity customer = customerEntity(1001);
-        CustomerDto customerDto = customerDto(customer.getId());
+        CustomerResponse customerResponse = customerResponse(customer.getId());
         PageRequest pageable = PageRequest.of(0, 5);
 
         when(customerRepository.searchCustomers(OWNER_USERNAME, businessId, "+14165556598", pageable))
                 .thenReturn(new PageImpl<>(List.of(customer)));
-        when(customerMapper.toCustomerDto(customer)).thenReturn(customerDto);
+        when(customerMapper.mapToCustomerResponse(customer)).thenReturn(customerResponse);
 
         var result = customerService.getCustomers(OWNER_USERNAME, businessId, rawPhoneNumber, pageable);
 
-        assertEquals(List.of(customerDto), result.getContent());
+        assertEquals(List.of(customerResponse), result.getContent());
         verify(customerRepository).searchCustomers(OWNER_USERNAME, businessId, "+14165556598", pageable);
-        verify(customerMapper).toCustomerDto(customer);
+        verify(customerMapper).mapToCustomerResponse(customer);
     }
 
     @Test
@@ -106,16 +106,16 @@ class CustomerServiceTest {
         UUID customerId = UUID.randomUUID();
         CustomerEntity customer = customerEntity(10);
         customer.setId(customerId);
-        CustomerDto expectedCustomer = customerDto(customerId);
+        CustomerResponse expectedCustomer = customerResponse(customerId);
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
-        when(customerMapper.toCustomerDto(customer)).thenReturn(expectedCustomer);
+        when(customerMapper.mapToCustomerResponse(customer)).thenReturn(expectedCustomer);
 
-        CustomerDto result = customerService.getCustomerById(customerId, OWNER_USERNAME);
+        CustomerResponse result = customerService.getCustomerById(customerId, OWNER_USERNAME);
 
         assertEquals(expectedCustomer, result);
         verify(customerRepository).findById(customerId);
-        verify(customerMapper).toCustomerDto(customer);
+        verify(customerMapper).mapToCustomerResponse(customer);
     }
 
     @Test
@@ -150,13 +150,13 @@ class CustomerServiceTest {
         String rawPhoneNumber = "4165556598";
         String normalizedPhoneNumber = "+14165556598";
 
-        CustomerCreateDto customerCreateDto = new CustomerCreateDto();
-        customerCreateDto.setPhoneNumber(rawPhoneNumber);
+        CreateCustomerRequest createCustomerRequest = new CreateCustomerRequest();
+        createCustomerRequest.setPhoneNumber(rawPhoneNumber);
 
         when(customerRepository.findByPhoneNumber(normalizedPhoneNumber))
                 .thenReturn(Optional.of(customerEntity(20)));
 
-        assertThrows(CustomerAlreadyExistException.class, () -> customerService.createCustomer(customerCreateDto, OWNER_USERNAME));
+        assertThrows(CustomerAlreadyExistException.class, () -> customerService.createCustomer(createCustomerRequest, OWNER_USERNAME));
 
         verify(customerRepository).findByPhoneNumber(normalizedPhoneNumber);
         verifyNoInteractions(customerMapper);
@@ -165,31 +165,31 @@ class CustomerServiceTest {
 
     @Test
     void createCustomerShouldNormalizePhoneAssignBusinessIdAndReturnMappedCustomer() {
-        CustomerCreateDto customerCreateDto = new CustomerCreateDto();
-        customerCreateDto.setName("Alice");
-        customerCreateDto.setPhoneNumber("(416) 555-6598");
+        CreateCustomerRequest createCustomerRequest = new CreateCustomerRequest();
+        createCustomerRequest.setName("Alice");
+        createCustomerRequest.setPhoneNumber("(416) 555-6598");
 
         CustomerEntity mappedCustomer = new CustomerEntity();
         CustomerEntity savedCustomer = new CustomerEntity();
-        CustomerDto expectedCustomer = customerDto(UUID.randomUUID());
+        CustomerResponse expectedCustomer = customerResponse(UUID.randomUUID());
 
         when(customerRepository.findByPhoneNumber("+14165556598")).thenReturn(Optional.empty());
-        when(customerMapper.toCustomerEntity(customerCreateDto)).thenReturn(mappedCustomer);
+        when(customerMapper.mapToCustomerEntity(createCustomerRequest)).thenReturn(mappedCustomer);
         when(customerBusinessIdGenerator.getNextBusinessId()).thenReturn(1001);
         when(customerRepository.saveAndFlush(mappedCustomer)).thenReturn(savedCustomer);
-        when(customerMapper.toCustomerDto(savedCustomer)).thenReturn(expectedCustomer);
+        when(customerMapper.mapToCustomerResponse(savedCustomer)).thenReturn(expectedCustomer);
 
-        CustomerDto result = customerService.createCustomer(customerCreateDto, OWNER_USERNAME);
+        CustomerResponse result = customerService.createCustomer(createCustomerRequest, OWNER_USERNAME);
 
         assertEquals(expectedCustomer, result);
         assertEquals("+14165556598", mappedCustomer.getPhoneNumber());
         assertEquals(OWNER_USERNAME, mappedCustomer.getOwnerUsername());
         assertEquals(1001, mappedCustomer.getBusinessId());
         verify(customerRepository).findByPhoneNumber("+14165556598");
-        verify(customerMapper).toCustomerEntity(customerCreateDto);
+        verify(customerMapper).mapToCustomerEntity(createCustomerRequest);
         verify(customerBusinessIdGenerator).getNextBusinessId();
         verify(customerRepository).saveAndFlush(mappedCustomer);
-        verify(customerMapper).toCustomerDto(savedCustomer);
+        verify(customerMapper).mapToCustomerResponse(savedCustomer);
     }
 
     @Test
@@ -287,35 +287,35 @@ class CustomerServiceTest {
         existingCustomer.setName("Alice");
         existingCustomer.setPhoneNumber("+14165550000");
 
-        CustomerUpdateDto customerUpdateDto = new CustomerUpdateDto();
-        customerUpdateDto.setName("Alice");
-        customerUpdateDto.setPhoneNumber("(416) 555-0000");
+        UpdateCustomerRequest updateCustomerRequest = new UpdateCustomerRequest();
+        updateCustomerRequest.setName("Alice");
+        updateCustomerRequest.setPhoneNumber("(416) 555-0000");
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(existingCustomer));
-        when(customerMapper.toCustomerDto(existingCustomer)).thenReturn(customerDto(customerId));
+        when(customerMapper.mapToCustomerResponse(existingCustomer)).thenReturn(customerResponse(customerId));
 
-        CustomerDto result = customerService.updateCustomer(customerId, customerUpdateDto, OWNER_USERNAME);
+        CustomerResponse result = customerService.updateCustomer(customerId, updateCustomerRequest, OWNER_USERNAME);
 
         assertEquals(customerId, result.getId());
         assertEquals("Alice", existingCustomer.getName());
         assertEquals("+14165550000", existingCustomer.getPhoneNumber());
         verify(customerRepository).findById(customerId);
         verify(customerRepository, never()).existsByPhoneNumber(any());
-        verify(customerMapper).toCustomerDto(existingCustomer);
+        verify(customerMapper).mapToCustomerResponse(existingCustomer);
     }
 
     @Test
     void updateCustomerShouldThrowWhenNormalizedPhoneNumberAlreadyExists() {
         UUID customerId = UUID.randomUUID();
         CustomerEntity existingCustomer = customerEntity(41);
-        CustomerUpdateDto customerUpdateDto = new CustomerUpdateDto();
-        customerUpdateDto.setPhoneNumber("(416) 555-9090");
+        UpdateCustomerRequest updateCustomerRequest = new UpdateCustomerRequest();
+        updateCustomerRequest.setPhoneNumber("(416) 555-9090");
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(existingCustomer));
         when(customerRepository.existsByPhoneNumber("+14165559090")).thenReturn(true);
 
         assertThrows(PhoneNumberAlreadyExists.class,
-                () -> customerService.updateCustomer(customerId, customerUpdateDto, OWNER_USERNAME));
+                () -> customerService.updateCustomer(customerId, updateCustomerRequest, OWNER_USERNAME));
 
         verify(customerRepository).findById(customerId);
         verify(customerRepository).existsByPhoneNumber("+14165559090");
@@ -327,12 +327,12 @@ class CustomerServiceTest {
         UUID customerId = UUID.randomUUID();
         CustomerEntity existingCustomer = customerEntity(49);
         existingCustomer.setOwnerUsername(OTHER_USERNAME);
-        CustomerUpdateDto customerUpdateDto = new CustomerUpdateDto("Bob", "(647) 555-1234");
+        UpdateCustomerRequest updateCustomerRequest = new UpdateCustomerRequest("Bob", "(647) 555-1234");
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(existingCustomer));
 
         assertThrows(AccessDeniedException.class,
-                () -> customerService.updateCustomer(customerId, customerUpdateDto, OWNER_USERNAME));
+                () -> customerService.updateCustomer(customerId, updateCustomerRequest, OWNER_USERNAME));
 
         verify(customerRepository).findById(customerId);
         verify(customerRepository, never()).existsByPhoneNumber(any());
@@ -347,17 +347,17 @@ class CustomerServiceTest {
         existingCustomer.setPhoneNumber("+14165550000");
         existingCustomer.setStatus(Status.ACTIVE);
 
-        CustomerUpdateDto customerUpdateDto = new CustomerUpdateDto();
-        customerUpdateDto.setName("Bob");
-        customerUpdateDto.setPhoneNumber("(647) 555-1234");
+        UpdateCustomerRequest updateCustomerRequest = new UpdateCustomerRequest();
+        updateCustomerRequest.setName("Bob");
+        updateCustomerRequest.setPhoneNumber("(647) 555-1234");
 
-        CustomerDto expectedCustomer = customerDto(customerId);
+        CustomerResponse expectedCustomer = customerResponse(customerId);
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(existingCustomer));
         when(customerRepository.existsByPhoneNumber("+16475551234")).thenReturn(false);
-        when(customerMapper.toCustomerDto(existingCustomer)).thenReturn(expectedCustomer);
+        when(customerMapper.mapToCustomerResponse(existingCustomer)).thenReturn(expectedCustomer);
 
-        CustomerDto result = customerService.updateCustomer(customerId, customerUpdateDto, OWNER_USERNAME);
+        CustomerResponse result = customerService.updateCustomer(customerId, updateCustomerRequest, OWNER_USERNAME);
 
         assertEquals(expectedCustomer, result);
         assertEquals("Bob", existingCustomer.getName());
@@ -365,19 +365,19 @@ class CustomerServiceTest {
         assertEquals(Status.ACTIVE, existingCustomer.getStatus());
         verify(customerRepository).findById(customerId);
         verify(customerRepository).existsByPhoneNumber("+16475551234");
-        verify(customerMapper).toCustomerDto(existingCustomer);
+        verify(customerMapper).mapToCustomerResponse(existingCustomer);
     }
 
     @Test
     void updateCustomerShouldTranslateOptimisticLockingFailure() {
         UUID customerId = UUID.randomUUID();
-        CustomerUpdateDto customerUpdateDto = new CustomerUpdateDto();
+        UpdateCustomerRequest updateCustomerRequest = new UpdateCustomerRequest();
 
         when(customerRepository.findById(customerId))
                 .thenThrow(new OptimisticLockingFailureException("conflict"));
 
         RuntimeException exception = assertThrows(ConcurrentUpdateException.class,
-                () -> customerService.updateCustomer(customerId, customerUpdateDto, OWNER_USERNAME));
+                () -> customerService.updateCustomer(customerId, updateCustomerRequest, OWNER_USERNAME));
 
         assertInstanceOf(ConcurrentUpdateException.class, exception);
         verify(customerRepository).findById(customerId);
@@ -387,15 +387,15 @@ class CustomerServiceTest {
     void updateCustomerShouldTranslateDataIntegrityViolation() {
         UUID customerId = UUID.randomUUID();
         CustomerEntity existingCustomer = customerEntity(43);
-        CustomerUpdateDto customerUpdateDto = new CustomerUpdateDto();
-        customerUpdateDto.setPhoneNumber("6475559999");
+        UpdateCustomerRequest updateCustomerRequest = new UpdateCustomerRequest();
+        updateCustomerRequest.setPhoneNumber("6475559999");
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(existingCustomer));
         when(customerRepository.existsByPhoneNumber("+16475559999"))
                 .thenThrow(new DataIntegrityViolationException("duplicate phone"));
 
         assertThrows(PhoneNumberAlreadyExists.class,
-                () -> customerService.updateCustomer(customerId, customerUpdateDto, OWNER_USERNAME));
+                () -> customerService.updateCustomer(customerId, updateCustomerRequest, OWNER_USERNAME));
 
         verify(customerRepository).findById(customerId);
         verify(customerRepository).existsByPhoneNumber("+16475559999");
@@ -408,22 +408,22 @@ class CustomerServiceTest {
         customer.setId(customerId);
         customer.setBusinessId(44);
         customer.setAccounts(new ArrayList<>());
-        AccountDto expectedAccount = new AccountDto();
+        AccountResponse expectedAccount = new AccountResponse();
         expectedAccount.setCurrency(Currency.CAD);
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
-        when(accountMapper.toAccountDto(any(AccountEntity.class))).thenReturn(expectedAccount);
+        when(accountMapper.mapToAccountResponse(any(AccountEntity.class))).thenReturn(expectedAccount);
 
-        AccountCreateDto accountCreateDto = new AccountCreateDto(Currency.CAD);
+        CreateAccountRequest createAccountRequest = new CreateAccountRequest(Currency.CAD);
 
-        AccountDto result = customerService.createAccount(customerId, accountCreateDto, OWNER_USERNAME);
+        AccountResponse result = customerService.createAccount(customerId, createAccountRequest, OWNER_USERNAME);
 
         ArgumentCaptor<AccountEntity> accountCaptor = ArgumentCaptor.forClass(AccountEntity.class);
 
         assertEquals(expectedAccount, result);
         verify(customerRepository).findById(customerId);
         verify(customerRepository).saveAndFlush(customer);
-        verify(accountMapper).toAccountDto(accountCaptor.capture());
+        verify(accountMapper).mapToAccountResponse(accountCaptor.capture());
         assertEquals(Currency.CAD, accountCaptor.getValue().getCurrency());
         assertSame(customer, accountCaptor.getValue().getCustomer());
         assertTrue(accountCaptor.getValue().getNumber().endsWith("-001"));
@@ -439,7 +439,7 @@ class CustomerServiceTest {
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
 
         assertThrows(AccessDeniedException.class,
-                () -> customerService.createAccount(customerId, new AccountCreateDto(Currency.CAD), OWNER_USERNAME));
+                () -> customerService.createAccount(customerId, new CreateAccountRequest(Currency.CAD), OWNER_USERNAME));
 
         verify(customerRepository).findById(customerId);
         verify(customerRepository, never()).saveAndFlush(any());
@@ -454,7 +454,7 @@ class CustomerServiceTest {
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
 
-        List<AccountDto> result = customerService.getCustomerAccounts(customerId, OWNER_USERNAME);
+        List<AccountResponse> result = customerService.getCustomerAccounts(customerId, OWNER_USERNAME);
 
         assertEquals(List.of(), result);
         verify(customerRepository).findById(customerId);
@@ -470,21 +470,21 @@ class CustomerServiceTest {
         AccountEntity secondAccount = new AccountEntity();
         secondAccount.setNumber("2026-101-000046-002");
         customer.setAccounts(List.of(firstAccount, secondAccount));
-        AccountDto firstAccountDto = new AccountDto();
-        firstAccountDto.setNumber(firstAccount.getNumber());
-        AccountDto secondAccountDto = new AccountDto();
-        secondAccountDto.setNumber(secondAccount.getNumber());
+        AccountResponse firstAccountResponse = new AccountResponse();
+        firstAccountResponse.setNumber(firstAccount.getNumber());
+        AccountResponse secondAccountResponse = new AccountResponse();
+        secondAccountResponse.setNumber(secondAccount.getNumber());
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
-        when(accountMapper.toAccountDto(firstAccount)).thenReturn(firstAccountDto);
-        when(accountMapper.toAccountDto(secondAccount)).thenReturn(secondAccountDto);
+        when(accountMapper.mapToAccountResponse(firstAccount)).thenReturn(firstAccountResponse);
+        when(accountMapper.mapToAccountResponse(secondAccount)).thenReturn(secondAccountResponse);
 
-        List<AccountDto> result = customerService.getCustomerAccounts(customerId, OWNER_USERNAME);
+        List<AccountResponse> result = customerService.getCustomerAccounts(customerId, OWNER_USERNAME);
 
-        assertEquals(List.of(firstAccountDto, secondAccountDto), result);
+        assertEquals(List.of(firstAccountResponse, secondAccountResponse), result);
         verify(customerRepository).findById(customerId);
-        verify(accountMapper).toAccountDto(firstAccount);
-        verify(accountMapper).toAccountDto(secondAccount);
+        verify(accountMapper).mapToAccountResponse(firstAccount);
+        verify(accountMapper).mapToAccountResponse(secondAccount);
     }
 
     @Test
@@ -514,8 +514,8 @@ class CustomerServiceTest {
         return customer;
     }
 
-    private CustomerDto customerDto(UUID customerId) {
-        CustomerDto customer = new CustomerDto();
+    private CustomerResponse customerResponse(UUID customerId) {
+        CustomerResponse customer = new CustomerResponse();
         customer.setId(customerId);
         return customer;
     }

@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CustomerCreateDto {
+public class CreateCustomerRequest {
     @NotBlank
     private String name;
 

@@ -21,7 +21,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class TransactionDto {
+public class TransactionResponse {
     private UUID id;
 
     @NotNull

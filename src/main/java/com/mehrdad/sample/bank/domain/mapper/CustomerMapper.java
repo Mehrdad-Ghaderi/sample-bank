@@ -1,7 +1,7 @@
 package com.mehrdad.sample.bank.domain.mapper;
 
-import com.mehrdad.sample.bank.api.dto.customer.CustomerCreateDto;
-import com.mehrdad.sample.bank.api.dto.customer.CustomerDto;
+import com.mehrdad.sample.bank.api.dto.customer.CreateCustomerRequest;
+import com.mehrdad.sample.bank.api.dto.customer.CustomerResponse;
 import com.mehrdad.sample.bank.domain.entity.CustomerEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -23,7 +23,7 @@ public interface CustomerMapper {
     @Mapping(target = "accounts", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    CustomerEntity toCustomerEntity(CustomerCreateDto dto);
+    CustomerEntity mapToCustomerEntity(CreateCustomerRequest dto);
 
-    CustomerDto toCustomerDto(CustomerEntity entity);
+    CustomerResponse mapToCustomerResponse(CustomerEntity entity);
 }

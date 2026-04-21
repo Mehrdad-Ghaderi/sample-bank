@@ -3,9 +3,9 @@ package com.mehrdad.sample.bank.domain.service;
 import com.mehrdad.sample.bank.api.dto.CreateDepositRequest;
 import com.mehrdad.sample.bank.api.dto.CreateTransferRequest;
 import com.mehrdad.sample.bank.api.dto.CreateWithdrawalRequest;
-import com.mehrdad.sample.bank.api.dto.account.AccountCreateDto;
-import com.mehrdad.sample.bank.api.dto.account.AccountDto;
-import com.mehrdad.sample.bank.api.dto.customer.CustomerCreateDto;
+import com.mehrdad.sample.bank.api.dto.account.CreateAccountRequest;
+import com.mehrdad.sample.bank.api.dto.account.AccountResponse;
+import com.mehrdad.sample.bank.api.dto.customer.CreateCustomerRequest;
 import com.mehrdad.sample.bank.domain.entity.*;
 import com.mehrdad.sample.bank.domain.exception.account.AccountNotActiveException;
 import com.mehrdad.sample.bank.domain.exception.account.AccountNotFoundException;
@@ -86,9 +86,9 @@ class TransactionServiceIT {
     @Autowired
     private IdempotencyRecordRepository idempotencyRecordRepository;
 
-    AccountDto bankCadAccount;
-    AccountDto senderAccount;
-    AccountDto receiverAccount;
+    AccountResponse bankCadAccount;
+    AccountResponse senderAccount;
+    AccountResponse receiverAccount;
     @Autowired
     private AccountMapper accountMapper;
 
@@ -142,20 +142,20 @@ class TransactionServiceIT {
                 .map(AccountEntity::getNumber)
                 .orElseThrow();
         bankCadAccount = accountRepository.findByNumber(bankCadAccountNumber)
-                .map(accountMapper::toAccountDto)
+                .map(accountMapper::mapToAccountResponse)
                 .orElseThrow();
     }
 
     void createSender() {
         var senderCustomer = customerService.createCustomer(
-                new CustomerCreateDto("Alice", "1111111111"), OWNER_USERNAME);
-        senderAccount = customerService.createAccount(senderCustomer.getId(), new AccountCreateDto(Currency.CAD), OWNER_USERNAME);
+                new CreateCustomerRequest("Alice", "1111111111"), OWNER_USERNAME);
+        senderAccount = customerService.createAccount(senderCustomer.getId(), new CreateAccountRequest(Currency.CAD), OWNER_USERNAME);
     }
 
     void createReceiver() {
         var receiverCustomer = customerService.createCustomer(
-                new CustomerCreateDto("Bob", "2222222222"), OWNER_USERNAME);
-        receiverAccount = customerService.createAccount(receiverCustomer.getId(), new AccountCreateDto(Currency.CAD), OWNER_USERNAME);
+                new CreateCustomerRequest("Bob", "2222222222"), OWNER_USERNAME);
+        receiverAccount = customerService.createAccount(receiverCustomer.getId(), new CreateAccountRequest(Currency.CAD), OWNER_USERNAME);
     }
 
     @Test
@@ -360,8 +360,8 @@ class TransactionServiceIT {
     }
 
     private void transfer(
-            AccountDto senderAccount,
-            AccountDto receiverAccount,
+            AccountResponse senderAccount,
+            AccountResponse receiverAccount,
             BigDecimal amount,
             TransactionType transactionType
     ) {
@@ -400,13 +400,13 @@ class TransactionServiceIT {
         }
     }
 
-    private void givenAccountHasBalance(AccountDto account, BigDecimal amount) {
+    private void givenAccountHasBalance(AccountResponse account, BigDecimal amount) {
         transfer(bankCadAccount, account, amount, TransactionType.DEPOSIT);
     }
 
-    private void assertBalance(AccountDto account, String expected) {
+    private void assertBalance(AccountResponse account, String expected) {
         String ownerUsername = bankCadAccount.getId().equals(account.getId()) ? BANK_OWNER_USERNAME : OWNER_USERNAME;
-        AccountDto refreshed = accountService.getAccountById(account.getId(), ownerUsername);
+        AccountResponse refreshed = accountService.getAccountById(account.getId(), ownerUsername);
         assertEquals(new BigDecimal(expected), refreshed.getBalance());
     }
 
