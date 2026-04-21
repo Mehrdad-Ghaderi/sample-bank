@@ -2,8 +2,8 @@ package com.mehrdad.sample.bank.api.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mehrdad.sample.bank.api.ApiPaths;
-import com.mehrdad.sample.bank.api.dto.account.AccountDto;
-import com.mehrdad.sample.bank.api.dto.account.AccountStatusUpdateDto;
+import com.mehrdad.sample.bank.api.dto.account.AccountResponse;
+import com.mehrdad.sample.bank.api.dto.account.UpdateAccountStatusRequest;
 import com.mehrdad.sample.bank.domain.entity.Currency;
 import com.mehrdad.sample.bank.domain.entity.Status;
 import com.mehrdad.sample.bank.domain.service.AccountService;
@@ -66,7 +66,7 @@ class AccountControllerWebMvcTest {
     @Test
     void getAccountsSearchesByAccountNumber() throws Exception {
         String accountNumber = "2026-101-000046-001";
-        AccountDto account = buildAccountDto(accountNumber);
+        AccountResponse account = buildAccountResponse(accountNumber);
 
         when(accountService.getAccounts(eq(AUTHENTICATED_USERNAME), eq(accountNumber), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(account), PageRequest.of(0, 5), 12));
@@ -97,7 +97,7 @@ class AccountControllerWebMvcTest {
 
     @Test
     void getAccountByIdReturnsAccount() throws Exception {
-        AccountDto account = buildAccountDto("2026-101-000046-001");
+        AccountResponse account = buildAccountResponse("2026-101-000046-001");
 
         when(accountService.getAccountById(account.getId(), AUTHENTICATED_USERNAME)).thenReturn(account);
 
@@ -129,12 +129,12 @@ class AccountControllerWebMvcTest {
     @Test
     void updateAccountStatusPassesRequestToService() throws Exception {
         UUID accountId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-        AccountStatusUpdateDto request = new AccountStatusUpdateDto(Status.SUSPENDED);
-        AccountDto response = buildAccountDto("2026-101-000046-001");
+        UpdateAccountStatusRequest request = new UpdateAccountStatusRequest(Status.SUSPENDED);
+        AccountResponse response = buildAccountResponse("2026-101-000046-001");
         response.setId(accountId);
         response.setStatus(Status.SUSPENDED);
 
-        when(accountService.updateAccountStatus(eq(accountId), any(AccountStatusUpdateDto.class), eq(AUTHENTICATED_USERNAME)))
+        when(accountService.updateAccountStatus(eq(accountId), any(UpdateAccountStatusRequest.class), eq(AUTHENTICATED_USERNAME)))
                 .thenReturn(response);
 
         mockMvc.perform(patch(ACCOUNTS_PATH + "/" + accountId)
@@ -145,7 +145,7 @@ class AccountControllerWebMvcTest {
                 .andExpect(jsonPath("$.id").value(accountId.toString()))
                 .andExpect(jsonPath("$.status").value("SUSPENDED"));
 
-        ArgumentCaptor<AccountStatusUpdateDto> requestCaptor = ArgumentCaptor.forClass(AccountStatusUpdateDto.class);
+        ArgumentCaptor<UpdateAccountStatusRequest> requestCaptor = ArgumentCaptor.forClass(UpdateAccountStatusRequest.class);
         verify(accountService).updateAccountStatus(eq(accountId), requestCaptor.capture(), eq(AUTHENTICATED_USERNAME));
         assertThat(requestCaptor.getValue().getStatus()).isEqualTo(Status.SUSPENDED);
     }
@@ -153,7 +153,7 @@ class AccountControllerWebMvcTest {
     @Test
     void updateAccountStatusRequiresStatus() throws Exception {
         UUID accountId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-        AccountStatusUpdateDto request = new AccountStatusUpdateDto(null);
+        UpdateAccountStatusRequest request = new UpdateAccountStatusRequest(null);
 
         mockMvc.perform(patch(ACCOUNTS_PATH + "/" + accountId)
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
@@ -168,8 +168,8 @@ class AccountControllerWebMvcTest {
         verifyNoInteractions(accountService);
     }
 
-    private static AccountDto buildAccountDto(String accountNumber) {
-        return new AccountDto(
+    private static AccountResponse buildAccountResponse(String accountNumber) {
+        return new AccountResponse(
                 UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
                 accountNumber,
                 Status.ACTIVE,

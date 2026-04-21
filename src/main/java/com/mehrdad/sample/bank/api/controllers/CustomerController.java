@@ -2,11 +2,11 @@ package com.mehrdad.sample.bank.api.controllers;
 
 import com.mehrdad.sample.bank.api.ApiPaths;
 import com.mehrdad.sample.bank.api.dto.PageResponse;
-import com.mehrdad.sample.bank.api.dto.account.AccountCreateDto;
-import com.mehrdad.sample.bank.api.dto.account.AccountDto;
-import com.mehrdad.sample.bank.api.dto.customer.CustomerCreateDto;
-import com.mehrdad.sample.bank.api.dto.customer.CustomerDto;
-import com.mehrdad.sample.bank.api.dto.customer.CustomerUpdateDto;
+import com.mehrdad.sample.bank.api.dto.account.CreateAccountRequest;
+import com.mehrdad.sample.bank.api.dto.account.AccountResponse;
+import com.mehrdad.sample.bank.api.dto.customer.CreateCustomerRequest;
+import com.mehrdad.sample.bank.api.dto.customer.CustomerResponse;
+import com.mehrdad.sample.bank.api.dto.customer.UpdateCustomerRequest;
 import com.mehrdad.sample.bank.domain.service.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -39,25 +39,25 @@ public class CustomerController {
     private final CustomerService customerService;
 
     @GetMapping
-    public ResponseEntity<PageResponse<CustomerDto>> getCustomers(
+    public ResponseEntity<PageResponse<CustomerResponse>> getCustomers(
             @RequestParam(required = false) Integer businessId,
             @RequestParam(required = false) String phoneNumber,
             @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             Authentication authentication) {
-        return ResponseEntity.ok(PageResponse.from(customerService.getCustomers(authentication.getName(), businessId, phoneNumber, pageable)));
+        return ResponseEntity.ok(PageResponse.createFrom(customerService.getCustomers(authentication.getName(), businessId, phoneNumber, pageable)));
     }
 
     @GetMapping(CUSTOMER_RESOURCE_PATH)
-    public ResponseEntity<CustomerDto> getCustomerById(@PathVariable UUID customerId,
+    public ResponseEntity<CustomerResponse> getCustomerById(@PathVariable UUID customerId,
                                                        Authentication authentication) {
         return ResponseEntity.ok(customerService.getCustomerById(customerId, authentication.getName()));
     }
 
     @PostMapping
-    public ResponseEntity<CustomerDto> createCustomer(
-            @Valid @RequestBody CustomerCreateDto customerCreateDto,
+    public ResponseEntity<CustomerResponse> createCustomer(
+            @Valid @RequestBody CreateCustomerRequest createCustomerRequest,
             Authentication authentication) {
-        CustomerDto createdCustomer = customerService.createCustomer(customerCreateDto, authentication.getName());
+        CustomerResponse createdCustomer = customerService.createCustomer(createCustomerRequest, authentication.getName());
 
         URI location = buildResourceLocation(ApiPaths.CUSTOMER_RESOURCE, createdCustomer.getId());
         return ResponseEntity.created(location).body(createdCustomer);
@@ -78,19 +78,19 @@ public class CustomerController {
     }
 
     @PatchMapping(CUSTOMER_RESOURCE_PATH)
-    public ResponseEntity<CustomerDto> updateCustomer(@PathVariable UUID customerId,
-                                                      @Valid @RequestBody CustomerUpdateDto customerUpdateDto,
+    public ResponseEntity<CustomerResponse> updateCustomer(@PathVariable UUID customerId,
+                                                      @Valid @RequestBody UpdateCustomerRequest updateCustomerRequest,
                                                       Authentication authentication) {
-        CustomerDto updatedCustomer = customerService.updateCustomer(customerId, customerUpdateDto, authentication.getName());
+        CustomerResponse updatedCustomer = customerService.updateCustomer(customerId, updateCustomerRequest, authentication.getName());
         return ResponseEntity.ok(updatedCustomer);
     }
 
     @PostMapping(CUSTOMER_ACCOUNTS_COLLECTION_PATH)
-    public ResponseEntity<AccountDto> createCustomerAccount(@PathVariable UUID customerId,
-                                                            @Valid @RequestBody AccountCreateDto accountCreateDto,
+    public ResponseEntity<AccountResponse> createCustomerAccount(@PathVariable UUID customerId,
+                                                            @Valid @RequestBody CreateAccountRequest createAccountRequest,
                                                             Authentication authentication) {
 
-        AccountDto createdAccount = customerService.createAccount(customerId, accountCreateDto, authentication.getName());
+        AccountResponse createdAccount = customerService.createAccount(customerId, createAccountRequest, authentication.getName());
 
         URI location = buildResourceLocation(ApiPaths.ACCOUNT_RESOURCE, createdAccount.getId());
 
@@ -100,9 +100,9 @@ public class CustomerController {
     }
 
     @GetMapping(CUSTOMER_ACCOUNTS_COLLECTION_PATH)
-    public ResponseEntity<List<AccountDto>> getCustomerAccounts(@PathVariable UUID customerId,
+    public ResponseEntity<List<AccountResponse>> getCustomerAccounts(@PathVariable UUID customerId,
                                                                 Authentication authentication) {
-        List<AccountDto> accounts = customerService.getCustomerAccounts(customerId, authentication.getName());
+        List<AccountResponse> accounts = customerService.getCustomerAccounts(customerId, authentication.getName());
         return ResponseEntity.ok(accounts);
     }
 

@@ -2,11 +2,11 @@ package com.mehrdad.sample.bank.api.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mehrdad.sample.bank.api.ApiPaths;
-import com.mehrdad.sample.bank.api.dto.account.AccountCreateDto;
-import com.mehrdad.sample.bank.api.dto.account.AccountDto;
-import com.mehrdad.sample.bank.api.dto.customer.CustomerCreateDto;
-import com.mehrdad.sample.bank.api.dto.customer.CustomerDto;
-import com.mehrdad.sample.bank.api.dto.customer.CustomerUpdateDto;
+import com.mehrdad.sample.bank.api.dto.account.CreateAccountRequest;
+import com.mehrdad.sample.bank.api.dto.account.AccountResponse;
+import com.mehrdad.sample.bank.api.dto.customer.CreateCustomerRequest;
+import com.mehrdad.sample.bank.api.dto.customer.CustomerResponse;
+import com.mehrdad.sample.bank.api.dto.customer.UpdateCustomerRequest;
 import com.mehrdad.sample.bank.domain.entity.Currency;
 import com.mehrdad.sample.bank.domain.entity.Status;
 import com.mehrdad.sample.bank.domain.service.CustomerService;
@@ -71,7 +71,7 @@ class CustomerControllerWebMvcTest {
 
     @Test
     void getCustomersSearchesByBusinessIdAndPhoneNumber() throws Exception {
-        CustomerDto customer = buildCustomerDto();
+        CustomerResponse customer = buildcustomerResponse();
 
         when(customerService.getCustomers(eq(AUTHENTICATED_USERNAME), eq(1001), eq(CUSTOMER_PHONE_NUMBER), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(customer), PageRequest.of(0, 5), 8));
@@ -101,7 +101,7 @@ class CustomerControllerWebMvcTest {
 
     @Test
     void getCustomerByIdReturnsCustomer() throws Exception {
-        CustomerDto customer = buildCustomerDto();
+        CustomerResponse customer = buildcustomerResponse();
 
         when(customerService.getCustomerById(customer.getId(), AUTHENTICATED_USERNAME)).thenReturn(customer);
 
@@ -131,40 +131,40 @@ class CustomerControllerWebMvcTest {
 
     @Test
     void createCustomerReturnsCreatedWithLocationHeader() throws Exception {
-        CustomerCreateDto customerCreateDto = buildCustomerCreateDto();
+        CreateCustomerRequest createCustomerRequest = buildCreateCustomerRequest();
 
         UUID customerId = UUID.randomUUID();
-        CustomerDto savedCustomerDto = buildCustomerDto();
-        savedCustomerDto.setId(customerId);
-        savedCustomerDto.setName(customerCreateDto.getName());
-        savedCustomerDto.setPhoneNumber(customerCreateDto.getPhoneNumber());
+        CustomerResponse savedCustomerResponse = buildcustomerResponse();
+        savedCustomerResponse.setId(customerId);
+        savedCustomerResponse.setName(createCustomerRequest.getName());
+        savedCustomerResponse.setPhoneNumber(createCustomerRequest.getPhoneNumber());
 
-        when(customerService.createCustomer(any(CustomerCreateDto.class), eq(AUTHENTICATED_USERNAME))).thenReturn(savedCustomerDto);
+        when(customerService.createCustomer(any(CreateCustomerRequest.class), eq(AUTHENTICATED_USERNAME))).thenReturn(savedCustomerResponse);
 
         mockMvc.perform(post(CUSTOMERS_PATH)
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(customerCreateDto)))
+                        .content(objectMapper.writeValueAsString(createCustomerRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value(customerCreateDto.getName()))
-                .andExpect(jsonPath("$.phoneNumber").value(customerCreateDto.getPhoneNumber()))
-                .andExpect(header().string("Location", endsWith(CUSTOMERS_PATH + "/" + savedCustomerDto.getId())));
+                .andExpect(jsonPath("$.name").value(createCustomerRequest.getName()))
+                .andExpect(jsonPath("$.phoneNumber").value(createCustomerRequest.getPhoneNumber()))
+                .andExpect(header().string("Location", endsWith(CUSTOMERS_PATH + "/" + savedCustomerResponse.getId())));
 
-        ArgumentCaptor<CustomerCreateDto> customerCreateCaptor = ArgumentCaptor.forClass(CustomerCreateDto.class);
+        ArgumentCaptor<CreateCustomerRequest> customerCreateCaptor = ArgumentCaptor.forClass(CreateCustomerRequest.class);
         verify(customerService).createCustomer(customerCreateCaptor.capture(), eq(AUTHENTICATED_USERNAME));
-        assertThat(customerCreateCaptor.getValue().getName()).isEqualTo(customerCreateDto.getName());
-        assertThat(customerCreateCaptor.getValue().getPhoneNumber()).isEqualTo(customerCreateDto.getPhoneNumber());
+        assertThat(customerCreateCaptor.getValue().getName()).isEqualTo(createCustomerRequest.getName());
+        assertThat(customerCreateCaptor.getValue().getPhoneNumber()).isEqualTo(createCustomerRequest.getPhoneNumber());
     }
 
     @Test
     void createCustomerRequiresName() throws Exception {
-        CustomerCreateDto customerCreateDto = buildCustomerCreateDto();
-        customerCreateDto.setName(null);
+        CreateCustomerRequest createCustomerRequest = buildCreateCustomerRequest();
+        createCustomerRequest.setName(null);
 
         mockMvc.perform(post(CUSTOMERS_PATH)
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(customerCreateDto)))
+                        .content(objectMapper.writeValueAsString(createCustomerRequest)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_FAILED"))
@@ -177,13 +177,13 @@ class CustomerControllerWebMvcTest {
     @Test
     void updateCustomerPassesRequestToService() throws Exception {
         UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-        CustomerUpdateDto request = new CustomerUpdateDto("Jane Doe", CUSTOMER_PHONE_NUMBER);
-        CustomerDto response = buildCustomerDto();
+        UpdateCustomerRequest request = new UpdateCustomerRequest("Jane Doe", CUSTOMER_PHONE_NUMBER);
+        CustomerResponse response = buildcustomerResponse();
         response.setId(customerId);
         response.setName(request.getName());
         response.setPhoneNumber(request.getPhoneNumber());
 
-        when(customerService.updateCustomer(eq(customerId), any(CustomerUpdateDto.class), eq(AUTHENTICATED_USERNAME)))
+        when(customerService.updateCustomer(eq(customerId), any(UpdateCustomerRequest.class), eq(AUTHENTICATED_USERNAME)))
                 .thenReturn(response);
 
         mockMvc.perform(patch(CUSTOMERS_PATH + "/" + customerId)
@@ -195,7 +195,7 @@ class CustomerControllerWebMvcTest {
                 .andExpect(jsonPath("$.name").value(request.getName()))
                 .andExpect(jsonPath("$.phoneNumber").value(CUSTOMER_PHONE_NUMBER));
 
-        ArgumentCaptor<CustomerUpdateDto> requestCaptor = ArgumentCaptor.forClass(CustomerUpdateDto.class);
+        ArgumentCaptor<UpdateCustomerRequest> requestCaptor = ArgumentCaptor.forClass(UpdateCustomerRequest.class);
         verify(customerService).updateCustomer(eq(customerId), requestCaptor.capture(), eq(AUTHENTICATED_USERNAME));
         assertThat(requestCaptor.getValue().getName()).isEqualTo(request.getName());
         assertThat(requestCaptor.getValue().getPhoneNumber()).isEqualTo(request.getPhoneNumber());
@@ -204,9 +204,9 @@ class CustomerControllerWebMvcTest {
     @Test
     void updateCustomerRejectsCustomerOwnedByAnotherUser() throws Exception {
         UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-        CustomerUpdateDto request = new CustomerUpdateDto("Jane Doe", CUSTOMER_PHONE_NUMBER);
+        UpdateCustomerRequest request = new UpdateCustomerRequest("Jane Doe", CUSTOMER_PHONE_NUMBER);
 
-        when(customerService.updateCustomer(eq(customerId), any(CustomerUpdateDto.class), eq(AUTHENTICATED_USERNAME)))
+        when(customerService.updateCustomer(eq(customerId), any(UpdateCustomerRequest.class), eq(AUTHENTICATED_USERNAME)))
                 .thenThrow(new AccessDeniedException("Customer does not belong to authenticated user"));
 
         mockMvc.perform(patch(CUSTOMERS_PATH + "/" + customerId)
@@ -216,13 +216,13 @@ class CustomerControllerWebMvcTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"));
 
-        verify(customerService).updateCustomer(eq(customerId), any(CustomerUpdateDto.class), eq(AUTHENTICATED_USERNAME));
+        verify(customerService).updateCustomer(eq(customerId), any(UpdateCustomerRequest.class), eq(AUTHENTICATED_USERNAME));
     }
 
     @Test
     void updateCustomerRejectsInvalidPhoneNumber() throws Exception {
         UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-        CustomerUpdateDto request = new CustomerUpdateDto("Jane Doe", INVALID_PHONE_NUMBER);
+        UpdateCustomerRequest request = new UpdateCustomerRequest("Jane Doe", INVALID_PHONE_NUMBER);
 
         mockMvc.perform(patch(CUSTOMERS_PATH + "/" + customerId)
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
@@ -292,10 +292,10 @@ class CustomerControllerWebMvcTest {
     @Test
     void createCustomerAccountReturnsCreatedWithLocationHeader() throws Exception {
         UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-        AccountCreateDto request = new AccountCreateDto(Currency.CAD);
-        AccountDto response = buildAccountDto("2026-101-000001-001");
+        CreateAccountRequest request = new CreateAccountRequest(Currency.CAD);
+        AccountResponse response = buildAccountResponse("2026-101-000001-001");
 
-        when(customerService.createAccount(eq(customerId), any(AccountCreateDto.class), eq(AUTHENTICATED_USERNAME))).thenReturn(response);
+        when(customerService.createAccount(eq(customerId), any(CreateAccountRequest.class), eq(AUTHENTICATED_USERNAME))).thenReturn(response);
 
         mockMvc.perform(post(CUSTOMERS_PATH + "/" + customerId + "/accounts")
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
@@ -310,7 +310,7 @@ class CustomerControllerWebMvcTest {
                         endsWith(ApiPaths.API_BASE_PATH + ApiPaths.ACCOUNTS + "/" + response.getId())
                 ));
 
-        ArgumentCaptor<AccountCreateDto> requestCaptor = ArgumentCaptor.forClass(AccountCreateDto.class);
+        ArgumentCaptor<CreateAccountRequest> requestCaptor = ArgumentCaptor.forClass(CreateAccountRequest.class);
         verify(customerService).createAccount(eq(customerId), requestCaptor.capture(), eq(AUTHENTICATED_USERNAME));
         assertThat(requestCaptor.getValue().getCurrency()).isEqualTo(Currency.CAD);
     }
@@ -318,7 +318,7 @@ class CustomerControllerWebMvcTest {
     @Test
     void createCustomerAccountRequiresCurrency() throws Exception {
         UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-        AccountCreateDto request = new AccountCreateDto(null);
+        CreateAccountRequest request = new CreateAccountRequest(null);
 
         mockMvc.perform(post(CUSTOMERS_PATH + "/" + customerId + "/accounts")
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
@@ -336,8 +336,8 @@ class CustomerControllerWebMvcTest {
     @Test
     void getCustomerAccountsReturnsAccounts() throws Exception {
         UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-        AccountDto firstAccount = buildAccountDto("2026-101-000001-001");
-        AccountDto secondAccount = buildAccountDto("2026-101-000001-002");
+        AccountResponse firstAccount = buildAccountResponse("2026-101-000001-001");
+        AccountResponse secondAccount = buildAccountResponse("2026-101-000001-002");
 
         when(customerService.getCustomerAccounts(customerId, AUTHENTICATED_USERNAME)).thenReturn(List.of(firstAccount, secondAccount));
 
@@ -365,15 +365,15 @@ class CustomerControllerWebMvcTest {
         verify(customerService).getCustomerAccounts(customerId, AUTHENTICATED_USERNAME);
     }
 
-    private static CustomerCreateDto buildCustomerCreateDto() {
-        CustomerCreateDto customerCreateDto = new CustomerCreateDto();
-        customerCreateDto.setName("John Doe");
-        customerCreateDto.setPhoneNumber(CUSTOMER_PHONE_NUMBER);
-        return customerCreateDto;
+    private static CreateCustomerRequest buildCreateCustomerRequest() {
+        CreateCustomerRequest createCustomerRequest = new CreateCustomerRequest();
+        createCustomerRequest.setName("John Doe");
+        createCustomerRequest.setPhoneNumber(CUSTOMER_PHONE_NUMBER);
+        return createCustomerRequest;
     }
 
-    private static CustomerDto buildCustomerDto() {
-        CustomerDto customer = new CustomerDto();
+    private static CustomerResponse buildcustomerResponse() {
+        CustomerResponse customer = new CustomerResponse();
         customer.setId(UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"));
         customer.setBusinessId(1001);
         customer.setName("John Doe");
@@ -384,8 +384,8 @@ class CustomerControllerWebMvcTest {
         return customer;
     }
 
-    private static AccountDto buildAccountDto(String accountNumber) {
-        return new AccountDto(
+    private static AccountResponse buildAccountResponse(String accountNumber) {
+        return new AccountResponse(
                 UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
                 accountNumber,
                 Status.ACTIVE,
