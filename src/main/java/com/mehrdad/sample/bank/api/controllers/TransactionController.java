@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -29,31 +30,35 @@ public class TransactionController {
     @GetMapping
     public ResponseEntity<Page<TransactionDto>> getTransactions(
             @RequestParam(required = false) String accountNumber,
-            @PageableDefault(size = 5, sort = "transactionTime", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(transactionService.getTransactions(accountNumber, pageable));
+            @PageableDefault(size = 5, sort = "transactionTime", direction = Sort.Direction.DESC) Pageable pageable,
+            Authentication authentication) {
+        return ResponseEntity.ok(transactionService.getTransactions(authentication.getName(), accountNumber, pageable));
     }
 
     @PostMapping(TRANSFERS_PATH)
     public ResponseEntity<TransactionDto> transfer(
             @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
-            @Valid @RequestBody CreateTransferRequest request
+            @Valid @RequestBody CreateTransferRequest request,
+            Authentication authentication
     ) {
-        return ResponseEntity.ok(transactionService.transfer(request, idempotencyKey));
+        return ResponseEntity.ok(transactionService.transfer(request, idempotencyKey, authentication.getName()));
     }
 
     @PostMapping(DEPOSITS_PATH)
     public ResponseEntity<TransactionDto> deposit(
             @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
-            @Valid @RequestBody CreateDepositRequest request
+            @Valid @RequestBody CreateDepositRequest request,
+            Authentication authentication
     ) {
-        return ResponseEntity.ok(transactionService.deposit(request, idempotencyKey));
+        return ResponseEntity.ok(transactionService.deposit(request, idempotencyKey, authentication.getName()));
     }
 
     @PostMapping(WITHDRAWALS_PATH)
     public ResponseEntity<TransactionDto> withdraw(
             @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
-            @Valid @RequestBody CreateWithdrawalRequest request
+            @Valid @RequestBody CreateWithdrawalRequest request,
+            Authentication authentication
     ) {
-        return ResponseEntity.ok(transactionService.withdraw(request, idempotencyKey));
+        return ResponseEntity.ok(transactionService.withdraw(request, idempotencyKey, authentication.getName()));
     }
 }

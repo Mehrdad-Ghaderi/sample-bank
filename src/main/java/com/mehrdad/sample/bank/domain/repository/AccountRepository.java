@@ -24,13 +24,43 @@ public interface AccountRepository extends JpaRepository<AccountEntity, UUID> {
     @Query("""
             select a
             from AccountEntity a
-            where (:number is null or a.number = :number)
+            join a.customer c
+            where c.ownerUsername = :ownerUsername
+              and (:number is null or a.number = :number)
             """)
-    Page<AccountEntity> searchAccounts(@Param("number") String number, Pageable pageable);
+    Page<AccountEntity> searchAccountsByOwner(
+            @Param("ownerUsername") String ownerUsername,
+            @Param("number") String number,
+            Pageable pageable
+    );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select a from AccountEntity a where a.id = :id")
     Optional<AccountEntity> findByIdForUpdate(@Param("id") UUID id);
+
+    @Query("""
+            select count(a) > 0
+            from AccountEntity a
+            where a.id = :id and a.accountRole = :accountRole
+            """)
+    boolean existsByIdAndAccountRole(
+            @Param("id") UUID id,
+            @Param("accountRole") AccountRole accountRole
+    );
+
+    @Query("""
+            select count(a) > 0
+            from AccountEntity a
+            join a.customer c
+            where a.id = :id
+              and a.accountRole = :accountRole
+              and c.ownerUsername = :ownerUsername
+            """)
+    boolean existsByIdAndAccountRoleAndOwnerUsername(
+            @Param("id") UUID id,
+            @Param("accountRole") AccountRole accountRole,
+            @Param("ownerUsername") String ownerUsername
+    );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
