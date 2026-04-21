@@ -59,23 +59,6 @@ public class TransactionService {
     }
 
     @Transactional
-    public TransactionDto transfer(CreateTransferRequest request) {
-        validateAmount(request.getAmount());
-        return transactionMapper.toTransactionDto(createTransaction(
-                request.getSenderAccountId(),
-                request.getReceiverAccountId(),
-                request.getAmount(),
-                request.getCurrency(),
-                TransactionType.TRANSFER
-        ));
-    }
-
-    @Transactional
-    public TransactionDto transfer(CreateTransferRequest request, String idempotencyKey) {
-        return transfer(request, idempotencyKey, null);
-    }
-
-    @Transactional
     public TransactionDto transfer(CreateTransferRequest request, String idempotencyKey, String ownerUsername) {
         validateAmount(request.getAmount());
         validateOwnedCustomerAccount(request.getSenderAccountId(), ownerUsername, "Sender account does not belong to authenticated user");
@@ -91,24 +74,6 @@ public class TransactionService {
                         TransactionType.TRANSFER
                 )
         );
-    }
-
-    @Transactional
-    public TransactionDto deposit(CreateDepositRequest request) {
-        validateAmount(request.getAmount());
-        AccountEntity bankTreasury = loadBankTreasuryAccountForUpdate(request.getCurrency());
-        return transactionMapper.toTransactionDto(createTransaction(
-                bankTreasury.getId(),
-                request.getReceiverAccountId(),
-                request.getAmount(),
-                request.getCurrency(),
-                TransactionType.DEPOSIT
-        ));
-    }
-
-    @Transactional
-    public TransactionDto deposit(CreateDepositRequest request, String idempotencyKey) {
-        return deposit(request, idempotencyKey, null);
     }
 
     @Transactional
@@ -130,24 +95,6 @@ public class TransactionService {
                     );
                 }
         );
-    }
-
-    @Transactional
-    public TransactionDto withdraw(CreateWithdrawalRequest request) {
-        validateAmount(request.getAmount());
-        AccountEntity bankTreasury = loadBankTreasuryAccountForUpdate(request.getCurrency());
-        return transactionMapper.toTransactionDto(createTransaction(
-                request.getSenderAccountId(),
-                bankTreasury.getId(),
-                request.getAmount(),
-                request.getCurrency(),
-                TransactionType.WITHDRAW
-        ));
-    }
-
-    @Transactional
-    public TransactionDto withdraw(CreateWithdrawalRequest request, String idempotencyKey) {
-        return withdraw(request, idempotencyKey, null);
     }
 
     @Transactional
@@ -379,13 +326,21 @@ public class TransactionService {
     }
 
     private void validateOwnedCustomerAccount(UUID accountId, String ownerUsername, String accessDeniedMessage) {
-        if (ownerUsername == null) {
-            return;
+        if (ownerUsername == null || ownerUsername.isBlank()) {
+            throw new AccessDeniedException("Authenticated username is required");
         }
 
-        AccountEntity account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException(accountId));
-        validateAccountOwnership(account, ownerUsername, accessDeniedMessage);
+        if (!accountRepository.existsById(accountId)) {
+            throw new AccountNotFoundException(accountId);
+        }
+
+        if (!accountRepository.existsByIdAndAccountRole(accountId, AccountRole.CUSTOMER)) {
+            throw new IllegalTransactionTypeException("Only customer-owned accounts can be used for this operation");
+        }
+
+        if (!accountRepository.existsByIdAndAccountRoleAndOwnerUsername(accountId, AccountRole.CUSTOMER, ownerUsername)) {
+            throw new AccessDeniedException(accessDeniedMessage);
+        }
     }
 
     private void validateAccountOwnership(AccountEntity account, String ownerUsername, String accessDeniedMessage) {

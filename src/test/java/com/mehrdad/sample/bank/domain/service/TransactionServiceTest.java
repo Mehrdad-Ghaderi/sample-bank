@@ -114,13 +114,24 @@ class TransactionServiceTest {
                 Currency.CAD
         );
 
-        when(accountRepository.findById(request.getSenderAccountId()))
-                .thenReturn(Optional.of(customerAccount(OTHER_USERNAME)));
+        when(accountRepository.existsById(request.getSenderAccountId())).thenReturn(true);
+        when(accountRepository.existsByIdAndAccountRole(request.getSenderAccountId(), AccountRole.CUSTOMER)).thenReturn(true);
+        when(accountRepository.existsByIdAndAccountRoleAndOwnerUsername(
+                request.getSenderAccountId(),
+                AccountRole.CUSTOMER,
+                OWNER_USERNAME
+        )).thenReturn(false);
 
         assertThrows(AccessDeniedException.class,
                 () -> transactionService.transfer(request, "key-1", OWNER_USERNAME));
 
-        verify(accountRepository).findById(request.getSenderAccountId());
+        verify(accountRepository).existsById(request.getSenderAccountId());
+        verify(accountRepository).existsByIdAndAccountRole(request.getSenderAccountId(), AccountRole.CUSTOMER);
+        verify(accountRepository).existsByIdAndAccountRoleAndOwnerUsername(
+                request.getSenderAccountId(),
+                AccountRole.CUSTOMER,
+                OWNER_USERNAME
+        );
         verifyNoInteractions(transactionRepository, idempotencyRecordRepository, transactionMapper);
     }
 
@@ -132,13 +143,24 @@ class TransactionServiceTest {
                 Currency.CAD
         );
 
-        when(accountRepository.findById(request.getReceiverAccountId()))
-                .thenReturn(Optional.of(customerAccount(OTHER_USERNAME)));
+        when(accountRepository.existsById(request.getReceiverAccountId())).thenReturn(true);
+        when(accountRepository.existsByIdAndAccountRole(request.getReceiverAccountId(), AccountRole.CUSTOMER)).thenReturn(true);
+        when(accountRepository.existsByIdAndAccountRoleAndOwnerUsername(
+                request.getReceiverAccountId(),
+                AccountRole.CUSTOMER,
+                OWNER_USERNAME
+        )).thenReturn(false);
 
         assertThrows(AccessDeniedException.class,
                 () -> transactionService.deposit(request, "key-1", OWNER_USERNAME));
 
-        verify(accountRepository).findById(request.getReceiverAccountId());
+        verify(accountRepository).existsById(request.getReceiverAccountId());
+        verify(accountRepository).existsByIdAndAccountRole(request.getReceiverAccountId(), AccountRole.CUSTOMER);
+        verify(accountRepository).existsByIdAndAccountRoleAndOwnerUsername(
+                request.getReceiverAccountId(),
+                AccountRole.CUSTOMER,
+                OWNER_USERNAME
+        );
         verifyNoInteractions(transactionRepository, idempotencyRecordRepository, transactionMapper);
     }
 
@@ -150,13 +172,24 @@ class TransactionServiceTest {
                 Currency.CAD
         );
 
-        when(accountRepository.findById(request.getSenderAccountId()))
-                .thenReturn(Optional.of(customerAccount(OTHER_USERNAME)));
+        when(accountRepository.existsById(request.getSenderAccountId())).thenReturn(true);
+        when(accountRepository.existsByIdAndAccountRole(request.getSenderAccountId(), AccountRole.CUSTOMER)).thenReturn(true);
+        when(accountRepository.existsByIdAndAccountRoleAndOwnerUsername(
+                request.getSenderAccountId(),
+                AccountRole.CUSTOMER,
+                OWNER_USERNAME
+        )).thenReturn(false);
 
         assertThrows(AccessDeniedException.class,
                 () -> transactionService.withdraw(request, "key-1", OWNER_USERNAME));
 
-        verify(accountRepository).findById(request.getSenderAccountId());
+        verify(accountRepository).existsById(request.getSenderAccountId());
+        verify(accountRepository).existsByIdAndAccountRole(request.getSenderAccountId(), AccountRole.CUSTOMER);
+        verify(accountRepository).existsByIdAndAccountRoleAndOwnerUsername(
+                request.getSenderAccountId(),
+                AccountRole.CUSTOMER,
+                OWNER_USERNAME
+        );
         verifyNoInteractions(transactionRepository, idempotencyRecordRepository, transactionMapper);
     }
 
@@ -169,22 +202,19 @@ class TransactionServiceTest {
                 Currency.CAD
         );
 
-        when(accountRepository.findById(request.getSenderAccountId()))
-                .thenReturn(Optional.of(treasuryAccount(OWNER_USERNAME)));
+        when(accountRepository.existsById(request.getSenderAccountId())).thenReturn(true);
+        when(accountRepository.existsByIdAndAccountRole(request.getSenderAccountId(), AccountRole.CUSTOMER)).thenReturn(false);
 
         assertThrows(com.mehrdad.sample.bank.domain.exception.transaction.IllegalTransactionTypeException.class,
                 () -> transactionService.transfer(request, "key-1", OWNER_USERNAME));
 
-        verify(accountRepository).findById(request.getSenderAccountId());
+        verify(accountRepository).existsById(request.getSenderAccountId());
+        verify(accountRepository).existsByIdAndAccountRole(request.getSenderAccountId(), AccountRole.CUSTOMER);
         verifyNoInteractions(transactionRepository, idempotencyRecordRepository, transactionMapper);
     }
 
     private static AccountEntity customerAccount(String ownerUsername) {
         return account(ownerUsername, AccountRole.CUSTOMER);
-    }
-
-    private static AccountEntity treasuryAccount(String ownerUsername) {
-        return account(ownerUsername, AccountRole.BANK_TREASURY);
     }
 
     private static AccountEntity account(String ownerUsername, AccountRole accountRole) {

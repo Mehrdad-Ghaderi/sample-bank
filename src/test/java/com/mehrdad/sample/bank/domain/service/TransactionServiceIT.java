@@ -41,6 +41,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -52,6 +53,7 @@ class TransactionServiceIT {
 
     private static final String OWNER_USERNAME = "user";
     private static final String BANK_OWNER_USERNAME = "system";
+    private AtomicInteger idempotencyKeySequence;
 
     @Container
     static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
@@ -96,6 +98,7 @@ class TransactionServiceIT {
         transactionRepository.deleteAll();
         accountRepository.deleteAll();
         customerRepository.deleteAll();
+        idempotencyKeySequence = new AtomicInteger();
         loadBank();
         createSender();
         createReceiver();
@@ -199,7 +202,7 @@ class TransactionServiceIT {
                 Currency.CAD
         );
 
-        assertThrows(InvalidAmountException.class, () -> transactionService.transfer(request));
+        assertThrows(InvalidAmountException.class, () -> transactionService.transfer(request, nextIdempotencyKey("invalid-amount"), OWNER_USERNAME));
         assertEquals(0, transactionRepository.count());
     }
 
@@ -212,7 +215,7 @@ class TransactionServiceIT {
                 Currency.USD
         );
 
-        assertThrows(CurrencyMismatchException.class, () -> transactionService.transfer(request));
+        assertThrows(CurrencyMismatchException.class, () -> transactionService.transfer(request, nextIdempotencyKey("currency-mismatch"), OWNER_USERNAME));
         assertEquals(0, transactionRepository.count());
     }
 
@@ -244,7 +247,7 @@ class TransactionServiceIT {
                 Currency.CAD
         );
 
-        assertThrows(AccountNotFoundException.class, () -> transactionService.deposit(request));
+        assertThrows(AccountNotFoundException.class, () -> transactionService.deposit(request, nextIdempotencyKey("missing-deposit"), OWNER_USERNAME));
     }
 
     @Test
@@ -255,7 +258,7 @@ class TransactionServiceIT {
                 Currency.CAD
         );
 
-        assertThrows(AccountNotFoundException.class, () -> transactionService.withdraw(request));
+        assertThrows(AccountNotFoundException.class, () -> transactionService.withdraw(request, nextIdempotencyKey("missing-withdrawal"), OWNER_USERNAME));
     }
 
     @Test
@@ -277,14 +280,14 @@ class TransactionServiceIT {
                 Currency.CAD
         );
 
-        var first = transactionService.transfer(request, "transfer-retry-1");
-        var second = transactionService.transfer(request, "transfer-retry-1");
+        var first = transactionService.transfer(request, "transfer-retry-1", OWNER_USERNAME);
+        var second = transactionService.transfer(request, "transfer-retry-1", OWNER_USERNAME);
 
         assertEquals(first.getId(), second.getId());
         assertBalance(senderAccount, "90.0000");
         assertBalance(receiverAccount, "10.0000");
         assertEquals(2, transactionRepository.count()); // initial deposit + one transfer
-        assertEquals(1, idempotencyRecordRepository.count());
+        assertEquals(2, idempotencyRecordRepository.count()); // initial deposit + retried transfer command
     }
 
     @Test
@@ -303,11 +306,11 @@ class TransactionServiceIT {
                 Currency.CAD
         );
 
-        transactionService.transfer(firstRequest, "transfer-retry-2");
+        transactionService.transfer(firstRequest, "transfer-retry-2", OWNER_USERNAME);
 
         assertThrows(
                 IdempotencyKeyConflictException.class,
-                () -> transactionService.transfer(changedRequest, "transfer-retry-2")
+                () -> transactionService.transfer(changedRequest, "transfer-retry-2", OWNER_USERNAME)
         );
         assertBalance(senderAccount, "90.0000");
         assertBalance(receiverAccount, "10.0000");
@@ -343,9 +346,13 @@ class TransactionServiceIT {
             long insufficientBalanceFailures = outcomes.stream()
                     .filter(InsufficientBalanceException.class::isInstance)
                     .count();
+            String outcomeTypes = outcomes.stream()
+                    .map(result -> result == null ? "success" : result.getClass().getName() + ": " + result.getMessage())
+                    .toList()
+                    .toString();
 
-            assertEquals(1, successes);
-            assertEquals(1, insufficientBalanceFailures);
+            assertEquals(1, successes, outcomeTypes);
+            assertEquals(1, insufficientBalanceFailures, outcomeTypes);
         }
 
         assertBalance(senderAccount, "40.0000");
@@ -364,17 +371,17 @@ class TransactionServiceIT {
                     receiverAccount.getId(),
                     amount,
                     Currency.CAD
-            ));
+            ), nextIdempotencyKey("transfer"), OWNER_USERNAME);
             case DEPOSIT -> transactionService.deposit(new CreateDepositRequest(
                     receiverAccount.getId(),
                     amount,
                     Currency.CAD
-            ));
+            ), nextIdempotencyKey("deposit"), OWNER_USERNAME);
             case WITHDRAW -> transactionService.withdraw(new CreateWithdrawalRequest(
                     senderAccount.getId(),
                     amount,
                     Currency.CAD
-            ));
+            ), nextIdempotencyKey("withdraw"), OWNER_USERNAME);
         }
     }
 
@@ -386,7 +393,7 @@ class TransactionServiceIT {
         ready.countDown();
         try {
             start.await();
-            transactionService.withdraw(request);
+            transactionService.withdraw(request, nextIdempotencyKey("concurrent-withdraw"), OWNER_USERNAME);
             return null;
         } catch (Throwable throwable) {
             return throwable;
@@ -401,5 +408,9 @@ class TransactionServiceIT {
         String ownerUsername = bankCadAccount.getId().equals(account.getId()) ? BANK_OWNER_USERNAME : OWNER_USERNAME;
         AccountDto refreshed = accountService.getAccountById(account.getId(), ownerUsername);
         assertEquals(new BigDecimal(expected), refreshed.getBalance());
+    }
+
+    private String nextIdempotencyKey(String prefix) {
+        return prefix + "-" + idempotencyKeySequence.incrementAndGet();
     }
 }
