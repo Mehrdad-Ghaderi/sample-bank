@@ -176,7 +176,8 @@ class CustomerControllerWebMvcTest {
         response.setName(request.getName());
         response.setPhoneNumber(request.getPhoneNumber());
 
-        when(customerService.updateCustomer(eq(customerId), any(CustomerUpdateDto.class))).thenReturn(response);
+        when(customerService.updateCustomer(eq(customerId), any(CustomerUpdateDto.class), eq(AUTHENTICATED_USERNAME)))
+                .thenReturn(response);
 
         mockMvc.perform(patch(CUSTOMERS_PATH + "/" + customerId)
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
@@ -188,9 +189,27 @@ class CustomerControllerWebMvcTest {
                 .andExpect(jsonPath("$.phoneNumber").value(CUSTOMER_PHONE_NUMBER));
 
         ArgumentCaptor<CustomerUpdateDto> requestCaptor = ArgumentCaptor.forClass(CustomerUpdateDto.class);
-        verify(customerService).updateCustomer(eq(customerId), requestCaptor.capture());
+        verify(customerService).updateCustomer(eq(customerId), requestCaptor.capture(), eq(AUTHENTICATED_USERNAME));
         assertThat(requestCaptor.getValue().getName()).isEqualTo(request.getName());
         assertThat(requestCaptor.getValue().getPhoneNumber()).isEqualTo(request.getPhoneNumber());
+    }
+
+    @Test
+    void updateCustomerRejectsCustomerOwnedByAnotherUser() throws Exception {
+        UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+        CustomerUpdateDto request = new CustomerUpdateDto("Jane Doe", CUSTOMER_PHONE_NUMBER);
+
+        when(customerService.updateCustomer(eq(customerId), any(CustomerUpdateDto.class), eq(AUTHENTICATED_USERNAME)))
+                .thenThrow(new AccessDeniedException("Customer does not belong to authenticated user"));
+
+        mockMvc.perform(patch(CUSTOMERS_PATH + "/" + customerId)
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"));
+
+        verify(customerService).updateCustomer(eq(customerId), any(CustomerUpdateDto.class), eq(AUTHENTICATED_USERNAME));
     }
 
     @Test
@@ -219,7 +238,7 @@ class CustomerControllerWebMvcTest {
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
                 .andExpect(status().isNoContent());
 
-        verify(customerService).activateCustomer(customerId);
+        verify(customerService).activateCustomer(customerId, AUTHENTICATED_USERNAME);
     }
 
     @Test
@@ -230,7 +249,37 @@ class CustomerControllerWebMvcTest {
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
                 .andExpect(status().isNoContent());
 
-        verify(customerService).deactivateCustomer(customerId);
+        verify(customerService).deactivateCustomer(customerId, AUTHENTICATED_USERNAME);
+    }
+
+    @Test
+    void activateCustomerRejectsCustomerOwnedByAnotherUser() throws Exception {
+        UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+        org.mockito.Mockito.doThrow(new AccessDeniedException("Customer does not belong to authenticated user"))
+                .when(customerService).activateCustomer(customerId, AUTHENTICATED_USERNAME);
+
+        mockMvc.perform(patch(CUSTOMERS_PATH + "/" + customerId + "/activation")
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"));
+
+        verify(customerService).activateCustomer(customerId, AUTHENTICATED_USERNAME);
+    }
+
+    @Test
+    void deactivateCustomerRejectsCustomerOwnedByAnotherUser() throws Exception {
+        UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+        org.mockito.Mockito.doThrow(new AccessDeniedException("Customer does not belong to authenticated user"))
+                .when(customerService).deactivateCustomer(customerId, AUTHENTICATED_USERNAME);
+
+        mockMvc.perform(patch(CUSTOMERS_PATH + "/" + customerId + "/deactivation")
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"));
+
+        verify(customerService).deactivateCustomer(customerId, AUTHENTICATED_USERNAME);
     }
 
     @Test

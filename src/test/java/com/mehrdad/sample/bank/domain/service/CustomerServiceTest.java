@@ -200,7 +200,7 @@ class CustomerServiceTest {
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
 
-        assertThrows(CustomerAlreadyActiveException.class, () -> customerService.activateCustomer(customerId));
+        assertThrows(CustomerAlreadyActiveException.class, () -> customerService.activateCustomer(customerId, OWNER_USERNAME));
 
         verify(customerRepository).findById(customerId);
         verify(customerRepository, never()).save(any());
@@ -214,11 +214,26 @@ class CustomerServiceTest {
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
 
-        customerService.activateCustomer(customerId);
+        customerService.activateCustomer(customerId, OWNER_USERNAME);
 
         assertEquals(Status.ACTIVE, customer.getStatus());
         verify(customerRepository).findById(customerId);
         verify(customerRepository).save(customer);
+    }
+
+    @Test
+    void activateCustomerShouldRejectCustomerOwnedByAnotherUser() {
+        UUID customerId = UUID.randomUUID();
+        CustomerEntity customer = customerEntity(34);
+        customer.setOwnerUsername(OTHER_USERNAME);
+
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+
+        assertThrows(AccessDeniedException.class,
+                () -> customerService.activateCustomer(customerId, OWNER_USERNAME));
+
+        verify(customerRepository).findById(customerId);
+        verify(customerRepository, never()).save(any());
     }
 
     @Test
@@ -229,7 +244,7 @@ class CustomerServiceTest {
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
 
-        assertThrows(CustomerAlreadyInactiveException.class, () -> customerService.deactivateCustomer(customerId));
+        assertThrows(CustomerAlreadyInactiveException.class, () -> customerService.deactivateCustomer(customerId, OWNER_USERNAME));
 
         verify(customerRepository).findById(customerId);
         verify(customerRepository, never()).save(any());
@@ -243,11 +258,26 @@ class CustomerServiceTest {
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
 
-        customerService.deactivateCustomer(customerId);
+        customerService.deactivateCustomer(customerId, OWNER_USERNAME);
 
         assertEquals(Status.SUSPENDED, customer.getStatus());
         verify(customerRepository).findById(customerId);
         verify(customerRepository).save(customer);
+    }
+
+    @Test
+    void deactivateCustomerShouldRejectCustomerOwnedByAnotherUser() {
+        UUID customerId = UUID.randomUUID();
+        CustomerEntity customer = customerEntity(35);
+        customer.setOwnerUsername(OTHER_USERNAME);
+
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+
+        assertThrows(AccessDeniedException.class,
+                () -> customerService.deactivateCustomer(customerId, OWNER_USERNAME));
+
+        verify(customerRepository).findById(customerId);
+        verify(customerRepository, never()).save(any());
     }
 
     @Test
@@ -264,7 +294,7 @@ class CustomerServiceTest {
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(existingCustomer));
         when(customerMapper.toCustomerDto(existingCustomer)).thenReturn(customerDto(customerId));
 
-        CustomerDto result = customerService.updateCustomer(customerId, customerUpdateDto);
+        CustomerDto result = customerService.updateCustomer(customerId, customerUpdateDto, OWNER_USERNAME);
 
         assertEquals(customerId, result.getId());
         assertEquals("Alice", existingCustomer.getName());
@@ -285,10 +315,27 @@ class CustomerServiceTest {
         when(customerRepository.existsByPhoneNumber("+14165559090")).thenReturn(true);
 
         assertThrows(PhoneNumberAlreadyExists.class,
-                () -> customerService.updateCustomer(customerId, customerUpdateDto));
+                () -> customerService.updateCustomer(customerId, customerUpdateDto, OWNER_USERNAME));
 
         verify(customerRepository).findById(customerId);
         verify(customerRepository).existsByPhoneNumber("+14165559090");
+        verifyNoInteractions(customerMapper);
+    }
+
+    @Test
+    void updateCustomerShouldRejectCustomerOwnedByAnotherUser() {
+        UUID customerId = UUID.randomUUID();
+        CustomerEntity existingCustomer = customerEntity(49);
+        existingCustomer.setOwnerUsername(OTHER_USERNAME);
+        CustomerUpdateDto customerUpdateDto = new CustomerUpdateDto("Bob", "(647) 555-1234");
+
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(existingCustomer));
+
+        assertThrows(AccessDeniedException.class,
+                () -> customerService.updateCustomer(customerId, customerUpdateDto, OWNER_USERNAME));
+
+        verify(customerRepository).findById(customerId);
+        verify(customerRepository, never()).existsByPhoneNumber(any());
         verifyNoInteractions(customerMapper);
     }
 
@@ -310,7 +357,7 @@ class CustomerServiceTest {
         when(customerRepository.existsByPhoneNumber("+16475551234")).thenReturn(false);
         when(customerMapper.toCustomerDto(existingCustomer)).thenReturn(expectedCustomer);
 
-        CustomerDto result = customerService.updateCustomer(customerId, customerUpdateDto);
+        CustomerDto result = customerService.updateCustomer(customerId, customerUpdateDto, OWNER_USERNAME);
 
         assertEquals(expectedCustomer, result);
         assertEquals("Bob", existingCustomer.getName());
@@ -330,7 +377,7 @@ class CustomerServiceTest {
                 .thenThrow(new OptimisticLockingFailureException("conflict"));
 
         RuntimeException exception = assertThrows(ConcurrentUpdateException.class,
-                () -> customerService.updateCustomer(customerId, customerUpdateDto));
+                () -> customerService.updateCustomer(customerId, customerUpdateDto, OWNER_USERNAME));
 
         assertInstanceOf(ConcurrentUpdateException.class, exception);
         verify(customerRepository).findById(customerId);
@@ -348,7 +395,7 @@ class CustomerServiceTest {
                 .thenThrow(new DataIntegrityViolationException("duplicate phone"));
 
         assertThrows(PhoneNumberAlreadyExists.class,
-                () -> customerService.updateCustomer(customerId, customerUpdateDto));
+                () -> customerService.updateCustomer(customerId, customerUpdateDto, OWNER_USERNAME));
 
         verify(customerRepository).findById(customerId);
         verify(customerRepository).existsByPhoneNumber("+16475559999");

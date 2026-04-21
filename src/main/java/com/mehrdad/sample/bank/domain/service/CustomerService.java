@@ -80,15 +80,24 @@ public class CustomerService {
     }
 
     public void activateCustomer(UUID id) {
-        activateOrDeactivateCustomer(id, Status.ACTIVE);
+        activateOrDeactivateCustomer(id, Status.ACTIVE, null);
+    }
+
+    public void activateCustomer(UUID id, String ownerUsername) {
+        activateOrDeactivateCustomer(id, Status.ACTIVE, ownerUsername);
     }
 
     public void deactivateCustomer(UUID id) {
-        activateOrDeactivateCustomer(id, Status.SUSPENDED);
+        activateOrDeactivateCustomer(id, Status.SUSPENDED, null);
     }
 
-    private void activateOrDeactivateCustomer(UUID id, Status status) {
+    public void deactivateCustomer(UUID id, String ownerUsername) {
+        activateOrDeactivateCustomer(id, Status.SUSPENDED, ownerUsername);
+    }
+
+    private void activateOrDeactivateCustomer(UUID id, Status status, String ownerUsername) {
         CustomerEntity foundCustomerEntity = loadCustomerById(id);
+        validateCustomerOwnershipIfPresent(foundCustomerEntity, ownerUsername);
 
         if (status == Status.ACTIVE && foundCustomerEntity.getStatus() == Status.ACTIVE) {
             throw new CustomerAlreadyActiveException(id);
@@ -102,8 +111,13 @@ public class CustomerService {
     }
 
     public CustomerDto updateCustomer(UUID customerId, CustomerUpdateDto customerUpdateDto) {
+        return updateCustomer(customerId, customerUpdateDto, null);
+    }
+
+    public CustomerDto updateCustomer(UUID customerId, CustomerUpdateDto customerUpdateDto, String ownerUsername) {
         try {
             CustomerEntity foundCustomer = loadCustomerById(customerId);
+            validateCustomerOwnershipIfPresent(foundCustomer, ownerUsername);
 
             if (customerUpdateDto.getName() != null
                     && !customerUpdateDto.getName().equals(foundCustomer.getName())) {
@@ -170,6 +184,12 @@ public class CustomerService {
     private void validateCustomerOwnership(CustomerEntity customer, String ownerUsername) {
         if (!ownerUsername.equals(customer.getOwnerUsername())) {
             throw new AccessDeniedException("Customer does not belong to authenticated user");
+        }
+    }
+
+    private void validateCustomerOwnershipIfPresent(CustomerEntity customer, String ownerUsername) {
+        if (ownerUsername != null) {
+            validateCustomerOwnership(customer, ownerUsername);
         }
     }
 }

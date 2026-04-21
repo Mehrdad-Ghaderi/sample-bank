@@ -65,20 +65,23 @@ public class CustomerController {
 
     @PatchMapping(CUSTOMER_DEACTIVATION_PATH)
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deactivateCustomer(@PathVariable UUID customerId) {
-        customerService.deactivateCustomer(customerId);
+    public void deactivateCustomer(@PathVariable UUID customerId,
+                                   Authentication authentication) {
+        customerService.deactivateCustomer(customerId, authentication.getName());
     }
 
     @PatchMapping(CUSTOMER_ACTIVATION_PATH)
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void activateCustomer(@PathVariable UUID customerId) {
-        customerService.activateCustomer(customerId);
+    public void activateCustomer(@PathVariable UUID customerId,
+                                 Authentication authentication) {
+        customerService.activateCustomer(customerId, authentication.getName());
     }
 
     @PatchMapping(CUSTOMER_RESOURCE_PATH)
     public ResponseEntity<CustomerDto> updateCustomer(@PathVariable UUID customerId,
-                                                      @Valid @RequestBody CustomerUpdateDto customerUpdateDto) {
-        CustomerDto updatedCustomer = customerService.updateCustomer(customerId, customerUpdateDto);
+                                                      @Valid @RequestBody CustomerUpdateDto customerUpdateDto,
+                                                      Authentication authentication) {
+        CustomerDto updatedCustomer = customerService.updateCustomer(customerId, customerUpdateDto, authentication.getName());
         return ResponseEntity.ok(updatedCustomer);
     }
 
