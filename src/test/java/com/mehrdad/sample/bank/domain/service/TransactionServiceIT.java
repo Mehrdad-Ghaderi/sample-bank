@@ -146,13 +146,13 @@ class TransactionServiceIT {
     void createSender() {
         var senderCustomer = customerService.createCustomer(
                 new CustomerCreateDto("Alice", "1111111111"), OWNER_USERNAME);
-        senderAccount = customerService.createAccount(senderCustomer.getId(), new AccountCreateDto(Currency.CAD));
+        senderAccount = customerService.createAccount(senderCustomer.getId(), new AccountCreateDto(Currency.CAD), OWNER_USERNAME);
     }
 
     void createReceiver() {
         var receiverCustomer = customerService.createCustomer(
                 new CustomerCreateDto("Bob", "2222222222"), OWNER_USERNAME);
-        receiverAccount = customerService.createAccount(receiverCustomer.getId(), new AccountCreateDto(Currency.CAD));
+        receiverAccount = customerService.createAccount(receiverCustomer.getId(), new AccountCreateDto(Currency.CAD), OWNER_USERNAME);
     }
 
     @Test
@@ -398,7 +398,8 @@ class TransactionServiceIT {
     }
 
     private void assertBalance(AccountDto account, String expected) {
-        AccountDto refreshed = accountService.getAccountById(account.getId());
+        String ownerUsername = bankCadAccount.getId().equals(account.getId()) ? BANK_OWNER_USERNAME : OWNER_USERNAME;
+        AccountDto refreshed = accountService.getAccountById(account.getId(), ownerUsername);
         assertEquals(new BigDecimal(expected), refreshed.getBalance());
     }
 }

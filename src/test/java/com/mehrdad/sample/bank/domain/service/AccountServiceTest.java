@@ -3,6 +3,7 @@ package com.mehrdad.sample.bank.domain.service;
 import com.mehrdad.sample.bank.api.dto.account.AccountStatusUpdateDto;
 import com.mehrdad.sample.bank.api.dto.account.AccountDto;
 import com.mehrdad.sample.bank.domain.entity.AccountEntity;
+import com.mehrdad.sample.bank.domain.entity.CustomerEntity;
 import com.mehrdad.sample.bank.domain.entity.Status;
 import com.mehrdad.sample.bank.domain.exception.account.AccountNotFoundException;
 import com.mehrdad.sample.bank.domain.exception.account.AccountStatusAlreadySetException;
@@ -31,14 +32,14 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AccountServiceTest {
 
+    private static final String OWNER_USERNAME = "user";
+    private static final String OTHER_USERNAME = "other-user";
+
     @Mock
     private AccountRepository accountRepository;
 
     @Mock
     private AccountMapper accountMapper;
-
-    @Mock
-    private CustomerService customerService;
 
     @InjectMocks
     private AccountService accountService;
@@ -47,17 +48,19 @@ class AccountServiceTest {
     void getAccountsShouldSearchByTrimmedAccountNumber() {
         String accountNumber = "2026-101-000046-001";
         PageRequest pageable = PageRequest.of(0, 5);
-        AccountEntity account = new AccountEntity();
+        AccountEntity account = ownedAccount(OWNER_USERNAME);
         AccountDto accountDto = new AccountDto();
 
-        when(accountRepository.searchAccounts(accountNumber, pageable))
+        when(accountRepository.findByNumber(accountNumber)).thenReturn(Optional.of(account));
+        when(accountRepository.searchAccountsByOwner(OWNER_USERNAME, accountNumber, pageable))
                 .thenReturn(new PageImpl<>(List.of(account)));
         when(accountMapper.toAccountDto(account)).thenReturn(accountDto);
 
-        var result = accountService.getAccounts("  " + accountNumber + "  ", pageable);
+        var result = accountService.getAccounts(OWNER_USERNAME, "  " + accountNumber + "  ", pageable);
 
         assertEquals(List.of(accountDto), result.getContent());
-        verify(accountRepository).searchAccounts(accountNumber, pageable);
+        verify(accountRepository).findByNumber(accountNumber);
+        verify(accountRepository).searchAccountsByOwner(OWNER_USERNAME, accountNumber, pageable);
         verify(accountMapper).toAccountDto(account);
     }
 
@@ -65,13 +68,29 @@ class AccountServiceTest {
     void getAccountsShouldTreatBlankNumberAsNoNumberFilter() {
         PageRequest pageable = PageRequest.of(0, 5);
 
-        when(accountRepository.searchAccounts(null, pageable))
+        when(accountRepository.searchAccountsByOwner(OWNER_USERNAME, null, pageable))
                 .thenReturn(new PageImpl<>(List.of()));
 
-        var result = accountService.getAccounts("   ", pageable);
+        var result = accountService.getAccounts(OWNER_USERNAME, "   ", pageable);
 
         assertEquals(List.of(), result.getContent());
-        verify(accountRepository).searchAccounts(null, pageable);
+        verify(accountRepository).searchAccountsByOwner(OWNER_USERNAME, null, pageable);
+        verifyNoInteractions(accountMapper);
+    }
+
+    @Test
+    void getAccountsShouldRejectAccountOwnedByAnotherUser() {
+        String accountNumber = "2026-101-000046-001";
+        PageRequest pageable = PageRequest.of(0, 5);
+        AccountEntity account = ownedAccount(OTHER_USERNAME);
+
+        when(accountRepository.findByNumber(accountNumber)).thenReturn(Optional.of(account));
+
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> accountService.getAccounts(OWNER_USERNAME, accountNumber, pageable));
+
+        verify(accountRepository).findByNumber(accountNumber);
+        verify(accountRepository, never()).searchAccountsByOwner(any(), any(), any());
         verifyNoInteractions(accountMapper);
     }
 
@@ -79,7 +98,7 @@ class AccountServiceTest {
     void updateAccountStatusShouldChangeAccountStatusAndReturnMappedDto() {
         UUID accountId = UUID.randomUUID();
 
-        AccountEntity account = new AccountEntity();
+        AccountEntity account = ownedAccount(OWNER_USERNAME);
         account.setId(accountId);
         account.setStatus(Status.ACTIVE);
 
@@ -92,7 +111,7 @@ class AccountServiceTest {
         when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
         when(accountMapper.toAccountDto(account)).thenReturn(mappedDto);
 
-        AccountDto result = accountService.updateAccountStatus(accountId, statusUpdateDto);
+        AccountDto result = accountService.updateAccountStatus(accountId, statusUpdateDto, OWNER_USERNAME);
 
         assertEquals(Status.SUSPENDED, account.getStatus());
         assertEquals(Status.SUSPENDED, result.getStatus());
@@ -105,7 +124,7 @@ class AccountServiceTest {
     void updateAccountStatusShouldThrowWhenStatusIsAlreadySet() {
         UUID accountId = UUID.randomUUID();
 
-        AccountEntity account = new AccountEntity();
+        AccountEntity account = ownedAccount(OWNER_USERNAME);
         account.setId(accountId);
         account.setStatus(Status.ACTIVE);
 
@@ -115,7 +134,7 @@ class AccountServiceTest {
 
         assertThrows(
                 AccountStatusAlreadySetException.class,
-                () -> accountService.updateAccountStatus(accountId, statusUpdateDto)
+                () -> accountService.updateAccountStatus(accountId, statusUpdateDto, OWNER_USERNAME)
         );
 
         verify(accountRepository).findById(accountId);
@@ -132,7 +151,7 @@ class AccountServiceTest {
 
         assertThrows(
                 AccountNotFoundException.class,
-                () -> accountService.updateAccountStatus(accountId, statusUpdateDto)
+                () -> accountService.updateAccountStatus(accountId, statusUpdateDto, OWNER_USERNAME)
         );
 
         verify(accountRepository).findById(accountId);
@@ -143,7 +162,7 @@ class AccountServiceTest {
     @Test
     void setAccountStatusShouldUpdateAndSaveAccount() {
         UUID accountId = UUID.randomUUID();
-        AccountEntity account = new AccountEntity();
+        AccountEntity account = ownedAccount(OWNER_USERNAME);
         account.setId(accountId);
         account.setStatus(Status.ACTIVE);
 
@@ -154,5 +173,46 @@ class AccountServiceTest {
         assertEquals(Status.FROZEN, account.getStatus());
         verify(accountRepository).findById(accountId);
         verify(accountRepository).save(account);
+    }
+
+    @Test
+    void getAccountByIdShouldRejectAccountOwnedByAnotherUser() {
+        UUID accountId = UUID.randomUUID();
+        AccountEntity account = ownedAccount(OTHER_USERNAME);
+        account.setId(accountId);
+
+        when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
+
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> accountService.getAccountById(accountId, OWNER_USERNAME));
+
+        verify(accountRepository).findById(accountId);
+        verifyNoInteractions(accountMapper);
+    }
+
+    @Test
+    void getAccountByIdShouldReturnOwnedAccount() {
+        UUID accountId = UUID.randomUUID();
+        AccountEntity account = ownedAccount(OWNER_USERNAME);
+        account.setId(accountId);
+        AccountDto dto = new AccountDto();
+
+        when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
+        when(accountMapper.toAccountDto(account)).thenReturn(dto);
+
+        AccountDto result = accountService.getAccountById(accountId, OWNER_USERNAME);
+
+        assertEquals(dto, result);
+        verify(accountRepository).findById(accountId);
+        verify(accountMapper).toAccountDto(account);
+    }
+
+    private static AccountEntity ownedAccount(String ownerUsername) {
+        CustomerEntity customer = new CustomerEntity();
+        customer.setOwnerUsername(ownerUsername);
+
+        AccountEntity account = new AccountEntity();
+        account.setCustomer(customer);
+        return account;
     }
 }

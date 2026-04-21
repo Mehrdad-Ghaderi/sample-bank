@@ -15,13 +15,20 @@ import java.util.UUID;
 public interface TransactionRepository extends JpaRepository<TransactionEntity, UUID> {
 
     @Query("""
-            select t
+            select distinct t
             from TransactionEntity t
-            where (:accountNumber is null
-                or t.sender.number = :accountNumber
-                or t.receiver.number = :accountNumber)
+            join t.sender s
+            join s.customer senderCustomer
+            join t.receiver r
+            join r.customer receiverCustomer
+            where (senderCustomer.ownerUsername = :ownerUsername
+                or receiverCustomer.ownerUsername = :ownerUsername)
+              and (:accountNumber is null
+                or s.number = :accountNumber
+                or r.number = :accountNumber)
             """)
-    Page<TransactionEntity> searchTransactions(
+    Page<TransactionEntity> searchTransactionsByOwner(
+            @Param("ownerUsername") String ownerUsername,
             @Param("accountNumber") String accountNumber,
             Pageable pageable
     );

@@ -24,9 +24,15 @@ public interface AccountRepository extends JpaRepository<AccountEntity, UUID> {
     @Query("""
             select a
             from AccountEntity a
-            where (:number is null or a.number = :number)
+            join a.customer c
+            where c.ownerUsername = :ownerUsername
+              and (:number is null or a.number = :number)
             """)
-    Page<AccountEntity> searchAccounts(@Param("number") String number, Pageable pageable);
+    Page<AccountEntity> searchAccountsByOwner(
+            @Param("ownerUsername") String ownerUsername,
+            @Param("number") String number,
+            Pageable pageable
+    );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select a from AccountEntity a where a.id = :id")

@@ -17,6 +17,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -41,6 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AccountControllerWebMvcTest {
 
     private static final String ACCOUNTS_PATH = ApiPaths.API_BASE_PATH + ApiPaths.ACCOUNTS;
+    private static final String AUTHENTICATED_USERNAME = "user";
     private static final String BEARER_TOKEN = TestJwtTokens.bearerToken();
 
     @Autowired
@@ -65,7 +67,7 @@ class AccountControllerWebMvcTest {
         String accountNumber = "2026-101-000046-001";
         AccountDto account = buildAccountDto(accountNumber);
 
-        when(accountService.getAccounts(eq(accountNumber), any(Pageable.class)))
+        when(accountService.getAccounts(eq(AUTHENTICATED_USERNAME), eq(accountNumber), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(account)));
 
         mockMvc.perform(get(ACCOUNTS_PATH)
@@ -79,7 +81,7 @@ class AccountControllerWebMvcTest {
                 .andExpect(jsonPath("$.content[0].balance").value(125.75));
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        verify(accountService).getAccounts(eq(accountNumber), pageableCaptor.capture());
+        verify(accountService).getAccounts(eq(AUTHENTICATED_USERNAME), eq(accountNumber), pageableCaptor.capture());
 
         Pageable pageable = pageableCaptor.getValue();
         assertThat(pageable.getPageSize()).isEqualTo(5);
@@ -90,7 +92,7 @@ class AccountControllerWebMvcTest {
     void getAccountByIdReturnsAccount() throws Exception {
         AccountDto account = buildAccountDto("2026-101-000046-001");
 
-        when(accountService.getAccountById(account.getId())).thenReturn(account);
+        when(accountService.getAccountById(account.getId(), AUTHENTICATED_USERNAME)).thenReturn(account);
 
         mockMvc.perform(get(ACCOUNTS_PATH + "/" + account.getId())
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
@@ -99,7 +101,22 @@ class AccountControllerWebMvcTest {
                 .andExpect(jsonPath("$.number").value(account.getNumber()))
                 .andExpect(jsonPath("$.status").value("ACTIVE"));
 
-        verify(accountService).getAccountById(account.getId());
+        verify(accountService).getAccountById(account.getId(), AUTHENTICATED_USERNAME);
+    }
+
+    @Test
+    void getAccountByIdRejectsAccountOwnedByAnotherUser() throws Exception {
+        UUID accountId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+        when(accountService.getAccountById(accountId, AUTHENTICATED_USERNAME))
+                .thenThrow(new AccessDeniedException("Account does not belong to authenticated user"));
+
+        mockMvc.perform(get(ACCOUNTS_PATH + "/" + accountId)
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"));
+
+        verify(accountService).getAccountById(accountId, AUTHENTICATED_USERNAME);
     }
 
     @Test
@@ -110,7 +127,7 @@ class AccountControllerWebMvcTest {
         response.setId(accountId);
         response.setStatus(Status.SUSPENDED);
 
-        when(accountService.updateAccountStatus(eq(accountId), any(AccountStatusUpdateDto.class)))
+        when(accountService.updateAccountStatus(eq(accountId), any(AccountStatusUpdateDto.class), eq(AUTHENTICATED_USERNAME)))
                 .thenReturn(response);
 
         mockMvc.perform(patch(ACCOUNTS_PATH + "/" + accountId)
@@ -122,7 +139,7 @@ class AccountControllerWebMvcTest {
                 .andExpect(jsonPath("$.status").value("SUSPENDED"));
 
         ArgumentCaptor<AccountStatusUpdateDto> requestCaptor = ArgumentCaptor.forClass(AccountStatusUpdateDto.class);
-        verify(accountService).updateAccountStatus(eq(accountId), requestCaptor.capture());
+        verify(accountService).updateAccountStatus(eq(accountId), requestCaptor.capture(), eq(AUTHENTICATED_USERNAME));
         assertThat(requestCaptor.getValue().getStatus()).isEqualTo(Status.SUSPENDED);
     }
 

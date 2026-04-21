@@ -19,9 +19,13 @@ final class TestJwtTokens {
     }
 
     static String bearerToken() {
+        return bearerToken("user");
+    }
+
+    static String bearerToken(String subject) {
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()
-                .subject("user")
+                .subject(subject)
                 .issuedAt(now)
                 .expiresAt(now.plusSeconds(3600))
                 .claim("scope", "ROLE_USER")

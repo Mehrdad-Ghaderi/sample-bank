@@ -84,9 +84,10 @@ public class CustomerController {
 
     @PostMapping(CUSTOMER_ACCOUNTS_COLLECTION_PATH)
     public ResponseEntity<AccountDto> createCustomerAccount(@PathVariable UUID customerId,
-                                                            @Valid @RequestBody AccountCreateDto accountCreateDto) {
+                                                            @Valid @RequestBody AccountCreateDto accountCreateDto,
+                                                            Authentication authentication) {
 
-        AccountDto createdAccount = customerService.createAccount(customerId, accountCreateDto);
+        AccountDto createdAccount = customerService.createAccount(customerId, accountCreateDto, authentication.getName());
 
         URI location = buildResourceLocation(ApiPaths.ACCOUNT_RESOURCE, createdAccount.getId());
 
@@ -96,8 +97,9 @@ public class CustomerController {
     }
 
     @GetMapping(CUSTOMER_ACCOUNTS_COLLECTION_PATH)
-    public ResponseEntity<List<AccountDto>> getCustomerAccounts(@PathVariable UUID customerId) {
-        List<AccountDto> accounts = customerService.getCustomerAccounts(customerId);
+    public ResponseEntity<List<AccountDto>> getCustomerAccounts(@PathVariable UUID customerId,
+                                                                Authentication authentication) {
+        List<AccountDto> accounts = customerService.getCustomerAccounts(customerId, authentication.getName());
         return ResponseEntity.ok(accounts);
     }
 

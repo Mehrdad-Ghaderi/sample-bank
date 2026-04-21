@@ -239,7 +239,7 @@ class CustomerControllerWebMvcTest {
         AccountCreateDto request = new AccountCreateDto(Currency.CAD);
         AccountDto response = buildAccountDto("2026-101-000001-001");
 
-        when(customerService.createAccount(eq(customerId), any(AccountCreateDto.class))).thenReturn(response);
+        when(customerService.createAccount(eq(customerId), any(AccountCreateDto.class), eq(AUTHENTICATED_USERNAME))).thenReturn(response);
 
         mockMvc.perform(post(CUSTOMERS_PATH + "/" + customerId + "/accounts")
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
@@ -255,7 +255,7 @@ class CustomerControllerWebMvcTest {
                 ));
 
         ArgumentCaptor<AccountCreateDto> requestCaptor = ArgumentCaptor.forClass(AccountCreateDto.class);
-        verify(customerService).createAccount(eq(customerId), requestCaptor.capture());
+        verify(customerService).createAccount(eq(customerId), requestCaptor.capture(), eq(AUTHENTICATED_USERNAME));
         assertThat(requestCaptor.getValue().getCurrency()).isEqualTo(Currency.CAD);
     }
 
@@ -283,7 +283,7 @@ class CustomerControllerWebMvcTest {
         AccountDto firstAccount = buildAccountDto("2026-101-000001-001");
         AccountDto secondAccount = buildAccountDto("2026-101-000001-002");
 
-        when(customerService.getCustomerAccounts(customerId)).thenReturn(List.of(firstAccount, secondAccount));
+        when(customerService.getCustomerAccounts(customerId, AUTHENTICATED_USERNAME)).thenReturn(List.of(firstAccount, secondAccount));
 
         mockMvc.perform(get(CUSTOMERS_PATH + "/" + customerId + "/accounts")
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
@@ -291,7 +291,22 @@ class CustomerControllerWebMvcTest {
                 .andExpect(jsonPath("$[0].number").value(firstAccount.getNumber()))
                 .andExpect(jsonPath("$[1].number").value(secondAccount.getNumber()));
 
-        verify(customerService).getCustomerAccounts(customerId);
+        verify(customerService).getCustomerAccounts(customerId, AUTHENTICATED_USERNAME);
+    }
+
+    @Test
+    void getCustomerAccountsRejectsCustomerOwnedByAnotherUser() throws Exception {
+        UUID customerId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+        when(customerService.getCustomerAccounts(customerId, AUTHENTICATED_USERNAME))
+                .thenThrow(new AccessDeniedException("Customer does not belong to authenticated user"));
+
+        mockMvc.perform(get(CUSTOMERS_PATH + "/" + customerId + "/accounts")
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"));
+
+        verify(customerService).getCustomerAccounts(customerId, AUTHENTICATED_USERNAME);
     }
 
     private static CustomerCreateDto buildCustomerCreateDto() {

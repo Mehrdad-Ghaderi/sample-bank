@@ -17,7 +17,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -43,6 +45,7 @@ class TransactionControllerWebMvcTest {
 
     private static final String TRANSACTIONS_PATH = ApiPaths.API_BASE_PATH + ApiPaths.TRANSACTIONS;
     private static final String IDEMPOTENCY_KEY = "transfer-key-1";
+    private static final String AUTHENTICATED_USERNAME = "user";
     private static final String BEARER_TOKEN = TestJwtTokens.bearerToken();
 
     @Autowired
@@ -59,7 +62,7 @@ class TransactionControllerWebMvcTest {
         String accountNumber = "2026-101-000046-001";
         TransactionDto transaction = buildTransactionDto();
 
-        when(transactionService.getTransactions(eq(accountNumber), any(Pageable.class)))
+        when(transactionService.getTransactions(eq(AUTHENTICATED_USERNAME), eq(accountNumber), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(transaction)));
 
         mockMvc.perform(get(TRANSACTIONS_PATH)
@@ -74,7 +77,7 @@ class TransactionControllerWebMvcTest {
                 .andExpect(jsonPath("$.content[0].type").value("TRANSFER"));
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        verify(transactionService).getTransactions(eq(accountNumber), pageableCaptor.capture());
+        verify(transactionService).getTransactions(eq(AUTHENTICATED_USERNAME), eq(accountNumber), pageableCaptor.capture());
 
         Pageable pageable = pageableCaptor.getValue();
         assertThat(pageable.getPageSize()).isEqualTo(5);
@@ -116,7 +119,7 @@ class TransactionControllerWebMvcTest {
         CreateTransferRequest request = buildTransferRequest();
         TransactionDto response = buildTransferResponse(request);
 
-        when(transactionService.transfer(any(CreateTransferRequest.class), eq(IDEMPOTENCY_KEY)))
+        when(transactionService.transfer(any(CreateTransferRequest.class), eq(IDEMPOTENCY_KEY), eq(AUTHENTICATED_USERNAME)))
                 .thenReturn(response);
 
         mockMvc.perform(post(TRANSACTIONS_PATH + "/transfers")
@@ -133,7 +136,7 @@ class TransactionControllerWebMvcTest {
                 .andExpect(jsonPath("$.type").value("TRANSFER"));
 
         ArgumentCaptor<CreateTransferRequest> requestCaptor = ArgumentCaptor.forClass(CreateTransferRequest.class);
-        verify(transactionService).transfer(requestCaptor.capture(), eq(IDEMPOTENCY_KEY));
+        verify(transactionService).transfer(requestCaptor.capture(), eq(IDEMPOTENCY_KEY), eq(AUTHENTICATED_USERNAME));
 
         CreateTransferRequest captured = requestCaptor.getValue();
         assertThat(captured.getSenderAccountId()).isEqualTo(request.getSenderAccountId());
@@ -155,7 +158,7 @@ class TransactionControllerWebMvcTest {
                 Instant.parse("2026-04-15T12:00:00Z")
         );
 
-        when(transactionService.deposit(any(CreateDepositRequest.class), eq(IDEMPOTENCY_KEY)))
+        when(transactionService.deposit(any(CreateDepositRequest.class), eq(IDEMPOTENCY_KEY), eq(AUTHENTICATED_USERNAME)))
                 .thenReturn(response);
 
         mockMvc.perform(post(TRANSACTIONS_PATH + "/deposits")
@@ -167,7 +170,7 @@ class TransactionControllerWebMvcTest {
                 .andExpect(jsonPath("$.type").value("DEPOSIT"))
                 .andExpect(jsonPath("$.receiverAccountId").value(request.getReceiverAccountId().toString()));
 
-        verify(transactionService).deposit(any(CreateDepositRequest.class), eq(IDEMPOTENCY_KEY));
+        verify(transactionService).deposit(any(CreateDepositRequest.class), eq(IDEMPOTENCY_KEY), eq(AUTHENTICATED_USERNAME));
     }
 
     @Test
@@ -183,7 +186,7 @@ class TransactionControllerWebMvcTest {
                 Instant.parse("2026-04-15T12:00:00Z")
         );
 
-        when(transactionService.withdraw(any(CreateWithdrawalRequest.class), eq(IDEMPOTENCY_KEY)))
+        when(transactionService.withdraw(any(CreateWithdrawalRequest.class), eq(IDEMPOTENCY_KEY), eq(AUTHENTICATED_USERNAME)))
                 .thenReturn(response);
 
         mockMvc.perform(post(TRANSACTIONS_PATH + "/withdrawals")
@@ -195,7 +198,41 @@ class TransactionControllerWebMvcTest {
                 .andExpect(jsonPath("$.type").value("WITHDRAW"))
                 .andExpect(jsonPath("$.senderAccountId").value(request.getSenderAccountId().toString()));
 
-        verify(transactionService).withdraw(any(CreateWithdrawalRequest.class), eq(IDEMPOTENCY_KEY));
+        verify(transactionService).withdraw(any(CreateWithdrawalRequest.class), eq(IDEMPOTENCY_KEY), eq(AUTHENTICATED_USERNAME));
+    }
+
+    @Test
+    void getTransactionsRejectsAccountOwnedByAnotherUser() throws Exception {
+        String accountNumber = "2026-101-000046-001";
+
+        when(transactionService.getTransactions(eq(AUTHENTICATED_USERNAME), eq(accountNumber), any(Pageable.class)))
+                .thenThrow(new AccessDeniedException("Account does not belong to authenticated user"));
+
+        mockMvc.perform(get(TRANSACTIONS_PATH)
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
+                        .param("accountNumber", accountNumber))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"));
+
+        verify(transactionService).getTransactions(eq(AUTHENTICATED_USERNAME), eq(accountNumber), any(Pageable.class));
+    }
+
+    @Test
+    void transferRejectsSenderAccountOwnedByAnotherUser() throws Exception {
+        CreateTransferRequest request = buildTransferRequest();
+
+        when(transactionService.transfer(any(CreateTransferRequest.class), eq(IDEMPOTENCY_KEY), eq(AUTHENTICATED_USERNAME)))
+                .thenThrow(new AccessDeniedException("Sender account does not belong to authenticated user"));
+
+        mockMvc.perform(post(TRANSACTIONS_PATH + "/transfers")
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
+                        .header("Idempotency-Key", IDEMPOTENCY_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"));
+
+        verify(transactionService).transfer(any(CreateTransferRequest.class), eq(IDEMPOTENCY_KEY), eq(AUTHENTICATED_USERNAME));
     }
 
     private static CreateWithdrawalRequest buildWithdrawalRequest() {

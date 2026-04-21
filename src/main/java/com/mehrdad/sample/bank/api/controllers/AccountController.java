@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -31,20 +32,23 @@ public class AccountController {
     @GetMapping
     public ResponseEntity<Page<AccountDto>> getAccounts(
             @RequestParam(required = false) String number,
-            @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(accountService.getAccounts(number, pageable));
+            @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            Authentication authentication) {
+        return ResponseEntity.ok(accountService.getAccounts(authentication.getName(), number, pageable));
     }
 
     @GetMapping(ACCOUNT_RESOURCE_PATH)
-    public ResponseEntity<AccountDto> getAccountById(@PathVariable UUID accountId) {
-        AccountDto accountDto = accountService.getAccountById(accountId);
+    public ResponseEntity<AccountDto> getAccountById(@PathVariable UUID accountId,
+                                                     Authentication authentication) {
+        AccountDto accountDto = accountService.getAccountById(accountId, authentication.getName());
         return ResponseEntity.ok(accountDto);
     }
 
     @PatchMapping(ACCOUNT_RESOURCE_PATH)
     public ResponseEntity<AccountDto> updateAccountStatus(@PathVariable UUID accountId,
-                                                          @Valid @RequestBody AccountStatusUpdateDto statusUpdateDto) {
-        AccountDto accountDto = accountService.updateAccountStatus(accountId, statusUpdateDto);
+                                                          @Valid @RequestBody AccountStatusUpdateDto statusUpdateDto,
+                                                          Authentication authentication) {
+        AccountDto accountDto = accountService.updateAccountStatus(accountId, statusUpdateDto, authentication.getName());
 
         return ResponseEntity.ok(accountDto);
     }

@@ -132,8 +132,9 @@ public class CustomerService {
     // ACCOUNT ***************************************
 
     @Transactional
-    public AccountDto createAccount(UUID customerId, AccountCreateDto accountCreateDto) {
+    public AccountDto createAccount(UUID customerId, AccountCreateDto accountCreateDto, String ownerUsername) {
         CustomerEntity foundCustomer = loadCustomerById(customerId);
+        validateCustomerOwnership(foundCustomer, ownerUsername);
 
         AccountEntity newAccount = new AccountEntity();
         newAccount.setNumber(AccountNumberGenerator.generate(foundCustomer));
@@ -152,8 +153,9 @@ public class CustomerService {
     }
 
     @Transactional(readOnly = true)
-    public List<AccountDto> getCustomerAccounts(UUID customerId) {
+    public List<AccountDto> getCustomerAccounts(UUID customerId, String ownerUsername) {
         CustomerEntity foundCustomer = loadCustomerById(customerId);
+        validateCustomerOwnership(foundCustomer, ownerUsername);
 
         return foundCustomer.getAccounts().stream()
                 .map(accountMapper::toAccountDto)

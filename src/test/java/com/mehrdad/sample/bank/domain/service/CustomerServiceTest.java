@@ -369,7 +369,7 @@ class CustomerServiceTest {
 
         AccountCreateDto accountCreateDto = new AccountCreateDto(Currency.CAD);
 
-        AccountDto result = customerService.createAccount(customerId, accountCreateDto);
+        AccountDto result = customerService.createAccount(customerId, accountCreateDto, OWNER_USERNAME);
 
         ArgumentCaptor<AccountEntity> accountCaptor = ArgumentCaptor.forClass(AccountEntity.class);
 
@@ -383,6 +383,23 @@ class CustomerServiceTest {
     }
 
     @Test
+    void createAccountShouldRejectCustomerOwnedByAnotherUser() {
+        UUID customerId = UUID.randomUUID();
+        CustomerEntity customer = customerEntity(47);
+        customer.setId(customerId);
+        customer.setOwnerUsername(OTHER_USERNAME);
+
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+
+        assertThrows(AccessDeniedException.class,
+                () -> customerService.createAccount(customerId, new AccountCreateDto(Currency.CAD), OWNER_USERNAME));
+
+        verify(customerRepository).findById(customerId);
+        verify(customerRepository, never()).saveAndFlush(any());
+        verifyNoInteractions(accountMapper);
+    }
+
+    @Test
     void getCustomerAccountsShouldReturnEmptyListWhenCustomerHasNoAccounts() {
         UUID customerId = UUID.randomUUID();
         CustomerEntity customer = customerEntity(45);
@@ -390,7 +407,7 @@ class CustomerServiceTest {
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
 
-        List<AccountDto> result = customerService.getCustomerAccounts(customerId);
+        List<AccountDto> result = customerService.getCustomerAccounts(customerId, OWNER_USERNAME);
 
         assertEquals(List.of(), result);
         verify(customerRepository).findById(customerId);
@@ -415,12 +432,27 @@ class CustomerServiceTest {
         when(accountMapper.toAccountDto(firstAccount)).thenReturn(firstAccountDto);
         when(accountMapper.toAccountDto(secondAccount)).thenReturn(secondAccountDto);
 
-        List<AccountDto> result = customerService.getCustomerAccounts(customerId);
+        List<AccountDto> result = customerService.getCustomerAccounts(customerId, OWNER_USERNAME);
 
         assertEquals(List.of(firstAccountDto, secondAccountDto), result);
         verify(customerRepository).findById(customerId);
         verify(accountMapper).toAccountDto(firstAccount);
         verify(accountMapper).toAccountDto(secondAccount);
+    }
+
+    @Test
+    void getCustomerAccountsShouldRejectCustomerOwnedByAnotherUser() {
+        UUID customerId = UUID.randomUUID();
+        CustomerEntity customer = customerEntity(48);
+        customer.setOwnerUsername(OTHER_USERNAME);
+
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+
+        assertThrows(AccessDeniedException.class,
+                () -> customerService.getCustomerAccounts(customerId, OWNER_USERNAME));
+
+        verify(customerRepository).findById(customerId);
+        verifyNoInteractions(accountMapper);
     }
 
     private CustomerEntity customerEntity(int businessId) {
