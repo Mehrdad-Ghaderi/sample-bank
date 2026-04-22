@@ -3,7 +3,9 @@ package com.mehrdad.sample.bank.api.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mehrdad.sample.bank.api.ApiPaths;
 import com.mehrdad.sample.bank.api.dto.auth.LoginRequest;
+import com.mehrdad.sample.bank.api.error.ProblemDetailsFactory;
 import com.mehrdad.sample.bank.security.JwtService;
+import com.mehrdad.sample.bank.security.ProblemDetailsSecurityHandler;
 import com.mehrdad.sample.bank.security.SpringSecurityConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
-@Import({SpringSecurityConfiguration.class, JwtService.class})
+@Import({SpringSecurityConfiguration.class, JwtService.class, ProblemDetailsFactory.class, ProblemDetailsSecurityHandler.class})
 class AuthControllerWebMvcTest {
 
     private static final String LOGIN_PATH = ApiPaths.API_BASE_PATH + ApiPaths.AUTH + "/login";

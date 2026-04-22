@@ -1,6 +1,7 @@
 package com.mehrdad.sample.bank.api.exception;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.mehrdad.sample.bank.api.error.ProblemDetailsFactory;
 import com.mehrdad.sample.bank.domain.exception.ConcurrentUpdateException;
 import com.mehrdad.sample.bank.domain.exception.account.AccountNotActiveException;
 import com.mehrdad.sample.bank.domain.exception.account.AccountNotFoundException;
@@ -26,9 +27,6 @@ import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.net.URI;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 
@@ -36,7 +34,11 @@ import java.util.List;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-    private static final String PROBLEM_TYPE_BASE = "https://api.sample-bank.local/problems/";
+    private final ProblemDetailsFactory problemDetailsFactory;
+
+    public GlobalExceptionHandler(ProblemDetailsFactory problemDetailsFactory) {
+        this.problemDetailsFactory = problemDetailsFactory;
+    }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ProblemDetail> handleDataIntegrityViolation(
@@ -360,20 +362,9 @@ public class GlobalExceptionHandler {
             String detail,
             HttpServletRequest request
     ) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
-        problem.setType(problemType(errorCode));
-        problem.setTitle(title);
-        problem.setInstance(URI.create(request.getRequestURI()));
-        problem.setProperty("errorCode", errorCode);
-        problem.setProperty("timestamp", OffsetDateTime.now(ZoneOffset.UTC));
-
         return ResponseEntity
                 .status(status)
-                .body(problem);
-    }
-
-    private URI problemType(String errorCode) {
-        return URI.create(PROBLEM_TYPE_BASE + errorCode.toLowerCase().replace('_', '-'));
+                .body(problemDetailsFactory.create(status, errorCode, title, detail, request));
     }
 
     private record FieldViolation(String field, String message) {

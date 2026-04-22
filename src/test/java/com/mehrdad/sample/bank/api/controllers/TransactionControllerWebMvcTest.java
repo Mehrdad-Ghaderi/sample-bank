@@ -6,9 +6,11 @@ import com.mehrdad.sample.bank.api.dto.transaction.CreateDepositRequest;
 import com.mehrdad.sample.bank.api.dto.transaction.CreateTransferRequest;
 import com.mehrdad.sample.bank.api.dto.transaction.CreateWithdrawalRequest;
 import com.mehrdad.sample.bank.api.dto.transaction.TransactionResponse;
+import com.mehrdad.sample.bank.api.error.ProblemDetailsFactory;
 import com.mehrdad.sample.bank.domain.entity.Currency;
 import com.mehrdad.sample.bank.domain.entity.TransactionType;
 import com.mehrdad.sample.bank.domain.service.TransactionService;
+import com.mehrdad.sample.bank.security.ProblemDetailsSecurityHandler;
 import com.mehrdad.sample.bank.security.SpringSecurityConfiguration;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -37,11 +39,12 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(TransactionController.class)
-@Import(SpringSecurityConfiguration.class)
+@Import({SpringSecurityConfiguration.class, ProblemDetailsFactory.class, ProblemDetailsSecurityHandler.class})
 class TransactionControllerWebMvcTest {
 
     private static final String TRANSACTIONS_PATH = ApiPaths.API_BASE_PATH + ApiPaths.TRANSACTIONS;
@@ -99,7 +102,15 @@ class TransactionControllerWebMvcTest {
                         .header("Idempotency-Key", IDEMPOTENCY_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("https://api.sample-bank.local/problems/authentication-required"))
+                .andExpect(jsonPath("$.title").value("Authentication required"))
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.detail").value("A valid bearer token is required to access this resource."))
+                .andExpect(jsonPath("$.instance").value(TRANSACTIONS_PATH + "/transfers"))
+                .andExpect(jsonPath("$.errorCode").value("AUTHENTICATION_REQUIRED"))
+                .andExpect(jsonPath("$.timestamp").exists());
 
         verifyNoInteractions(transactionService);
     }
