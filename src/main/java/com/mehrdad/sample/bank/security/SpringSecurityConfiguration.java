@@ -40,7 +40,7 @@ import java.util.List;
 public class SpringSecurityConfiguration {
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http, ProblemDetailsSecurityHandler problemDetailsSecurityHandler) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
@@ -50,7 +50,15 @@ public class SpringSecurityConfiguration {
                         .requestMatchers(ApiPaths.API_BASE_PATH + ApiPaths.AUTH + "/login").permitAll()
                         .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(problemDetailsSecurityHandler)
+                        .accessDeniedHandler(problemDetailsSecurityHandler)
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .authenticationEntryPoint(problemDetailsSecurityHandler)
+                        .accessDeniedHandler(problemDetailsSecurityHandler)
+                        .jwt(Customizer.withDefaults())
+                );
 
         return http.build();
     }

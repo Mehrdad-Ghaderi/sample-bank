@@ -7,9 +7,11 @@ import com.mehrdad.sample.bank.api.dto.account.AccountResponse;
 import com.mehrdad.sample.bank.api.dto.customer.CreateCustomerRequest;
 import com.mehrdad.sample.bank.api.dto.customer.CustomerResponse;
 import com.mehrdad.sample.bank.api.dto.customer.UpdateCustomerRequest;
+import com.mehrdad.sample.bank.api.error.ProblemDetailsFactory;
 import com.mehrdad.sample.bank.domain.entity.Currency;
 import com.mehrdad.sample.bank.domain.entity.Status;
 import com.mehrdad.sample.bank.domain.service.CustomerService;
+import com.mehrdad.sample.bank.security.ProblemDetailsSecurityHandler;
 import com.mehrdad.sample.bank.security.SpringSecurityConfiguration;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -43,7 +45,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(CustomerController.class)
-@Import(SpringSecurityConfiguration.class)
+@Import({SpringSecurityConfiguration.class, ProblemDetailsFactory.class, ProblemDetailsSecurityHandler.class})
 class CustomerControllerWebMvcTest {
 
     private static final String CUSTOMERS_PATH = ApiPaths.API_BASE_PATH + ApiPaths.CUSTOMERS;
@@ -64,7 +66,15 @@ class CustomerControllerWebMvcTest {
     @Test
     void getCustomersRequiresAuthentication() throws Exception {
         mockMvc.perform(get(CUSTOMERS_PATH))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("https://api.sample-bank.local/problems/authentication-required"))
+                .andExpect(jsonPath("$.title").value("Authentication required"))
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.detail").value("A valid bearer token is required to access this resource."))
+                .andExpect(jsonPath("$.instance").value(CUSTOMERS_PATH))
+                .andExpect(jsonPath("$.errorCode").value("AUTHENTICATION_REQUIRED"))
+                .andExpect(jsonPath("$.timestamp").exists());
 
         verifyNoInteractions(customerService);
     }
