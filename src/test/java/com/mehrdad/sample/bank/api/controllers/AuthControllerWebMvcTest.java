@@ -53,7 +53,9 @@ class AuthControllerWebMvcTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_FAILED"))
-                .andExpect(jsonPath("$.message").value("username: must not be blank"))
-                .andExpect(jsonPath("$.path").value(LOGIN_PATH));
+                .andExpect(jsonPath("$.detail").value("Request validation failed."))
+                .andExpect(jsonPath("$.instance").value(LOGIN_PATH))
+                .andExpect(jsonPath("$.violations[0].field").value("username"))
+                .andExpect(jsonPath("$.violations[0].message").value("must not be blank"));
     }
 }

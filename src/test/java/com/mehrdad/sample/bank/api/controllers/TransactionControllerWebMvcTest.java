@@ -115,8 +115,8 @@ class TransactionControllerWebMvcTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.errorCode").value("MISSING_REQUEST_HEADER"))
-                .andExpect(jsonPath("$.message").value("Missing required header: Idempotency-Key"))
-                .andExpect(jsonPath("$.path").value(TRANSACTIONS_PATH + "/transfers"));
+                .andExpect(jsonPath("$.detail").value("Missing required header: Idempotency-Key"))
+                .andExpect(jsonPath("$.instance").value(TRANSACTIONS_PATH + "/transfers"));
 
         verifyNoInteractions(transactionService);
     }

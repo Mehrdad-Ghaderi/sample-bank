@@ -35,6 +35,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -121,7 +122,29 @@ class AccountControllerWebMvcTest {
         mockMvc.perform(get(ACCOUNTS_PATH + "/" + accountId)
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
                 .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("https://api.sample-bank.local/problems/access-denied"))
+                .andExpect(jsonPath("$.title").value("Access denied"))
                 .andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"));
+
+        verify(accountService).getAccountById(accountId, AUTHENTICATED_USERNAME);
+    }
+
+    @Test
+    void getAccountByIdReturnsProblemDetailForUnexpectedErrors() throws Exception {
+        UUID accountId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+        when(accountService.getAccountById(accountId, AUTHENTICATED_USERNAME))
+                .thenThrow(new IllegalStateException("Database connection failed"));
+
+        mockMvc.perform(get(ACCOUNTS_PATH + "/" + accountId)
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("https://api.sample-bank.local/problems/internal-server-error"))
+                .andExpect(jsonPath("$.title").value("Internal server error"))
+                .andExpect(jsonPath("$.detail").value("An unexpected error occurred."))
+                .andExpect(jsonPath("$.errorCode").value("INTERNAL_SERVER_ERROR"));
 
         verify(accountService).getAccountById(accountId, AUTHENTICATED_USERNAME);
     }
@@ -160,10 +183,16 @@ class AccountControllerWebMvcTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.type").value("https://api.sample-bank.local/problems/validation-failed"))
+                .andExpect(jsonPath("$.title").value("Validation failed"))
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_FAILED"))
-                .andExpect(jsonPath("$.message").value("status: must not be null"))
-                .andExpect(jsonPath("$.path").value(ACCOUNTS_PATH + "/" + accountId));
+                .andExpect(jsonPath("$.detail").value("Request validation failed."))
+                .andExpect(jsonPath("$.instance").value(ACCOUNTS_PATH + "/" + accountId))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.violations[0].field").value("status"))
+                .andExpect(jsonPath("$.violations[0].message").value("must not be null"));
 
         verifyNoInteractions(accountService);
     }
