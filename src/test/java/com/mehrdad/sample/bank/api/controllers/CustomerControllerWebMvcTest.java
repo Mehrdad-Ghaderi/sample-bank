@@ -168,8 +168,10 @@ class CustomerControllerWebMvcTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_FAILED"))
-                .andExpect(jsonPath("$.message").value("name: must not be blank"))
-                .andExpect(jsonPath("$.path").value(CUSTOMERS_PATH));
+                .andExpect(jsonPath("$.detail").value("Request validation failed."))
+                .andExpect(jsonPath("$.instance").value(CUSTOMERS_PATH))
+                .andExpect(jsonPath("$.violations[0].field").value("name"))
+                .andExpect(jsonPath("$.violations[0].message").value("must not be blank"));
 
         verifyNoInteractions(customerService);
     }
@@ -231,8 +233,10 @@ class CustomerControllerWebMvcTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_FAILED"))
-                .andExpect(jsonPath("$.message").value("phoneNumber: Invalid phone number format"))
-                .andExpect(jsonPath("$.path").value(CUSTOMERS_PATH + "/" + customerId));
+                .andExpect(jsonPath("$.detail").value("Request validation failed."))
+                .andExpect(jsonPath("$.instance").value(CUSTOMERS_PATH + "/" + customerId))
+                .andExpect(jsonPath("$.violations[0].field").value("phoneNumber"))
+                .andExpect(jsonPath("$.violations[0].message").value("Invalid phone number format"));
 
         verifyNoInteractions(customerService);
     }
@@ -327,8 +331,10 @@ class CustomerControllerWebMvcTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_FAILED"))
-                .andExpect(jsonPath("$.message").value("currency: must not be null"))
-                .andExpect(jsonPath("$.path").value(CUSTOMERS_PATH + "/" + customerId + "/accounts"));
+                .andExpect(jsonPath("$.detail").value("Request validation failed."))
+                .andExpect(jsonPath("$.instance").value(CUSTOMERS_PATH + "/" + customerId + "/accounts"))
+                .andExpect(jsonPath("$.violations[0].field").value("currency"))
+                .andExpect(jsonPath("$.violations[0].message").value("must not be null"));
 
         verifyNoInteractions(customerService);
     }
