@@ -24,15 +24,34 @@ final class TestJwtTokens {
 
     static String bearerToken(String subject) {
         Instant now = Instant.now();
+        return bearerToken(subject, now, now.plusSeconds(3600), SECRET);
+    }
+
+    static String expiredBearerToken() {
+        Instant now = Instant.now();
+        return bearerToken("user", now.minusSeconds(7200), now.minusSeconds(3600), SECRET);
+    }
+
+    static String bearerTokenSignedWithWrongSecret() {
+        Instant now = Instant.now();
+        return bearerToken(
+                "user",
+                now,
+                now.plusSeconds(3600),
+                "wrong-sample-bank-local-development-secret-at-least-32-bytes"
+        );
+    }
+
+    private static String bearerToken(String subject, Instant issuedAt, Instant expiresAt, String secret) {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .subject(subject)
-                .issuedAt(now)
-                .expiresAt(now.plusSeconds(3600))
+                .issuedAt(issuedAt)
+                .expiresAt(expiresAt)
                 .claim("scope", "ROLE_USER")
                 .build();
 
         JwtEncoder jwtEncoder = new NimbusJwtEncoder(new ImmutableSecret<>(
-                new SecretKeySpec(SECRET.getBytes(), "HmacSHA256")
+                new SecretKeySpec(secret.getBytes(), "HmacSHA256")
         ));
 
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
