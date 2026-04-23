@@ -1,6 +1,6 @@
 package com.mehrdad.sample.bank.api.dto.account;
 
-import com.mehrdad.sample.bank.domain.entity.Currency;
+import com.mehrdad.sample.bank.domain.entity.Status;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,10 +9,10 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
-public class AccountCreateDto {
+@NoArgsConstructor
+public class UpdateAccountStatusRequest {
 
     @NotNull
-    private Currency currency;
+    private Status status;
 }

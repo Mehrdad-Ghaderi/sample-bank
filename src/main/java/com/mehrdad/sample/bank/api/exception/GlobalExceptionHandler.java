@@ -1,8 +1,7 @@
 package com.mehrdad.sample.bank.api.exception;
 
-
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
-import com.mehrdad.sample.bank.api.error.ApiErrorResponse;
+import com.mehrdad.sample.bank.api.error.ProblemDetailsFactory;
 import com.mehrdad.sample.bank.domain.exception.ConcurrentUpdateException;
 import com.mehrdad.sample.bank.domain.exception.account.AccountNotActiveException;
 import com.mehrdad.sample.bank.domain.exception.account.AccountNotFoundException;
@@ -15,8 +14,11 @@ import com.mehrdad.sample.bank.domain.exception.transaction.InsufficientBalanceE
 import com.mehrdad.sample.bank.domain.exception.transaction.InvalidIdempotencyKeyException;
 import com.mehrdad.sample.bank.domain.exception.transaction.InvalidAmountException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -25,324 +27,276 @@ import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    //CUSTOMER ********************
-    //         ********************
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private final ProblemDetailsFactory problemDetailsFactory;
+
+    public GlobalExceptionHandler(ProblemDetailsFactory problemDetailsFactory) {
+        this.problemDetailsFactory = problemDetailsFactory;
+    }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(
+    public ResponseEntity<ProblemDetail> handleDataIntegrityViolation(
             DataIntegrityViolationException ex,
             HttpServletRequest request
     ) {
-        Throwable root = ex.getMostSpecificCause();
+        log.warn("Data integrity violation on {}", request.getRequestURI(), ex);
 
-        ApiErrorResponse error = new ApiErrorResponse(
-                HttpStatus.CONFLICT.value(),
+        return problem(
+                HttpStatus.CONFLICT,
                 "DATA_INTEGRITY_VIOLATION",
-                root.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                "Data conflict",
+                "Request conflicts with existing data.",
+                request
         );
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
     @ExceptionHandler(CustomerAlreadyActiveException.class)
-    public ResponseEntity<ApiErrorResponse> handleCustomerAlreadyActive(
+    public ResponseEntity<ProblemDetail> handleCustomerAlreadyActive(
             CustomerAlreadyActiveException ex,
             HttpServletRequest request) {
 
-        ApiErrorResponse error = new ApiErrorResponse(
-                HttpStatus.CONFLICT.value(),
+        return problem(
+                HttpStatus.CONFLICT,
                 "CUSTOMER_ALREADY_ACTIVE",
+                "Customer already active",
                 ex.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(error);
     }
 
     @ExceptionHandler(CustomerAlreadyInactiveException.class)
-    public ResponseEntity<ApiErrorResponse> handleCustomerAlreadyInactive(
+    public ResponseEntity<ProblemDetail> handleCustomerAlreadyInactive(
             CustomerAlreadyInactiveException ex,
             HttpServletRequest request) {
 
-        ApiErrorResponse error = new ApiErrorResponse(
-                HttpStatus.CONFLICT.value(),
+        return problem(
+                HttpStatus.CONFLICT,
                 "CUSTOMER_ALREADY_INACTIVE",
+                "Customer already inactive",
                 ex.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(error);
     }
 
     @ExceptionHandler(CustomerNotFoundException.class)
-    public ResponseEntity<ApiErrorResponse> handleCustomerNotFound(
+    public ResponseEntity<ProblemDetail> handleCustomerNotFound(
             CustomerNotFoundException ex,
             HttpServletRequest request) {
 
-        ApiErrorResponse error = new ApiErrorResponse(
-                HttpStatus.NOT_FOUND.value(),
+        return problem(
+                HttpStatus.NOT_FOUND,
                 "CUSTOMER_NOT_FOUND",
+                "Customer not found",
                 ex.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(error);
     }
 
     @ExceptionHandler(CustomerAlreadyExistException.class)
-    public ResponseEntity<ApiErrorResponse> handleCustomerExist(
+    public ResponseEntity<ProblemDetail> handleCustomerExist(
             CustomerAlreadyExistException ex,
             HttpServletRequest request) {
 
-        ApiErrorResponse error = new ApiErrorResponse(
-                HttpStatus.CONFLICT.value(),
+        return problem(
+                HttpStatus.CONFLICT,
                 "CUSTOMER_ALREADY_EXIST",
+                "Customer already exists",
                 ex.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(error);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiErrorResponse> handleValidationException(
+    public ResponseEntity<ProblemDetail> handleValidationException(
             MethodArgumentNotValidException ex,
             HttpServletRequest request
     ) {
-        String firstError = ex.getBindingResult()
+        List<FieldViolation> violations = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .findFirst()
-                .map(err -> err.getField() + ": " + err.getDefaultMessage())
-                .orElse("Validation failed");
+                .map(err -> new FieldViolation(err.getField(), err.getDefaultMessage()))
+                .toList();
 
-        ApiErrorResponse error = new ApiErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
+        ResponseEntity<ProblemDetail> response = problem(
+                HttpStatus.BAD_REQUEST,
                 "VALIDATION_FAILED",
-                firstError,
-                request.getRequestURI(),
-                OffsetDateTime.now(ZoneOffset.UTC)
+                "Validation failed",
+                "Request validation failed.",
+                request
         );
 
-        return ResponseEntity
-                .badRequest()
-                .body(error);
+        response.getBody().setProperty("violations", violations);
+        return response;
     }
 
     @ExceptionHandler(PhoneNumberAlreadyExists.class)
-    public ResponseEntity<ApiErrorResponse> handlePhoneNumberAlreadyExists(
+    public ResponseEntity<ProblemDetail> handlePhoneNumberAlreadyExists(
             PhoneNumberAlreadyExists ex,
             HttpServletRequest request
     ) {
-        ApiErrorResponse error = new ApiErrorResponse(
-                HttpStatus.CONFLICT.value(),
+        return problem(
+                HttpStatus.CONFLICT,
                 "PHONE_NUMBER_ALREADY_EXISTS",
+                "Phone number already exists",
                 ex.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(error);
     }
 
     @ExceptionHandler(InvalidPhoneNumberException.class)
-    public ResponseEntity<ApiErrorResponse> handleInvalidPhoneNumber(
-
+    public ResponseEntity<ProblemDetail> handleInvalidPhoneNumber(
             InvalidPhoneNumberException ex,
             HttpServletRequest request
     ) {
-        ApiErrorResponse error = new ApiErrorResponse(
-                HttpStatus.CONFLICT.value(),
+        return problem(
+                HttpStatus.BAD_REQUEST,
                 "INVALID_PHONE_NUMBER",
+                "Invalid phone number",
                 ex.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
-
-    /* ===================
-           ACCOUNT
-       =================== */
 
     @ExceptionHandler(AccountNotFoundException.class)
-    public ResponseEntity<ApiErrorResponse> handleAccountNotFound(AccountNotFoundException ex,
-                                                                  HttpServletRequest request) {
-        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
-                HttpStatus.NOT_FOUND.value(),
+    public ResponseEntity<ProblemDetail> handleAccountNotFound(AccountNotFoundException ex,
+                                                               HttpServletRequest request) {
+        return problem(
+                HttpStatus.NOT_FOUND,
                 "ACCOUNT_NOT_FOUND",
+                "Account not found",
                 ex.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(apiErrorResponse);
     }
 
-
     @ExceptionHandler(AccountNotActiveException.class)
-    public ResponseEntity<ApiErrorResponse> handleAccountNotFound(AccountNotActiveException ex,
-                                                                  HttpServletRequest request) {
-        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
-                HttpStatus.FORBIDDEN.value(),
+    public ResponseEntity<ProblemDetail> handleAccountNotActive(AccountNotActiveException ex,
+                                                                HttpServletRequest request) {
+        return problem(
+                HttpStatus.FORBIDDEN,
                 "ACCOUNT_NOT_ACTIVE",
+                "Account not active",
                 ex.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(apiErrorResponse);
     }
 
     @ExceptionHandler(AccountStatusAlreadySetException.class)
-    public ResponseEntity<ApiErrorResponse> handleAccountAlreadyHasThatStatus(AccountStatusAlreadySetException ex,
-                                                                              HttpServletRequest request) {
-        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
+    public ResponseEntity<ProblemDetail> handleAccountAlreadyHasThatStatus(AccountStatusAlreadySetException ex,
+                                                                           HttpServletRequest request) {
+        return problem(
+                HttpStatus.BAD_REQUEST,
                 "ACCOUNT_STATUS_ALREADY_SET",
+                "Account status already set",
                 ex.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(apiErrorResponse);
     }
 
-
     @ExceptionHandler(InsufficientBalanceException.class)
-    public ResponseEntity<ApiErrorResponse> handleInsufficientBalance(InsufficientBalanceException ex,
-                                                                      HttpServletRequest request) {
-        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
+    public ResponseEntity<ProblemDetail> handleInsufficientBalance(InsufficientBalanceException ex,
+                                                                   HttpServletRequest request) {
+        return problem(
+                HttpStatus.BAD_REQUEST,
                 "INSUFFICIENT_BALANCE",
+                "Insufficient balance",
                 ex.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(apiErrorResponse);
     }
 
     @ExceptionHandler(CurrencyMismatchException.class)
-    public ResponseEntity<ApiErrorResponse> handleCurrencyMismatchException(CurrencyMismatchException ex,
-                                                                            HttpServletRequest request) {
-        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
+    public ResponseEntity<ProblemDetail> handleCurrencyMismatchException(CurrencyMismatchException ex,
+                                                                         HttpServletRequest request) {
+        return problem(
+                HttpStatus.BAD_REQUEST,
                 "CURRENCY_MISMATCH",
+                "Currency mismatch",
                 ex.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(apiErrorResponse);
     }
 
     @ExceptionHandler(InvalidAmountException.class)
-    public ResponseEntity<ApiErrorResponse> handleInvalidAmountException(InvalidAmountException ex,
-                                                                         HttpServletRequest request) {
-        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
+    public ResponseEntity<ProblemDetail> handleInvalidAmountException(InvalidAmountException ex,
+                                                                      HttpServletRequest request) {
+        return problem(
+                HttpStatus.BAD_REQUEST,
                 "INVALID_AMOUNT",
+                "Invalid amount",
                 ex.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(apiErrorResponse);
     }
 
     @ExceptionHandler(IllegalTransactionTypeException.class)
-    public ResponseEntity<ApiErrorResponse> handleIllegalTransactionTypeException(IllegalTransactionTypeException ex,
-                                                                                  HttpServletRequest request) {
-        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
+    public ResponseEntity<ProblemDetail> handleIllegalTransactionTypeException(IllegalTransactionTypeException ex,
+                                                                               HttpServletRequest request) {
+        return problem(
+                HttpStatus.BAD_REQUEST,
                 "ILLEGAL_TRANSACTION_TYPE",
+                "Illegal transaction type",
                 ex.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(apiErrorResponse);
     }
 
     @ExceptionHandler(InvalidIdempotencyKeyException.class)
-    public ResponseEntity<ApiErrorResponse> handleInvalidIdempotencyKey(InvalidIdempotencyKeyException ex,
-                                                                        HttpServletRequest request) {
-        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
+    public ResponseEntity<ProblemDetail> handleInvalidIdempotencyKey(InvalidIdempotencyKeyException ex,
+                                                                     HttpServletRequest request) {
+        return problem(
+                HttpStatus.BAD_REQUEST,
                 "INVALID_IDEMPOTENCY_KEY",
+                "Invalid idempotency key",
                 ex.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(apiErrorResponse);
     }
 
     @ExceptionHandler(MissingRequestHeaderException.class)
-    public ResponseEntity<ApiErrorResponse> handleMissingRequestHeader(MissingRequestHeaderException ex,
-                                                                       HttpServletRequest request) {
-        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
+    public ResponseEntity<ProblemDetail> handleMissingRequestHeader(MissingRequestHeaderException ex,
+                                                                    HttpServletRequest request) {
+        return problem(
+                HttpStatus.BAD_REQUEST,
                 "MISSING_REQUEST_HEADER",
+                "Missing request header",
                 "Missing required header: " + ex.getHeaderName(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(apiErrorResponse);
     }
 
     @ExceptionHandler(IdempotencyKeyConflictException.class)
-    public ResponseEntity<ApiErrorResponse> handleIdempotencyKeyConflict(IdempotencyKeyConflictException ex,
-                                                                         HttpServletRequest request) {
-        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
-                HttpStatus.CONFLICT.value(),
+    public ResponseEntity<ProblemDetail> handleIdempotencyKeyConflict(IdempotencyKeyConflictException ex,
+                                                                      HttpServletRequest request) {
+        return problem(
+                HttpStatus.CONFLICT,
                 "IDEMPOTENCY_KEY_CONFLICT",
+                "Idempotency key conflict",
                 ex.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(apiErrorResponse);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiErrorResponse> handleInvalidEnum(
+    public ResponseEntity<ProblemDetail> handleInvalidJson(
             HttpMessageNotReadableException ex,
             HttpServletRequest request
     ) {
         String message = "Malformed request body";
+        String errorCode = "MALFORMED_REQUEST_BODY";
+        String title = "Malformed request body";
 
         if (ex.getCause() instanceof InvalidFormatException ife
                 && ife.getTargetType().isEnum()) {
 
             String fieldName = ife.getPath().getFirst().getFieldName();
-            String invalidValue = ife.getValue().toString();
+            String invalidValue = String.valueOf(ife.getValue());
 
             message = String.format(
                     "Invalid value '%s' for field '%s'. Allowed values: %s",
@@ -350,49 +304,69 @@ public class GlobalExceptionHandler {
                     fieldName,
                     Arrays.toString(ife.getTargetType().getEnumConstants())
             );
+            errorCode = "INVALID_ENUM_VALUE";
+            title = "Invalid enum value";
         }
 
-        ApiErrorResponse response = new ApiErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                "INVALID_TRANSACTION_TYPE_VALUE",
+        return problem(
+                HttpStatus.BAD_REQUEST,
+                errorCode,
+                title,
                 message,
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-
-        return ResponseEntity.badRequest().body(response);
     }
 
-    /* ===================
-           CONCURRENCY
-       =================== */
-
     @ExceptionHandler(ConcurrentUpdateException.class)
-    public ResponseEntity<ApiErrorResponse> handleOptimisticLock(ConcurrentUpdateException ex,
-                                                 HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleOptimisticLock(ConcurrentUpdateException ex,
+                                                              HttpServletRequest request) {
 
-        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
-                HttpStatus.CONFLICT.value(),
+        return problem(
+                HttpStatus.CONFLICT,
                 "CONCURRENT_MODIFICATION",
+                "Concurrent modification",
                 ex.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(apiErrorResponse);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiErrorResponse> handleAccessDenied(AccessDeniedException ex,
-                                                               HttpServletRequest request) {
-        ApiErrorResponse apiErrorResponse = new ApiErrorResponse(
-                HttpStatus.FORBIDDEN.value(),
+    public ResponseEntity<ProblemDetail> handleAccessDenied(AccessDeniedException ex,
+                                                            HttpServletRequest request) {
+        return problem(
+                HttpStatus.FORBIDDEN,
                 "ACCESS_DENIED",
+                "Access denied",
                 ex.getMessage(),
-                request.getRequestURI(),
-                OffsetDateTime.now()
+                request
         );
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(apiErrorResponse);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ProblemDetail> handleUnexpectedException(Exception ex, HttpServletRequest request) {
+        log.error("Unexpected error on {}", request.getRequestURI(), ex);
+
+        return problem(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "INTERNAL_SERVER_ERROR",
+                "Internal server error",
+                "An unexpected error occurred.",
+                request
+        );
+    }
+
+    private ResponseEntity<ProblemDetail> problem(
+            HttpStatus status,
+            String errorCode,
+            String title,
+            String detail,
+            HttpServletRequest request
+    ) {
+        return ResponseEntity
+                .status(status)
+                .body(problemDetailsFactory.create(status, errorCode, title, detail, request));
+    }
+
+    private record FieldViolation(String field, String message) {
     }
 }

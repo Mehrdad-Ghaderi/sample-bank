@@ -1,4 +1,4 @@
-package com.mehrdad.sample.bank.api.dto;
+package com.mehrdad.sample.bank.api.dto.transaction;
 
 
 import com.mehrdad.sample.bank.domain.entity.Currency;
@@ -21,7 +21,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class TransactionDto {
+public class TransactionResponse {
     private UUID id;
 
     @NotNull

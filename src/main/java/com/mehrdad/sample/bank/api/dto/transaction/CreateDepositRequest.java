@@ -1,4 +1,4 @@
-package com.mehrdad.sample.bank.api.dto;
+package com.mehrdad.sample.bank.api.dto.transaction;
 
 import com.mehrdad.sample.bank.domain.entity.Currency;
 import jakarta.validation.constraints.NotNull;
@@ -15,9 +15,9 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateWithdrawalRequest {
+public class CreateDepositRequest {
     @NotNull
-    private UUID senderAccountId;
+    private UUID receiverAccountId;
 
     @NotNull
     @Positive

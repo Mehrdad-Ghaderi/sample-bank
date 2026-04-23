@@ -3,7 +3,9 @@ package com.mehrdad.sample.bank.api.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mehrdad.sample.bank.api.ApiPaths;
 import com.mehrdad.sample.bank.api.dto.auth.LoginRequest;
+import com.mehrdad.sample.bank.api.error.ProblemDetailsFactory;
 import com.mehrdad.sample.bank.security.JwtService;
+import com.mehrdad.sample.bank.security.ProblemDetailsSecurityHandler;
 import com.mehrdad.sample.bank.security.SpringSecurityConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
-@Import({SpringSecurityConfiguration.class, JwtService.class})
+@Import({SpringSecurityConfiguration.class, JwtService.class, ProblemDetailsFactory.class, ProblemDetailsSecurityHandler.class})
 class AuthControllerWebMvcTest {
 
     private static final String LOGIN_PATH = ApiPaths.API_BASE_PATH + ApiPaths.AUTH + "/login";
@@ -53,7 +55,9 @@ class AuthControllerWebMvcTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_FAILED"))
-                .andExpect(jsonPath("$.message").value("username: must not be blank"))
-                .andExpect(jsonPath("$.path").value(LOGIN_PATH));
+                .andExpect(jsonPath("$.detail").value("Request validation failed."))
+                .andExpect(jsonPath("$.instance").value(LOGIN_PATH))
+                .andExpect(jsonPath("$.violations[0].field").value("username"))
+                .andExpect(jsonPath("$.violations[0].message").value("must not be blank"));
     }
 }

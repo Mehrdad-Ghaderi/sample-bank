@@ -1,14 +1,14 @@
 package com.mehrdad.sample.bank.api.controllers;
 
 import com.mehrdad.sample.bank.api.ApiPaths;
-import com.mehrdad.sample.bank.api.dto.CreateDepositRequest;
-import com.mehrdad.sample.bank.api.dto.CreateTransferRequest;
-import com.mehrdad.sample.bank.api.dto.CreateWithdrawalRequest;
-import com.mehrdad.sample.bank.api.dto.TransactionDto;
+import com.mehrdad.sample.bank.api.dto.transaction.CreateDepositRequest;
+import com.mehrdad.sample.bank.api.dto.PageResponse;
+import com.mehrdad.sample.bank.api.dto.transaction.CreateTransferRequest;
+import com.mehrdad.sample.bank.api.dto.transaction.CreateWithdrawalRequest;
+import com.mehrdad.sample.bank.api.dto.transaction.TransactionResponse;
 import com.mehrdad.sample.bank.domain.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -28,15 +28,15 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     @GetMapping
-    public ResponseEntity<Page<TransactionDto>> getTransactions(
+    public ResponseEntity<PageResponse<TransactionResponse>> getTransactions(
             @RequestParam(required = false) String accountNumber,
             @PageableDefault(size = 5, sort = "transactionTime", direction = Sort.Direction.DESC) Pageable pageable,
             Authentication authentication) {
-        return ResponseEntity.ok(transactionService.getTransactions(authentication.getName(), accountNumber, pageable));
+        return ResponseEntity.ok(PageResponse.createFrom(transactionService.getTransactions(authentication.getName(), accountNumber, pageable)));
     }
 
     @PostMapping(TRANSFERS_PATH)
-    public ResponseEntity<TransactionDto> transfer(
+    public ResponseEntity<TransactionResponse> transfer(
             @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
             @Valid @RequestBody CreateTransferRequest request,
             Authentication authentication
@@ -45,7 +45,7 @@ public class TransactionController {
     }
 
     @PostMapping(DEPOSITS_PATH)
-    public ResponseEntity<TransactionDto> deposit(
+    public ResponseEntity<TransactionResponse> deposit(
             @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
             @Valid @RequestBody CreateDepositRequest request,
             Authentication authentication
@@ -54,7 +54,7 @@ public class TransactionController {
     }
 
     @PostMapping(WITHDRAWALS_PATH)
-    public ResponseEntity<TransactionDto> withdraw(
+    public ResponseEntity<TransactionResponse> withdraw(
             @RequestHeader(IDEMPOTENCY_KEY_HEADER) String idempotencyKey,
             @Valid @RequestBody CreateWithdrawalRequest request,
             Authentication authentication

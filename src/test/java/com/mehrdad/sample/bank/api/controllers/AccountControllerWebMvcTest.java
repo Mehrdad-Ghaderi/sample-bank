@@ -2,11 +2,13 @@ package com.mehrdad.sample.bank.api.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mehrdad.sample.bank.api.ApiPaths;
-import com.mehrdad.sample.bank.api.dto.account.AccountDto;
-import com.mehrdad.sample.bank.api.dto.account.AccountStatusUpdateDto;
+import com.mehrdad.sample.bank.api.dto.account.AccountResponse;
+import com.mehrdad.sample.bank.api.dto.account.UpdateAccountStatusRequest;
+import com.mehrdad.sample.bank.api.error.ProblemDetailsFactory;
 import com.mehrdad.sample.bank.domain.entity.Currency;
 import com.mehrdad.sample.bank.domain.entity.Status;
 import com.mehrdad.sample.bank.domain.service.AccountService;
+import com.mehrdad.sample.bank.security.ProblemDetailsSecurityHandler;
 import com.mehrdad.sample.bank.security.SpringSecurityConfiguration;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -34,11 +37,12 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AccountController.class)
-@Import(SpringSecurityConfiguration.class)
+@Import({SpringSecurityConfiguration.class, ProblemDetailsFactory.class, ProblemDetailsSecurityHandler.class})
 class AccountControllerWebMvcTest {
 
     private static final String ACCOUNTS_PATH = ApiPaths.API_BASE_PATH + ApiPaths.ACCOUNTS;
@@ -57,7 +61,15 @@ class AccountControllerWebMvcTest {
     @Test
     void getAccountsRequiresAuthentication() throws Exception {
         mockMvc.perform(get(ACCOUNTS_PATH))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("https://api.sample-bank.local/problems/authentication-required"))
+                .andExpect(jsonPath("$.title").value("Authentication required"))
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.detail").value("A valid bearer token is required to access this resource."))
+                .andExpect(jsonPath("$.instance").value(ACCOUNTS_PATH))
+                .andExpect(jsonPath("$.errorCode").value("AUTHENTICATION_REQUIRED"))
+                .andExpect(jsonPath("$.timestamp").exists());
 
         verifyNoInteractions(accountService);
     }
@@ -65,10 +77,10 @@ class AccountControllerWebMvcTest {
     @Test
     void getAccountsSearchesByAccountNumber() throws Exception {
         String accountNumber = "2026-101-000046-001";
-        AccountDto account = buildAccountDto(accountNumber);
+        AccountResponse account = buildAccountResponse(accountNumber);
 
         when(accountService.getAccounts(eq(AUTHENTICATED_USERNAME), eq(accountNumber), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(account)));
+                .thenReturn(new PageImpl<>(List.of(account), PageRequest.of(0, 5), 12));
 
         mockMvc.perform(get(ACCOUNTS_PATH)
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
@@ -78,7 +90,13 @@ class AccountControllerWebMvcTest {
                 .andExpect(jsonPath("$.content[0].number").value(accountNumber))
                 .andExpect(jsonPath("$.content[0].status").value("ACTIVE"))
                 .andExpect(jsonPath("$.content[0].currency").value("CAD"))
-                .andExpect(jsonPath("$.content[0].balance").value(125.75));
+                .andExpect(jsonPath("$.content[0].balance").value(125.75))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.totalElements").value(12))
+                .andExpect(jsonPath("$.totalPages").value(3))
+                .andExpect(jsonPath("$.first").value(true))
+                .andExpect(jsonPath("$.last").value(false));
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
         verify(accountService).getAccounts(eq(AUTHENTICATED_USERNAME), eq(accountNumber), pageableCaptor.capture());
@@ -90,7 +108,7 @@ class AccountControllerWebMvcTest {
 
     @Test
     void getAccountByIdReturnsAccount() throws Exception {
-        AccountDto account = buildAccountDto("2026-101-000046-001");
+        AccountResponse account = buildAccountResponse("2026-101-000046-001");
 
         when(accountService.getAccountById(account.getId(), AUTHENTICATED_USERNAME)).thenReturn(account);
 
@@ -114,7 +132,29 @@ class AccountControllerWebMvcTest {
         mockMvc.perform(get(ACCOUNTS_PATH + "/" + accountId)
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
                 .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("https://api.sample-bank.local/problems/access-denied"))
+                .andExpect(jsonPath("$.title").value("Access denied"))
                 .andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"));
+
+        verify(accountService).getAccountById(accountId, AUTHENTICATED_USERNAME);
+    }
+
+    @Test
+    void getAccountByIdReturnsProblemDetailForUnexpectedErrors() throws Exception {
+        UUID accountId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+        when(accountService.getAccountById(accountId, AUTHENTICATED_USERNAME))
+                .thenThrow(new IllegalStateException("Database connection failed"));
+
+        mockMvc.perform(get(ACCOUNTS_PATH + "/" + accountId)
+                        .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("https://api.sample-bank.local/problems/internal-server-error"))
+                .andExpect(jsonPath("$.title").value("Internal server error"))
+                .andExpect(jsonPath("$.detail").value("An unexpected error occurred."))
+                .andExpect(jsonPath("$.errorCode").value("INTERNAL_SERVER_ERROR"));
 
         verify(accountService).getAccountById(accountId, AUTHENTICATED_USERNAME);
     }
@@ -122,12 +162,12 @@ class AccountControllerWebMvcTest {
     @Test
     void updateAccountStatusPassesRequestToService() throws Exception {
         UUID accountId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-        AccountStatusUpdateDto request = new AccountStatusUpdateDto(Status.SUSPENDED);
-        AccountDto response = buildAccountDto("2026-101-000046-001");
+        UpdateAccountStatusRequest request = new UpdateAccountStatusRequest(Status.SUSPENDED);
+        AccountResponse response = buildAccountResponse("2026-101-000046-001");
         response.setId(accountId);
         response.setStatus(Status.SUSPENDED);
 
-        when(accountService.updateAccountStatus(eq(accountId), any(AccountStatusUpdateDto.class), eq(AUTHENTICATED_USERNAME)))
+        when(accountService.updateAccountStatus(eq(accountId), any(UpdateAccountStatusRequest.class), eq(AUTHENTICATED_USERNAME)))
                 .thenReturn(response);
 
         mockMvc.perform(patch(ACCOUNTS_PATH + "/" + accountId)
@@ -138,7 +178,7 @@ class AccountControllerWebMvcTest {
                 .andExpect(jsonPath("$.id").value(accountId.toString()))
                 .andExpect(jsonPath("$.status").value("SUSPENDED"));
 
-        ArgumentCaptor<AccountStatusUpdateDto> requestCaptor = ArgumentCaptor.forClass(AccountStatusUpdateDto.class);
+        ArgumentCaptor<UpdateAccountStatusRequest> requestCaptor = ArgumentCaptor.forClass(UpdateAccountStatusRequest.class);
         verify(accountService).updateAccountStatus(eq(accountId), requestCaptor.capture(), eq(AUTHENTICATED_USERNAME));
         assertThat(requestCaptor.getValue().getStatus()).isEqualTo(Status.SUSPENDED);
     }
@@ -146,23 +186,29 @@ class AccountControllerWebMvcTest {
     @Test
     void updateAccountStatusRequiresStatus() throws Exception {
         UUID accountId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-        AccountStatusUpdateDto request = new AccountStatusUpdateDto(null);
+        UpdateAccountStatusRequest request = new UpdateAccountStatusRequest(null);
 
         mockMvc.perform(patch(ACCOUNTS_PATH + "/" + accountId)
                         .header(HttpHeaders.AUTHORIZATION, BEARER_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.type").value("https://api.sample-bank.local/problems/validation-failed"))
+                .andExpect(jsonPath("$.title").value("Validation failed"))
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_FAILED"))
-                .andExpect(jsonPath("$.message").value("status: must not be null"))
-                .andExpect(jsonPath("$.path").value(ACCOUNTS_PATH + "/" + accountId));
+                .andExpect(jsonPath("$.detail").value("Request validation failed."))
+                .andExpect(jsonPath("$.instance").value(ACCOUNTS_PATH + "/" + accountId))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.violations[0].field").value("status"))
+                .andExpect(jsonPath("$.violations[0].message").value("must not be null"));
 
         verifyNoInteractions(accountService);
     }
 
-    private static AccountDto buildAccountDto(String accountNumber) {
-        return new AccountDto(
+    private static AccountResponse buildAccountResponse(String accountNumber) {
+        return new AccountResponse(
                 UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
                 accountNumber,
                 Status.ACTIVE,

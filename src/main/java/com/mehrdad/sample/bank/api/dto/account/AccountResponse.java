@@ -19,7 +19,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AccountDto {
+public class AccountResponse {
 
     private UUID id;
 

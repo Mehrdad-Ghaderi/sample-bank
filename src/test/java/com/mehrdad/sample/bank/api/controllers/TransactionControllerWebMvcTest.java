@@ -2,13 +2,15 @@ package com.mehrdad.sample.bank.api.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mehrdad.sample.bank.api.ApiPaths;
-import com.mehrdad.sample.bank.api.dto.CreateDepositRequest;
-import com.mehrdad.sample.bank.api.dto.CreateTransferRequest;
-import com.mehrdad.sample.bank.api.dto.CreateWithdrawalRequest;
-import com.mehrdad.sample.bank.api.dto.TransactionDto;
+import com.mehrdad.sample.bank.api.dto.transaction.CreateDepositRequest;
+import com.mehrdad.sample.bank.api.dto.transaction.CreateTransferRequest;
+import com.mehrdad.sample.bank.api.dto.transaction.CreateWithdrawalRequest;
+import com.mehrdad.sample.bank.api.dto.transaction.TransactionResponse;
+import com.mehrdad.sample.bank.api.error.ProblemDetailsFactory;
 import com.mehrdad.sample.bank.domain.entity.Currency;
 import com.mehrdad.sample.bank.domain.entity.TransactionType;
 import com.mehrdad.sample.bank.domain.service.TransactionService;
+import com.mehrdad.sample.bank.security.ProblemDetailsSecurityHandler;
 import com.mehrdad.sample.bank.security.SpringSecurityConfiguration;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -16,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -36,11 +39,12 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(TransactionController.class)
-@Import(SpringSecurityConfiguration.class)
+@Import({SpringSecurityConfiguration.class, ProblemDetailsFactory.class, ProblemDetailsSecurityHandler.class})
 class TransactionControllerWebMvcTest {
 
     private static final String TRANSACTIONS_PATH = ApiPaths.API_BASE_PATH + ApiPaths.TRANSACTIONS;
@@ -60,10 +64,10 @@ class TransactionControllerWebMvcTest {
     @Test
     void getTransactionsSearchesByAccountNumber() throws Exception {
         String accountNumber = "2026-101-000046-001";
-        TransactionDto transaction = buildTransactionDto();
+        TransactionResponse transaction = buildTransactionResponse();
 
         when(transactionService.getTransactions(eq(AUTHENTICATED_USERNAME), eq(accountNumber), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(transaction)));
+                .thenReturn(new PageImpl<>(List.of(transaction), PageRequest.of(0, 5), 6));
 
         mockMvc.perform(get(TRANSACTIONS_PATH)
                         .header("Authorization", BEARER_TOKEN)
@@ -74,7 +78,13 @@ class TransactionControllerWebMvcTest {
                 .andExpect(jsonPath("$.content[0].receiverAccountId").value(transaction.getReceiverAccountId().toString()))
                 .andExpect(jsonPath("$.content[0].amount").value(25.50))
                 .andExpect(jsonPath("$.content[0].currency").value("CAD"))
-                .andExpect(jsonPath("$.content[0].type").value("TRANSFER"));
+                .andExpect(jsonPath("$.content[0].type").value("TRANSFER"))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.totalElements").value(6))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.first").value(true))
+                .andExpect(jsonPath("$.last").value(false));
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
         verify(transactionService).getTransactions(eq(AUTHENTICATED_USERNAME), eq(accountNumber), pageableCaptor.capture());
@@ -92,7 +102,15 @@ class TransactionControllerWebMvcTest {
                         .header("Idempotency-Key", IDEMPOTENCY_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("https://api.sample-bank.local/problems/authentication-required"))
+                .andExpect(jsonPath("$.title").value("Authentication required"))
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.detail").value("A valid bearer token is required to access this resource."))
+                .andExpect(jsonPath("$.instance").value(TRANSACTIONS_PATH + "/transfers"))
+                .andExpect(jsonPath("$.errorCode").value("AUTHENTICATION_REQUIRED"))
+                .andExpect(jsonPath("$.timestamp").exists());
 
         verifyNoInteractions(transactionService);
     }
@@ -108,8 +126,8 @@ class TransactionControllerWebMvcTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.errorCode").value("MISSING_REQUEST_HEADER"))
-                .andExpect(jsonPath("$.message").value("Missing required header: Idempotency-Key"))
-                .andExpect(jsonPath("$.path").value(TRANSACTIONS_PATH + "/transfers"));
+                .andExpect(jsonPath("$.detail").value("Missing required header: Idempotency-Key"))
+                .andExpect(jsonPath("$.instance").value(TRANSACTIONS_PATH + "/transfers"));
 
         verifyNoInteractions(transactionService);
     }
@@ -117,7 +135,7 @@ class TransactionControllerWebMvcTest {
     @Test
     void transferPassesRequestAndIdempotencyKeyToService() throws Exception {
         CreateTransferRequest request = buildTransferRequest();
-        TransactionDto response = buildTransferResponse(request);
+        TransactionResponse response = buildTransferResponse(request);
 
         when(transactionService.transfer(any(CreateTransferRequest.class), eq(IDEMPOTENCY_KEY), eq(AUTHENTICATED_USERNAME)))
                 .thenReturn(response);
@@ -148,7 +166,7 @@ class TransactionControllerWebMvcTest {
     @Test
     void depositPassesRequestAndIdempotencyKeyToService() throws Exception {
         CreateDepositRequest request = buildDepositRequest();
-        TransactionDto response = new TransactionDto(
+        TransactionResponse response = new TransactionResponse(
                 UUID.fromString("44444444-4444-4444-4444-444444444444"),
                 UUID.fromString("99999999-9999-9999-9999-999999999999"),
                 request.getReceiverAccountId(),
@@ -176,7 +194,7 @@ class TransactionControllerWebMvcTest {
     @Test
     void withdrawalPassesRequestAndIdempotencyKeyToService() throws Exception {
         CreateWithdrawalRequest request = buildWithdrawalRequest();
-        TransactionDto response = new TransactionDto(
+        TransactionResponse response = new TransactionResponse(
                 UUID.fromString("55555555-5555-5555-5555-555555555555"),
                 request.getSenderAccountId(),
                 UUID.fromString("99999999-9999-9999-9999-999999999999"),
@@ -260,8 +278,8 @@ class TransactionControllerWebMvcTest {
         );
     }
 
-    private static TransactionDto buildTransactionDto() {
-        return new TransactionDto(
+    private static TransactionResponse buildTransactionResponse() {
+        return new TransactionResponse(
                 UUID.fromString("33333333-3333-3333-3333-333333333333"),
                 UUID.fromString("11111111-1111-1111-1111-111111111111"),
                 UUID.fromString("22222222-2222-2222-2222-222222222222"),
@@ -272,8 +290,8 @@ class TransactionControllerWebMvcTest {
         );
     }
 
-    private static TransactionDto buildTransferResponse(CreateTransferRequest request) {
-        return new TransactionDto(
+    private static TransactionResponse buildTransferResponse(CreateTransferRequest request) {
+        return new TransactionResponse(
                 UUID.fromString("33333333-3333-3333-3333-333333333333"),
                 request.getSenderAccountId(),
                 request.getReceiverAccountId(),

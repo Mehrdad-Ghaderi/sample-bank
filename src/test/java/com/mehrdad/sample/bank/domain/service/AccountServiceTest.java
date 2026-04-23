@@ -1,7 +1,7 @@
 package com.mehrdad.sample.bank.domain.service;
 
-import com.mehrdad.sample.bank.api.dto.account.AccountStatusUpdateDto;
-import com.mehrdad.sample.bank.api.dto.account.AccountDto;
+import com.mehrdad.sample.bank.api.dto.account.UpdateAccountStatusRequest;
+import com.mehrdad.sample.bank.api.dto.account.AccountResponse;
 import com.mehrdad.sample.bank.domain.entity.AccountEntity;
 import com.mehrdad.sample.bank.domain.entity.CustomerEntity;
 import com.mehrdad.sample.bank.domain.entity.Status;
@@ -49,19 +49,19 @@ class AccountServiceTest {
         String accountNumber = "2026-101-000046-001";
         PageRequest pageable = PageRequest.of(0, 5);
         AccountEntity account = ownedAccount(OWNER_USERNAME);
-        AccountDto accountDto = new AccountDto();
+        AccountResponse accountResponse = new AccountResponse();
 
         when(accountRepository.findByNumber(accountNumber)).thenReturn(Optional.of(account));
         when(accountRepository.searchAccountsByOwner(OWNER_USERNAME, accountNumber, pageable))
                 .thenReturn(new PageImpl<>(List.of(account)));
-        when(accountMapper.toAccountDto(account)).thenReturn(accountDto);
+        when(accountMapper.mapToAccountResponse(account)).thenReturn(accountResponse);
 
         var result = accountService.getAccounts(OWNER_USERNAME, "  " + accountNumber + "  ", pageable);
 
-        assertEquals(List.of(accountDto), result.getContent());
+        assertEquals(List.of(accountResponse), result.getContent());
         verify(accountRepository).findByNumber(accountNumber);
         verify(accountRepository).searchAccountsByOwner(OWNER_USERNAME, accountNumber, pageable);
-        verify(accountMapper).toAccountDto(account);
+        verify(accountMapper).mapToAccountResponse(account);
     }
 
     @Test
@@ -95,29 +95,29 @@ class AccountServiceTest {
     }
 
     @Test
-    void updateAccountStatusShouldChangeAccountStatusAndReturnMappedDto() {
+    void updateAccountStatusShouldChangeAccountStatusAndReturnmappedResponse() {
         UUID accountId = UUID.randomUUID();
 
         AccountEntity account = ownedAccount(OWNER_USERNAME);
         account.setId(accountId);
         account.setStatus(Status.ACTIVE);
 
-        AccountStatusUpdateDto statusUpdateDto = new AccountStatusUpdateDto(Status.SUSPENDED);
+        UpdateAccountStatusRequest updateAccountStatusRequest = new UpdateAccountStatusRequest(Status.SUSPENDED);
 
-        AccountDto mappedDto = new AccountDto();
-        mappedDto.setId(accountId);
-        mappedDto.setStatus(Status.SUSPENDED);
+        AccountResponse mappedResponse = new AccountResponse();
+        mappedResponse.setId(accountId);
+        mappedResponse.setStatus(Status.SUSPENDED);
 
         when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
-        when(accountMapper.toAccountDto(account)).thenReturn(mappedDto);
+        when(accountMapper.mapToAccountResponse(account)).thenReturn(mappedResponse);
 
-        AccountDto result = accountService.updateAccountStatus(accountId, statusUpdateDto, OWNER_USERNAME);
+        AccountResponse result = accountService.updateAccountStatus(accountId, updateAccountStatusRequest, OWNER_USERNAME);
 
         assertEquals(Status.SUSPENDED, account.getStatus());
         assertEquals(Status.SUSPENDED, result.getStatus());
         verify(accountRepository).findById(accountId);
         verify(accountRepository).save(account);
-        verify(accountMapper).toAccountDto(account);
+        verify(accountMapper).mapToAccountResponse(account);
     }
 
     @Test
@@ -128,13 +128,13 @@ class AccountServiceTest {
         account.setId(accountId);
         account.setStatus(Status.ACTIVE);
 
-        AccountStatusUpdateDto statusUpdateDto = new AccountStatusUpdateDto(Status.ACTIVE);
+        UpdateAccountStatusRequest updateAccountStatusRequest = new UpdateAccountStatusRequest(Status.ACTIVE);
 
         when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
 
         assertThrows(
                 AccountStatusAlreadySetException.class,
-                () -> accountService.updateAccountStatus(accountId, statusUpdateDto, OWNER_USERNAME)
+                () -> accountService.updateAccountStatus(accountId, updateAccountStatusRequest, OWNER_USERNAME)
         );
 
         verify(accountRepository).findById(accountId);
@@ -145,13 +145,13 @@ class AccountServiceTest {
     @Test
     void updateAccountStatusShouldThrowWhenAccountDoesNotExist() {
         UUID accountId = UUID.randomUUID();
-        AccountStatusUpdateDto statusUpdateDto = new AccountStatusUpdateDto(Status.SUSPENDED);
+        UpdateAccountStatusRequest updateAccountStatusRequest = new UpdateAccountStatusRequest(Status.SUSPENDED);
 
         when(accountRepository.findById(accountId)).thenReturn(Optional.empty());
 
         assertThrows(
                 AccountNotFoundException.class,
-                () -> accountService.updateAccountStatus(accountId, statusUpdateDto, OWNER_USERNAME)
+                () -> accountService.updateAccountStatus(accountId, updateAccountStatusRequest, OWNER_USERNAME)
         );
 
         verify(accountRepository).findById(accountId);
@@ -195,16 +195,16 @@ class AccountServiceTest {
         UUID accountId = UUID.randomUUID();
         AccountEntity account = ownedAccount(OWNER_USERNAME);
         account.setId(accountId);
-        AccountDto dto = new AccountDto();
+        AccountResponse dto = new AccountResponse();
 
         when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
-        when(accountMapper.toAccountDto(account)).thenReturn(dto);
+        when(accountMapper.mapToAccountResponse(account)).thenReturn(dto);
 
-        AccountDto result = accountService.getAccountById(accountId, OWNER_USERNAME);
+        AccountResponse result = accountService.getAccountById(accountId, OWNER_USERNAME);
 
         assertEquals(dto, result);
         verify(accountRepository).findById(accountId);
-        verify(accountMapper).toAccountDto(account);
+        verify(accountMapper).mapToAccountResponse(account);
     }
 
     private static AccountEntity ownedAccount(String ownerUsername) {

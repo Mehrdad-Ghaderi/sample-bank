@@ -1,9 +1,9 @@
 package com.mehrdad.sample.bank.domain.service;
 
-import com.mehrdad.sample.bank.api.dto.CreateDepositRequest;
-import com.mehrdad.sample.bank.api.dto.CreateTransferRequest;
-import com.mehrdad.sample.bank.api.dto.CreateWithdrawalRequest;
-import com.mehrdad.sample.bank.api.dto.TransactionDto;
+import com.mehrdad.sample.bank.api.dto.transaction.CreateDepositRequest;
+import com.mehrdad.sample.bank.api.dto.transaction.CreateTransferRequest;
+import com.mehrdad.sample.bank.api.dto.transaction.CreateWithdrawalRequest;
+import com.mehrdad.sample.bank.api.dto.transaction.TransactionResponse;
 import com.mehrdad.sample.bank.domain.entity.AccountEntity;
 import com.mehrdad.sample.bank.domain.entity.AccountRole;
 import com.mehrdad.sample.bank.domain.entity.Currency;
@@ -47,7 +47,7 @@ public class TransactionService {
     private final TransactionMapper transactionMapper;
 
     @Transactional(readOnly = true)
-    public Page<TransactionDto> getTransactions(String ownerUsername, String accountNumber, Pageable pageable) {
+    public Page<TransactionResponse> getTransactions(String ownerUsername, String accountNumber, Pageable pageable) {
         String normalizedAccountNumber = normalizeOptionalAccountNumber(accountNumber);
 
         if (normalizedAccountNumber != null) {
@@ -55,11 +55,11 @@ public class TransactionService {
         }
 
         return transactionRepository.searchTransactionsByOwner(ownerUsername, normalizedAccountNumber, pageable)
-                .map(transactionMapper::toTransactionDto);
+                .map(transactionMapper::mapToTransactionResponse);
     }
 
     @Transactional
-    public TransactionDto transfer(CreateTransferRequest request, String idempotencyKey, String ownerUsername) {
+    public TransactionResponse transfer(CreateTransferRequest request, String idempotencyKey, String ownerUsername) {
         validateAmount(request.getAmount());
         validateOwnedCustomerAccount(request.getSenderAccountId(), ownerUsername, "Sender account does not belong to authenticated user");
         return executeIdempotently(
@@ -77,7 +77,7 @@ public class TransactionService {
     }
 
     @Transactional
-    public TransactionDto deposit(CreateDepositRequest request, String idempotencyKey, String ownerUsername) {
+    public TransactionResponse deposit(CreateDepositRequest request, String idempotencyKey, String ownerUsername) {
         validateAmount(request.getAmount());
         validateOwnedCustomerAccount(request.getReceiverAccountId(), ownerUsername, "Receiver account does not belong to authenticated user");
         return executeIdempotently(
@@ -98,7 +98,7 @@ public class TransactionService {
     }
 
     @Transactional
-    public TransactionDto withdraw(CreateWithdrawalRequest request, String idempotencyKey, String ownerUsername) {
+    public TransactionResponse withdraw(CreateWithdrawalRequest request, String idempotencyKey, String ownerUsername) {
         validateAmount(request.getAmount());
         validateOwnedCustomerAccount(request.getSenderAccountId(), ownerUsername, "Sender account does not belong to authenticated user");
         return executeIdempotently(
@@ -143,7 +143,7 @@ public class TransactionService {
         return savedTransaction;
     }
 
-    private TransactionDto executeIdempotently(
+    private TransactionResponse executeIdempotently(
             String idempotencyKey,
             TransactionType commandType,
             String requestHash,
@@ -161,7 +161,7 @@ public class TransactionService {
                 ));
     }
 
-    private TransactionDto resolveExistingIdempotencyRecord(
+    private TransactionResponse resolveExistingIdempotencyRecord(
             IdempotencyRecordEntity existingRecord,
             String requestHash,
             String idempotencyKey
@@ -169,10 +169,10 @@ public class TransactionService {
         if (!existingRecord.getRequestHash().equals(requestHash)) {
             throw new IdempotencyKeyConflictException(idempotencyKey);
         }
-        return transactionMapper.toTransactionDto(existingRecord.getTransaction());
+        return transactionMapper.mapToTransactionResponse(existingRecord.getTransaction());
     }
 
-    private TransactionDto createIdempotentTransaction(
+    private TransactionResponse createIdempotentTransaction(
             String idempotencyKey,
             TransactionType commandType,
             String requestHash,
@@ -187,7 +187,7 @@ public class TransactionService {
         TransactionEntity transaction = transactionSupplier.get();
         record.setTransaction(transaction);
 
-        return transactionMapper.toTransactionDto(transaction);
+        return transactionMapper.mapToTransactionResponse(transaction);
     }
 
     private String transferRequestHash(CreateTransferRequest request) {
