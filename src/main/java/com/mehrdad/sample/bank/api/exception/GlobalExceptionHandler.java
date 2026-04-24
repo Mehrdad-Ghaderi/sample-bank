@@ -13,6 +13,7 @@ import com.mehrdad.sample.bank.domain.exception.transaction.IllegalTransactionTy
 import com.mehrdad.sample.bank.domain.exception.transaction.InsufficientBalanceException;
 import com.mehrdad.sample.bank.domain.exception.transaction.InvalidIdempotencyKeyException;
 import com.mehrdad.sample.bank.domain.exception.transaction.InvalidAmountException;
+import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyExistsException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,6 +145,20 @@ public class GlobalExceptionHandler {
                 HttpStatus.CONFLICT,
                 "PHONE_NUMBER_ALREADY_EXISTS",
                 "Phone number already exists",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<ProblemDetail> handleUserAlreadyExists(
+            UserAlreadyExistsException ex,
+            HttpServletRequest request
+    ) {
+        return problem(
+                HttpStatus.CONFLICT,
+                "USER_ALREADY_EXISTS",
+                "User already exists",
                 ex.getMessage(),
                 request
         );

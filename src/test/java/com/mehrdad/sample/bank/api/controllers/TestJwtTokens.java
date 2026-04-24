@@ -23,31 +23,40 @@ final class TestJwtTokens {
     }
 
     static String bearerToken(String subject) {
+        return bearerToken(subject, "ROLE_USER");
+    }
+
+    static String adminBearerToken() {
+        return bearerToken("admin", "ROLE_ADMIN");
+    }
+
+    static String bearerToken(String subject, String scope) {
         Instant now = Instant.now();
-        return bearerToken(subject, now, now.plusSeconds(3600), SECRET);
+        return bearerToken(subject, scope, now, now.plusSeconds(3600), SECRET);
     }
 
     static String expiredBearerToken() {
         Instant now = Instant.now();
-        return bearerToken("user", now.minusSeconds(7200), now.minusSeconds(3600), SECRET);
+        return bearerToken("user", "ROLE_USER", now.minusSeconds(7200), now.minusSeconds(3600), SECRET);
     }
 
     static String bearerTokenSignedWithWrongSecret() {
         Instant now = Instant.now();
         return bearerToken(
                 "user",
+                "ROLE_USER",
                 now,
                 now.plusSeconds(3600),
                 "wrong-sample-bank-local-development-secret-at-least-32-bytes"
         );
     }
 
-    private static String bearerToken(String subject, Instant issuedAt, Instant expiresAt, String secret) {
+    private static String bearerToken(String subject, String scope, Instant issuedAt, Instant expiresAt, String secret) {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .subject(subject)
                 .issuedAt(issuedAt)
                 .expiresAt(expiresAt)
-                .claim("scope", "ROLE_USER")
+                .claim("scope", scope)
                 .build();
 
         JwtEncoder jwtEncoder = new NimbusJwtEncoder(new ImmutableSecret<>(
