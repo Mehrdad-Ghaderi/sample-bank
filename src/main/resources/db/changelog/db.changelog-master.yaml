@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/changes/003-add-account-role-to-baselined-accounts.yaml
   - include:
       file: db/changelog/changes/004-add-customer-owner-username.yaml
+  - include:
+      file: db/changelog/changes/005-create-user-entity.yaml

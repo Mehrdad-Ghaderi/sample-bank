@@ -7,7 +7,9 @@ import com.mehrdad.sample.bank.api.dto.account.UpdateAccountStatusRequest;
 import com.mehrdad.sample.bank.api.error.ProblemDetailsFactory;
 import com.mehrdad.sample.bank.domain.entity.Currency;
 import com.mehrdad.sample.bank.domain.entity.Status;
+import com.mehrdad.sample.bank.domain.repository.UserRepository;
 import com.mehrdad.sample.bank.domain.service.AccountService;
+import com.mehrdad.sample.bank.security.DatabaseUserDetailsService;
 import com.mehrdad.sample.bank.security.ProblemDetailsSecurityHandler;
 import com.mehrdad.sample.bank.security.SpringSecurityConfiguration;
 import org.junit.jupiter.api.Test;
@@ -42,7 +44,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AccountController.class)
-@Import({SpringSecurityConfiguration.class, ProblemDetailsFactory.class, ProblemDetailsSecurityHandler.class})
+@Import({
+        SpringSecurityConfiguration.class,
+        DatabaseUserDetailsService.class,
+        ProblemDetailsFactory.class,
+        ProblemDetailsSecurityHandler.class
+})
 class AccountControllerWebMvcTest {
 
     private static final String ACCOUNTS_PATH = ApiPaths.API_BASE_PATH + ApiPaths.ACCOUNTS;
@@ -57,6 +64,9 @@ class AccountControllerWebMvcTest {
 
     @MockitoBean
     private AccountService accountService;
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     @Test
     void getAccountsRequiresAuthentication() throws Exception {

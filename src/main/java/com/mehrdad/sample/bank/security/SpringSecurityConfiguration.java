@@ -3,7 +3,6 @@ package com.mehrdad.sample.bank.security;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.mehrdad.sample.bank.api.ApiPaths;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,9 +11,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -61,18 +57,6 @@ public class SpringSecurityConfiguration {
                 );
 
         return http.build();
-    }
-
-    @Bean
-    UserDetailsService userDetailsService(SecurityProperties securityProperties, PasswordEncoder passwordEncoder) {
-        SecurityProperties.User configuredUser = securityProperties.getUser();
-
-        return new InMemoryUserDetailsManager(
-                User.withUsername(configuredUser.getName())
-                        .password(passwordEncoder.encode(configuredUser.getPassword()))
-                        .roles(configuredUser.getRoles().toArray(String[]::new))
-                        .build()
-        );
     }
 
     @Bean
