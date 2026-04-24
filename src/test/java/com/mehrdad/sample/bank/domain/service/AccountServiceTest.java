@@ -5,6 +5,7 @@ import com.mehrdad.sample.bank.api.dto.account.AccountResponse;
 import com.mehrdad.sample.bank.domain.entity.AccountEntity;
 import com.mehrdad.sample.bank.domain.entity.CustomerEntity;
 import com.mehrdad.sample.bank.domain.entity.Status;
+import com.mehrdad.sample.bank.domain.entity.UserEntity;
 import com.mehrdad.sample.bank.domain.exception.account.AccountNotFoundException;
 import com.mehrdad.sample.bank.domain.exception.account.AccountStatusAlreadySetException;
 import com.mehrdad.sample.bank.domain.mapper.AccountMapper;
@@ -209,10 +210,16 @@ class AccountServiceTest {
 
     private static AccountEntity ownedAccount(String ownerUsername) {
         CustomerEntity customer = new CustomerEntity();
-        customer.setOwnerUsername(ownerUsername);
+        customer.setOwnerUser(user(ownerUsername));
 
         AccountEntity account = new AccountEntity();
         account.setCustomer(customer);
         return account;
+    }
+
+    private static UserEntity user(String username) {
+        UserEntity user = new UserEntity();
+        user.setUsername(username);
+        return user;
     }
 }

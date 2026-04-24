@@ -88,7 +88,7 @@ public class AccountService {
     }
 
     private void validateAccountOwnership(AccountEntity account, String ownerUsername) {
-        if (!ownerUsername.equals(account.getCustomer().getOwnerUsername())) {
+        if (!ownerUsername.equals(account.getCustomer().getOwnerUser().getUsername())) {
             throw new AccessDeniedException("Account does not belong to authenticated user");
         }
     }

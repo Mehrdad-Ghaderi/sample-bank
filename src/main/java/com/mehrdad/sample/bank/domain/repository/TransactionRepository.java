@@ -19,10 +19,12 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
             from TransactionEntity t
             join t.sender s
             join s.customer senderCustomer
+            join senderCustomer.ownerUser senderOwner
             join t.receiver r
             join r.customer receiverCustomer
-            where (senderCustomer.ownerUsername = :ownerUsername
-                or receiverCustomer.ownerUsername = :ownerUsername)
+            join receiverCustomer.ownerUser receiverOwner
+            where (senderOwner.username = :ownerUsername
+                or receiverOwner.username = :ownerUsername)
               and (:accountNumber is null
                 or s.number = :accountNumber
                 or r.number = :accountNumber)

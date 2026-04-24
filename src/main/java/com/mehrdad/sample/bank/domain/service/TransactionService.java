@@ -348,7 +348,7 @@ public class TransactionService {
             throw new IllegalTransactionTypeException("Only customer-owned accounts can be used for this operation");
         }
 
-        if (!ownerUsername.equals(account.getCustomer().getOwnerUsername())) {
+        if (!ownerUsername.equals(account.getCustomer().getOwnerUser().getUsername())) {
             throw new AccessDeniedException(accessDeniedMessage);
         }
     }

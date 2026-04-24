@@ -9,6 +9,7 @@ import com.mehrdad.sample.bank.domain.entity.AccountEntity;
 import com.mehrdad.sample.bank.domain.entity.Currency;
 import com.mehrdad.sample.bank.domain.entity.CustomerEntity;
 import com.mehrdad.sample.bank.domain.entity.Status;
+import com.mehrdad.sample.bank.domain.entity.UserEntity;
 import com.mehrdad.sample.bank.domain.exception.ConcurrentUpdateException;
 import com.mehrdad.sample.bank.domain.exception.customer.CustomerAlreadyActiveException;
 import com.mehrdad.sample.bank.domain.exception.customer.CustomerAlreadyExistException;
@@ -18,6 +19,7 @@ import com.mehrdad.sample.bank.domain.exception.customer.PhoneNumberAlreadyExist
 import com.mehrdad.sample.bank.domain.mapper.AccountMapper;
 import com.mehrdad.sample.bank.domain.mapper.CustomerMapper;
 import com.mehrdad.sample.bank.domain.repository.CustomerRepository;
+import com.mehrdad.sample.bank.domain.repository.UserRepository;
 import com.mehrdad.sample.bank.domain.util.CustomerBusinessIdGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -58,6 +60,9 @@ class CustomerServiceTest {
 
     @Mock
     private CustomerMapper customerMapper;
+
+    @Mock
+    private UserRepository userRepository;
 
     @Mock
     private CustomerBusinessIdGenerator customerBusinessIdGenerator;
@@ -134,7 +139,7 @@ class CustomerServiceTest {
     void getCustomerByIdShouldThrowAccessDeniedWhenCustomerBelongsToAnotherUser() {
         UUID customerId = UUID.randomUUID();
         CustomerEntity customer = customerEntity(11);
-        customer.setOwnerUsername(OTHER_USERNAME);
+        customer.setOwnerUser(user(OTHER_USERNAME));
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
 
@@ -175,6 +180,7 @@ class CustomerServiceTest {
 
         when(customerRepository.findByPhoneNumber("+14165556598")).thenReturn(Optional.empty());
         when(customerMapper.mapToCustomerEntity(createCustomerRequest)).thenReturn(mappedCustomer);
+        when(userRepository.findByUsername(OWNER_USERNAME)).thenReturn(Optional.of(user(OWNER_USERNAME)));
         when(customerBusinessIdGenerator.getNextBusinessId()).thenReturn(1001);
         when(customerRepository.saveAndFlush(mappedCustomer)).thenReturn(savedCustomer);
         when(customerMapper.mapToCustomerResponse(savedCustomer)).thenReturn(expectedCustomer);
@@ -183,10 +189,11 @@ class CustomerServiceTest {
 
         assertEquals(expectedCustomer, result);
         assertEquals("+14165556598", mappedCustomer.getPhoneNumber());
-        assertEquals(OWNER_USERNAME, mappedCustomer.getOwnerUsername());
+        assertEquals(OWNER_USERNAME, mappedCustomer.getOwnerUser().getUsername());
         assertEquals(1001, mappedCustomer.getBusinessId());
         verify(customerRepository).findByPhoneNumber("+14165556598");
         verify(customerMapper).mapToCustomerEntity(createCustomerRequest);
+        verify(userRepository).findByUsername(OWNER_USERNAME);
         verify(customerBusinessIdGenerator).getNextBusinessId();
         verify(customerRepository).saveAndFlush(mappedCustomer);
         verify(customerMapper).mapToCustomerResponse(savedCustomer);
@@ -225,7 +232,7 @@ class CustomerServiceTest {
     void activateCustomerShouldRejectCustomerOwnedByAnotherUser() {
         UUID customerId = UUID.randomUUID();
         CustomerEntity customer = customerEntity(34);
-        customer.setOwnerUsername(OTHER_USERNAME);
+        customer.setOwnerUser(user(OTHER_USERNAME));
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
 
@@ -269,7 +276,7 @@ class CustomerServiceTest {
     void deactivateCustomerShouldRejectCustomerOwnedByAnotherUser() {
         UUID customerId = UUID.randomUUID();
         CustomerEntity customer = customerEntity(35);
-        customer.setOwnerUsername(OTHER_USERNAME);
+        customer.setOwnerUser(user(OTHER_USERNAME));
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
 
@@ -326,7 +333,7 @@ class CustomerServiceTest {
     void updateCustomerShouldRejectCustomerOwnedByAnotherUser() {
         UUID customerId = UUID.randomUUID();
         CustomerEntity existingCustomer = customerEntity(49);
-        existingCustomer.setOwnerUsername(OTHER_USERNAME);
+        existingCustomer.setOwnerUser(user(OTHER_USERNAME));
         UpdateCustomerRequest updateCustomerRequest = new UpdateCustomerRequest("Bob", "(647) 555-1234");
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(existingCustomer));
@@ -434,7 +441,7 @@ class CustomerServiceTest {
         UUID customerId = UUID.randomUUID();
         CustomerEntity customer = customerEntity(47);
         customer.setId(customerId);
-        customer.setOwnerUsername(OTHER_USERNAME);
+        customer.setOwnerUser(user(OTHER_USERNAME));
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
 
@@ -491,7 +498,7 @@ class CustomerServiceTest {
     void getCustomerAccountsShouldRejectCustomerOwnedByAnotherUser() {
         UUID customerId = UUID.randomUUID();
         CustomerEntity customer = customerEntity(48);
-        customer.setOwnerUsername(OTHER_USERNAME);
+        customer.setOwnerUser(user(OTHER_USERNAME));
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
 
@@ -507,7 +514,7 @@ class CustomerServiceTest {
         customer.setId(UUID.randomUUID());
         customer.setBusinessId(businessId);
         customer.setName("Customer-" + businessId);
-        customer.setOwnerUsername(OWNER_USERNAME);
+        customer.setOwnerUser(user(OWNER_USERNAME));
         customer.setPhoneNumber("+1416555" + String.format("%04d", businessId));
         customer.setStatus(Status.ACTIVE);
         customer.setAccounts(new ArrayList<>());
@@ -518,5 +525,11 @@ class CustomerServiceTest {
         CustomerResponse customer = new CustomerResponse();
         customer.setId(customerId);
         return customer;
+    }
+
+    private UserEntity user(String username) {
+        UserEntity user = new UserEntity();
+        user.setUsername(username);
+        return user;
     }
 }

@@ -19,6 +19,7 @@ import com.mehrdad.sample.bank.domain.repository.AccountRepository;
 import com.mehrdad.sample.bank.domain.repository.CustomerRepository;
 import com.mehrdad.sample.bank.domain.repository.IdempotencyRecordRepository;
 import com.mehrdad.sample.bank.domain.repository.TransactionRepository;
+import com.mehrdad.sample.bank.domain.repository.UserRepository;
 import com.mehrdad.sample.bank.domain.util.AccountNumberGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +54,7 @@ class TransactionServiceIT {
 
     private static final String OWNER_USERNAME = "user";
     private static final String BANK_OWNER_USERNAME = "system";
+    private static final String DISABLED_PLACEHOLDER_PASSWORD_HASH = "$2a$10$7EqJtq98hPqEX7fNZaFWoOHi6M6K5vCk1vZ1tc665Ar3e8DqRL3Oe";
     private AtomicInteger idempotencyKeySequence;
 
     @Container
@@ -85,6 +87,8 @@ class TransactionServiceIT {
     private TransactionRepository transactionRepository;
     @Autowired
     private IdempotencyRecordRepository idempotencyRecordRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     AccountResponse bankCadAccount;
     AccountResponse senderAccount;
@@ -98,7 +102,9 @@ class TransactionServiceIT {
         transactionRepository.deleteAll();
         accountRepository.deleteAll();
         customerRepository.deleteAll();
+        userRepository.deleteAll();
         idempotencyKeySequence = new AtomicInteger();
+        ensureUser(OWNER_USERNAME, true);
         loadBank();
         createSender();
         createReceiver();
@@ -107,7 +113,7 @@ class TransactionServiceIT {
     void loadBank() {
         CustomerEntity bankEntity = new CustomerEntity();
         bankEntity.setName("BANK");
-        bankEntity.setOwnerUsername(BANK_OWNER_USERNAME);
+        bankEntity.setOwnerUser(ensureUser(BANK_OWNER_USERNAME, false));
         bankEntity.setPhoneNumber("+10000000000");
         bankEntity.setStatus(Status.ACTIVE);
         bankEntity.setAccounts(new ArrayList<>());
@@ -412,5 +418,17 @@ class TransactionServiceIT {
 
     private String nextIdempotencyKey(String prefix) {
         return prefix + "-" + idempotencyKeySequence.incrementAndGet();
+    }
+
+    private UserEntity ensureUser(String username, boolean enabled) {
+        return userRepository.findByUsername(username)
+                .orElseGet(() -> {
+                    UserEntity user = new UserEntity();
+                    user.setUsername(username);
+                    user.setPasswordHash(DISABLED_PLACEHOLDER_PASSWORD_HASH);
+                    user.setRole(UserRole.USER);
+                    user.setEnabled(enabled);
+                    return userRepository.saveAndFlush(user);
+                });
     }
 }

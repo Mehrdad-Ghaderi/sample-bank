@@ -9,6 +9,7 @@ import com.mehrdad.sample.bank.domain.entity.AccountRole;
 import com.mehrdad.sample.bank.domain.entity.Currency;
 import com.mehrdad.sample.bank.domain.entity.CustomerEntity;
 import com.mehrdad.sample.bank.domain.entity.TransactionEntity;
+import com.mehrdad.sample.bank.domain.entity.UserEntity;
 import com.mehrdad.sample.bank.domain.mapper.TransactionMapper;
 import com.mehrdad.sample.bank.domain.repository.AccountRepository;
 import com.mehrdad.sample.bank.domain.repository.IdempotencyRecordRepository;
@@ -217,11 +218,17 @@ class TransactionServiceTest {
 
     private static AccountEntity account(String ownerUsername, AccountRole accountRole) {
         CustomerEntity customer = new CustomerEntity();
-        customer.setOwnerUsername(ownerUsername);
+        customer.setOwnerUser(user(ownerUsername));
 
         AccountEntity account = new AccountEntity();
         account.setCustomer(customer);
         account.setAccountRole(accountRole);
         return account;
+    }
+
+    private static UserEntity user(String username) {
+        UserEntity user = new UserEntity();
+        user.setUsername(username);
+        return user;
     }
 }
