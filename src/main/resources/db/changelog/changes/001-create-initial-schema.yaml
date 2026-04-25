@@ -109,6 +109,11 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
+                  name: account_role
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
                   name: balance
                   type: numeric(19,4)
                   constraints:
@@ -162,6 +167,9 @@ databaseChangeLog:
         - sql:
             dbms: postgresql
             sql: ALTER TABLE account_entity ADD CONSTRAINT chk_account_currency CHECK (currency IN ('USD', 'CAD', 'EUR'))
+        - sql:
+            dbms: postgresql
+            sql: ALTER TABLE account_entity ADD CONSTRAINT chk_account_role CHECK (account_role IN ('CUSTOMER', 'BANK_TREASURY'))
 
   - changeSet:
       id: 003-create-transaction-entity
