@@ -48,7 +48,11 @@ public class SpringSecurityConfiguration {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers(ApiPaths.API_BASE_PATH + ApiPaths.AUTH + "/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, ApiPaths.API_BASE_PATH + ApiPaths.USERS)
+                        .hasRole(UserRole.ADMIN.name())
                         .requestMatchers(HttpMethod.POST, ApiPaths.API_BASE_PATH + ApiPaths.USERS)
+                        .hasRole(UserRole.ADMIN.name())
+                        .requestMatchers(HttpMethod.PATCH, ApiPaths.API_BASE_PATH + ApiPaths.USERS + "/**")
                         .hasRole(UserRole.ADMIN.name())
                         .anyRequest().authenticated()
                 )
