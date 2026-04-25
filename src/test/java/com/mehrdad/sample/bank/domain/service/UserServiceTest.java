@@ -1,12 +1,15 @@
 package com.mehrdad.sample.bank.domain.service;
 
+import com.mehrdad.sample.bank.api.dto.user.ChangePasswordRequest;
 import com.mehrdad.sample.bank.api.dto.user.CreateUserRequest;
+import com.mehrdad.sample.bank.api.dto.user.ResetPasswordRequest;
 import com.mehrdad.sample.bank.api.dto.user.UserResponse;
 import com.mehrdad.sample.bank.domain.entity.UserEntity;
 import com.mehrdad.sample.bank.domain.entity.UserRole;
 import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyDisabledException;
 import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyEnabledException;
 import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyExistsException;
+import com.mehrdad.sample.bank.domain.exception.user.InvalidCurrentPasswordException;
 import com.mehrdad.sample.bank.domain.exception.user.UserNotFoundException;
 import com.mehrdad.sample.bank.domain.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -176,5 +179,53 @@ class UserServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.enableUser(userId));
+    }
+
+    @Test
+    void resetPasswordShouldPersistEncodedNewPassword() {
+        UUID userId = UUID.randomUUID();
+        UserEntity user = new UserEntity();
+        user.setId(userId);
+        user.setPasswordHash("old-hash");
+        ResetPasswordRequest request = new ResetPasswordRequest("new-password-123");
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode("new-password-123")).thenReturn("new-hash");
+
+        userService.resetPassword(userId, request);
+
+        assertEquals("new-hash", user.getPasswordHash());
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void changePasswordShouldPersistEncodedNewPasswordForMatchingCurrentPassword() {
+        UserEntity user = new UserEntity();
+        user.setUsername("user");
+        user.setPasswordHash("old-hash");
+        ChangePasswordRequest request = new ChangePasswordRequest("current-pass", "new-password-123");
+
+        when(userRepository.findByUsername("user")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("current-pass", "old-hash")).thenReturn(true);
+        when(passwordEncoder.encode("new-password-123")).thenReturn("new-hash");
+
+        userService.changePassword("user", request);
+
+        assertEquals("new-hash", user.getPasswordHash());
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void changePasswordShouldRejectWrongCurrentPassword() {
+        UserEntity user = new UserEntity();
+        user.setUsername("user");
+        user.setPasswordHash("old-hash");
+        ChangePasswordRequest request = new ChangePasswordRequest("wrong-pass", "new-password-123");
+
+        when(userRepository.findByUsername("user")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrong-pass", "old-hash")).thenReturn(false);
+
+        assertThrows(InvalidCurrentPasswordException.class, () -> userService.changePassword("user", request));
+        verify(userRepository, never()).save(any());
     }
 }

@@ -16,6 +16,7 @@ import com.mehrdad.sample.bank.domain.exception.transaction.InvalidAmountExcepti
 import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyDisabledException;
 import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyEnabledException;
 import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyExistsException;
+import com.mehrdad.sample.bank.domain.exception.user.InvalidCurrentPasswordException;
 import com.mehrdad.sample.bank.domain.exception.user.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -204,6 +205,20 @@ public class GlobalExceptionHandler {
                 HttpStatus.CONFLICT,
                 "USER_ALREADY_DISABLED",
                 "User already disabled",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(InvalidCurrentPasswordException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidCurrentPassword(
+            InvalidCurrentPasswordException ex,
+            HttpServletRequest request
+    ) {
+        return problem(
+                HttpStatus.BAD_REQUEST,
+                "INVALID_CURRENT_PASSWORD",
+                "Invalid current password",
                 ex.getMessage(),
                 request
         );

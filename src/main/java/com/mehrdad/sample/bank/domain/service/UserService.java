@@ -1,11 +1,14 @@
 package com.mehrdad.sample.bank.domain.service;
 
+import com.mehrdad.sample.bank.api.dto.user.ChangePasswordRequest;
 import com.mehrdad.sample.bank.api.dto.user.CreateUserRequest;
+import com.mehrdad.sample.bank.api.dto.user.ResetPasswordRequest;
 import com.mehrdad.sample.bank.api.dto.user.UserResponse;
 import com.mehrdad.sample.bank.domain.entity.UserEntity;
 import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyDisabledException;
 import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyEnabledException;
 import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyExistsException;
+import com.mehrdad.sample.bank.domain.exception.user.InvalidCurrentPasswordException;
 import com.mehrdad.sample.bank.domain.exception.user.UserNotFoundException;
 import com.mehrdad.sample.bank.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -73,9 +76,30 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public void resetPassword(UUID userId, ResetPasswordRequest request) {
+        UserEntity user = loadUserById(userId);
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+    }
+
+    public void changePassword(String username, ChangePasswordRequest request) {
+        UserEntity user = loadUserByUsername(username);
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            throw new InvalidCurrentPasswordException();
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+    }
+
     private UserEntity loadUserById(UUID userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
+    }
+
+    private UserEntity loadUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(username));
     }
 
     private UserResponse toUserResponse(UserEntity user) {
