@@ -11,6 +11,7 @@ import com.mehrdad.sample.bank.domain.repository.UserRepository;
 import com.mehrdad.sample.bank.domain.service.AccountService;
 import com.mehrdad.sample.bank.security.DatabaseUserDetailsService;
 import com.mehrdad.sample.bank.security.ProblemDetailsSecurityHandler;
+import com.mehrdad.sample.bank.security.RevokedAccessTokenService;
 import com.mehrdad.sample.bank.security.SpringSecurityConfiguration;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -37,6 +38,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -67,6 +69,9 @@ class AccountControllerWebMvcTest {
 
     @MockitoBean
     private UserRepository userRepository;
+
+    @MockitoBean
+    private RevokedAccessTokenService revokedAccessTokenService;
 
     @Test
     void getAccountsRequiresAuthentication() throws Exception {
@@ -165,6 +170,18 @@ class AccountControllerWebMvcTest {
                 .andExpect(jsonPath("$.instance").value(ACCOUNTS_PATH))
                 .andExpect(jsonPath("$.errorCode").value("AUTHENTICATION_REQUIRED"))
                 .andExpect(jsonPath("$.timestamp").exists());
+
+        verifyNoInteractions(accountService);
+    }
+
+    @Test
+    void getAccountsRejectsRevokedBearerToken() throws Exception {
+        when(revokedAccessTokenService.isRevoked(anyString())).thenReturn(true);
+
+        mockMvc.perform(get(ACCOUNTS_PATH)
+                        .header(HttpHeaders.AUTHORIZATION, TestJwtTokens.bearerToken()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("AUTHENTICATION_REQUIRED"));
 
         verifyNoInteractions(accountService);
     }

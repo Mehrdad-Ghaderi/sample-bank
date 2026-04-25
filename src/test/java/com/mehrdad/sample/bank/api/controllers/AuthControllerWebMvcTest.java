@@ -11,8 +11,9 @@ import com.mehrdad.sample.bank.security.DatabaseUserDetailsService;
 import com.mehrdad.sample.bank.security.JwtService;
 import com.mehrdad.sample.bank.security.LoginAttemptService;
 import com.mehrdad.sample.bank.security.ProblemDetailsSecurityHandler;
+import com.mehrdad.sample.bank.security.RevokedAccessTokenService;
 import com.mehrdad.sample.bank.security.SpringSecurityConfiguration;
-import com.mehrdad.sample.bank.security.TooManyLoginAttemptsException;
+import com.mehrdad.sample.bank.security.exception.TooManyLoginAttemptsException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -27,6 +28,7 @@ import java.util.Optional;
 
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.blankOrNullString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -57,6 +59,9 @@ class AuthControllerWebMvcTest {
 
     @MockitoBean
     private LoginAttemptService loginAttemptService;
+
+    @MockitoBean
+    private RevokedAccessTokenService revokedAccessTokenService;
 
     @Test
     void loginReturnsBearerToken() throws Exception {
@@ -115,6 +120,21 @@ class AuthControllerWebMvcTest {
                 .andExpect(status().isTooManyRequests())
                 .andExpect(jsonPath("$.errorCode").value("TOO_MANY_LOGIN_ATTEMPTS"))
                 .andExpect(jsonPath("$.retryAt").exists());
+    }
+
+    @Test
+    void logoutRequiresAuthentication() throws Exception {
+        mockMvc.perform(post(LOGIN_PATH.replace("/login", "/logout")))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void logoutRevokesCurrentAccessToken() throws Exception {
+        mockMvc.perform(post(LOGIN_PATH.replace("/login", "/logout"))
+                        .header("Authorization", TestJwtTokens.bearerToken()))
+                .andExpect(status().isNoContent());
+
+        verify(revokedAccessTokenService).revoke(any());
     }
 
     private static UserEntity activeUser(String username, String rawPassword) {

@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +37,7 @@ public class JwtService {
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .subject(authentication.getName())
+                .id(UUID.randomUUID().toString())
                 .issuedAt(now)
                 .expiresAt(expiresAt)
                 .claim("scope", scope)

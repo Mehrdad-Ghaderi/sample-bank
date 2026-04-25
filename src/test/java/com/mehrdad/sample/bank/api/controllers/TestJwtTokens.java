@@ -10,6 +10,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.time.Instant;
+import java.util.UUID;
 
 final class TestJwtTokens {
 
@@ -80,6 +81,7 @@ final class TestJwtTokens {
     ) {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .subject(subject)
+                .id(UUID.randomUUID().toString())
                 .issuedAt(issuedAt)
                 .expiresAt(expiresAt)
                 .issuer(issuer)

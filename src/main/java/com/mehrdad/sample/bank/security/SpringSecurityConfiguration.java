@@ -4,6 +4,7 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.mehrdad.sample.bank.api.ApiPaths;
 import com.mehrdad.sample.bank.domain.entity.UserRole;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -96,16 +97,21 @@ public class SpringSecurityConfiguration {
     JwtDecoder jwtDecoder(
             @Value("${app.security.jwt.secret}") String secret,
             @Value("${app.security.jwt.issuer}") String issuer,
-            @Value("${app.security.jwt.audience}") String audience
+            @Value("${app.security.jwt.audience}") String audience,
+            ObjectProvider<RevokedAccessTokenService> revokedAccessTokenServiceProvider
     ) {
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(secretKey(secret))
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
-        decoder.setJwtValidator(jwtValidator(issuer, audience));
+        decoder.setJwtValidator(jwtValidator(issuer, audience, revokedAccessTokenServiceProvider.getIfAvailable()));
         return decoder;
     }
 
-    private OAuth2TokenValidator<Jwt> jwtValidator(String issuer, String audience) {
+    private OAuth2TokenValidator<Jwt> jwtValidator(
+            String issuer,
+            String audience,
+            RevokedAccessTokenService revokedAccessTokenService
+    ) {
         OAuth2TokenValidator<Jwt> issuerValidator = JwtValidators.createDefaultWithIssuer(issuer);
         OAuth2TokenValidator<Jwt> audienceValidator = jwt -> {
             Collection<String> audiences = jwt.getAudience();
@@ -119,13 +125,28 @@ public class SpringSecurityConfiguration {
                     null
             ));
         };
+        OAuth2TokenValidator<Jwt> revokedTokenValidator = jwt -> {
+            if (revokedAccessTokenService == null || !revokedAccessTokenService.isRevoked(jwt.getId())) {
+                return OAuth2TokenValidatorResult.success();
+            }
+
+            return OAuth2TokenValidatorResult.failure(new OAuth2Error(
+                    "invalid_token",
+                    "The access token has been revoked.",
+                    null
+            ));
+        };
 
         return jwt -> {
             OAuth2TokenValidatorResult issuerResult = issuerValidator.validate(jwt);
             if (issuerResult.hasErrors()) {
                 return issuerResult;
             }
-            return audienceValidator.validate(jwt);
+            OAuth2TokenValidatorResult audienceResult = audienceValidator.validate(jwt);
+            if (audienceResult.hasErrors()) {
+                return audienceResult;
+            }
+            return revokedTokenValidator.validate(jwt);
         };
     }
 
