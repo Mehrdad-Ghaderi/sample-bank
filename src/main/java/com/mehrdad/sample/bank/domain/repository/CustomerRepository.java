@@ -24,7 +24,8 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, UUID> 
     @Query("""
             select c
             from CustomerEntity c
-            where c.ownerUsername = :ownerUsername
+            join c.ownerUser ownerUser
+            where ownerUser.username = :ownerUsername
               and (:businessId is null or c.businessId = :businessId)
               and (:phoneNumber is null or c.phoneNumber = :phoneNumber)
             """)

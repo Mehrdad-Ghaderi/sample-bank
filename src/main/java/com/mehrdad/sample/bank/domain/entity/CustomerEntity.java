@@ -33,6 +33,10 @@ import java.util.UUID;
                 @Index(
                         name = "idx_customer_status",
                         columnList = "status"
+                ),
+                @Index(
+                        name = "idx_customer_owner_user",
+                        columnList = "owner_user_id"
                 )
         }
 )
@@ -57,8 +61,9 @@ public class CustomerEntity {
     @Column(length = 100, nullable = false)
     private String name;
 
-    @Column(name = "owner_username", length = 100, nullable = false)
-    private String ownerUsername;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "owner_user_id", nullable = false)
+    private UserEntity ownerUser;
 
     @Pattern(
             regexp = "^\\+[0-9]{10,16}$",

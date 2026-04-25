@@ -13,6 +13,10 @@ import com.mehrdad.sample.bank.domain.exception.transaction.IllegalTransactionTy
 import com.mehrdad.sample.bank.domain.exception.transaction.InsufficientBalanceException;
 import com.mehrdad.sample.bank.domain.exception.transaction.InvalidIdempotencyKeyException;
 import com.mehrdad.sample.bank.domain.exception.transaction.InvalidAmountException;
+import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyDisabledException;
+import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyEnabledException;
+import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyExistsException;
+import com.mehrdad.sample.bank.domain.exception.user.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,6 +148,62 @@ public class GlobalExceptionHandler {
                 HttpStatus.CONFLICT,
                 "PHONE_NUMBER_ALREADY_EXISTS",
                 "Phone number already exists",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<ProblemDetail> handleUserAlreadyExists(
+            UserAlreadyExistsException ex,
+            HttpServletRequest request
+    ) {
+        return problem(
+                HttpStatus.CONFLICT,
+                "USER_ALREADY_EXISTS",
+                "User already exists",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleUserNotFound(
+            UserNotFoundException ex,
+            HttpServletRequest request
+    ) {
+        return problem(
+                HttpStatus.NOT_FOUND,
+                "USER_NOT_FOUND",
+                "User not found",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(UserAlreadyEnabledException.class)
+    public ResponseEntity<ProblemDetail> handleUserAlreadyEnabled(
+            UserAlreadyEnabledException ex,
+            HttpServletRequest request
+    ) {
+        return problem(
+                HttpStatus.CONFLICT,
+                "USER_ALREADY_ENABLED",
+                "User already enabled",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(UserAlreadyDisabledException.class)
+    public ResponseEntity<ProblemDetail> handleUserAlreadyDisabled(
+            UserAlreadyDisabledException ex,
+            HttpServletRequest request
+    ) {
+        return problem(
+                HttpStatus.CONFLICT,
+                "USER_ALREADY_DISABLED",
+                "User already disabled",
                 ex.getMessage(),
                 request
         );

@@ -8,11 +8,13 @@ import com.mehrdad.sample.bank.api.dto.customer.UpdateCustomerRequest;
 import com.mehrdad.sample.bank.domain.entity.AccountEntity;
 import com.mehrdad.sample.bank.domain.entity.CustomerEntity;
 import com.mehrdad.sample.bank.domain.entity.Status;
+import com.mehrdad.sample.bank.domain.entity.UserEntity;
 import com.mehrdad.sample.bank.domain.exception.ConcurrentUpdateException;
 import com.mehrdad.sample.bank.domain.exception.customer.*;
 import com.mehrdad.sample.bank.domain.mapper.AccountMapper;
 import com.mehrdad.sample.bank.domain.mapper.CustomerMapper;
 import com.mehrdad.sample.bank.domain.repository.CustomerRepository;
+import com.mehrdad.sample.bank.domain.repository.UserRepository;
 import com.mehrdad.sample.bank.domain.util.AccountNumberGenerator;
 import com.mehrdad.sample.bank.domain.util.CustomerBusinessIdGenerator;
 import com.mehrdad.sample.bank.domain.util.PhoneNumberNormalizer;
@@ -36,6 +38,7 @@ import java.util.UUID;
 @Transactional
 public class CustomerService {
     private final CustomerRepository customerRepository;
+    private final UserRepository userRepository;
     private final CustomerMapper customerMapper;
     private final CustomerBusinessIdGenerator customerBusinessIdGenerator;
     private final AccountMapper accountMapper;
@@ -66,7 +69,7 @@ public class CustomerService {
 
         CustomerEntity customerEntity = customerMapper.mapToCustomerEntity(createCustomerRequest);
         customerEntity.setPhoneNumber(normalizedPhoneNumber);
-        customerEntity.setOwnerUsername(ownerUsername);
+        customerEntity.setOwnerUser(loadAuthenticatedUser(ownerUsername));
         customerEntity.setBusinessId(customerBusinessIdGenerator.getNextBusinessId());
         CustomerEntity savedCustomerEntity = customerRepository.saveAndFlush(customerEntity);
         return customerMapper.mapToCustomerResponse(savedCustomerEntity);
@@ -182,7 +185,7 @@ public class CustomerService {
     }
 
     private void validateCustomerOwnership(CustomerEntity customer, String ownerUsername) {
-        if (!ownerUsername.equals(customer.getOwnerUsername())) {
+        if (!ownerUsername.equals(customer.getOwnerUser().getUsername())) {
             throw new AccessDeniedException("Customer does not belong to authenticated user");
         }
     }
@@ -191,5 +194,14 @@ public class CustomerService {
         if (ownerUsername != null) {
             validateCustomerOwnership(customer, ownerUsername);
         }
+    }
+
+    private UserEntity loadAuthenticatedUser(String username) {
+        if (username == null || username.isBlank()) {
+            throw new AccessDeniedException("Authenticated username is required");
+        }
+
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new AccessDeniedException("Authenticated user was not found"));
     }
 }

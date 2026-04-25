@@ -1,0 +1,57 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-replace-customer-owner-username-with-owner-user
+      author: mehrdad
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: customer_entity
+              columnName: owner_user_id
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: >
+              INSERT INTO user_entity (id, username, password_hash, role, enabled, created_at, updated_at)
+              SELECT gen_random_uuid(), c.owner_username,
+                     '$2a$10$7EqJtq98hPqEX7fNZaFWoOHi6M6K5vCk1vZ1tc665Ar3e8DqRL3Oe',
+                     'USER', false, now(), now()
+              FROM (SELECT DISTINCT owner_username FROM customer_entity) c
+              WHERE NOT EXISTS (
+                  SELECT 1 FROM user_entity u WHERE u.username = c.owner_username
+              )
+        - addColumn:
+            tableName: customer_entity
+            columns:
+              - column:
+                  name: owner_user_id
+                  type: uuid
+        - sql:
+            dbms: postgresql
+            sql: >
+              UPDATE customer_entity c
+              SET owner_user_id = u.id
+              FROM user_entity u
+              WHERE c.owner_username = u.username
+        - addNotNullConstraint:
+            tableName: customer_entity
+            columnName: owner_user_id
+            columnDataType: uuid
+        - addForeignKeyConstraint:
+            baseTableName: customer_entity
+            baseColumnNames: owner_user_id
+            constraintName: fk_customer_owner_user
+            referencedTableName: user_entity
+            referencedColumnNames: id
+        - createIndex:
+            tableName: customer_entity
+            indexName: idx_customer_owner_user
+            columns:
+              - column:
+                  name: owner_user_id
+        - dropIndex:
+            tableName: customer_entity
+            indexName: idx_customer_owner_username
+        - dropColumn:
+            tableName: customer_entity
+            columnName: owner_username
