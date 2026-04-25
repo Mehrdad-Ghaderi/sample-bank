@@ -2,10 +2,13 @@ package com.mehrdad.sample.bank.api.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mehrdad.sample.bank.api.ApiPaths;
+import com.mehrdad.sample.bank.api.dto.user.ChangePasswordRequest;
 import com.mehrdad.sample.bank.api.dto.user.CreateUserRequest;
+import com.mehrdad.sample.bank.api.dto.user.ResetPasswordRequest;
 import com.mehrdad.sample.bank.api.dto.user.UserResponse;
 import com.mehrdad.sample.bank.api.error.ProblemDetailsFactory;
 import com.mehrdad.sample.bank.domain.entity.UserRole;
+import com.mehrdad.sample.bank.domain.exception.user.InvalidCurrentPasswordException;
 import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyDisabledException;
 import com.mehrdad.sample.bank.domain.exception.user.UserNotFoundException;
 import com.mehrdad.sample.bank.domain.repository.UserRepository;
@@ -48,6 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserControllerWebMvcTest {
 
     private static final String USERS_PATH = ApiPaths.API_BASE_PATH + ApiPaths.USERS;
+    private static final String MY_PASSWORD_PATH = USERS_PATH + "/me/password";
     private static final UUID USER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
     @Autowired
@@ -184,5 +188,68 @@ class UserControllerWebMvcTest {
                         .header(HttpHeaders.AUTHORIZATION, TestJwtTokens.adminBearerToken()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("USER_NOT_FOUND"));
+    }
+
+    @Test
+    void changePasswordShouldRequireAuthentication() throws Exception {
+        ChangePasswordRequest request = new ChangePasswordRequest("current-pass", "new-password-123");
+
+        mockMvc.perform(patch(MY_PASSWORD_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void changePasswordShouldAllowAuthenticatedUser() throws Exception {
+        ChangePasswordRequest request = new ChangePasswordRequest("current-pass", "new-password-123");
+
+        mockMvc.perform(patch(MY_PASSWORD_PATH)
+                        .header(HttpHeaders.AUTHORIZATION, TestJwtTokens.bearerToken("alice"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNoContent());
+
+        verify(userService).changePassword("alice", request);
+    }
+
+    @Test
+    void changePasswordShouldReturnProblemForInvalidCurrentPassword() throws Exception {
+        ChangePasswordRequest request = new ChangePasswordRequest("wrong-pass", "new-password-123");
+        doThrow(new InvalidCurrentPasswordException()).when(userService).changePassword("user", request);
+
+        mockMvc.perform(patch(MY_PASSWORD_PATH)
+                        .header(HttpHeaders.AUTHORIZATION, TestJwtTokens.bearerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_CURRENT_PASSWORD"));
+    }
+
+    @Test
+    void resetPasswordShouldRequireAdmin() throws Exception {
+        ResetPasswordRequest request = new ResetPasswordRequest("new-password-123");
+
+        mockMvc.perform(patch(USERS_PATH + "/" + USER_ID + "/password/reset")
+                        .header(HttpHeaders.AUTHORIZATION, TestJwtTokens.bearerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"));
+
+        verifyNoInteractions(userService);
+    }
+
+    @Test
+    void resetPasswordShouldReturnNoContentForAdmin() throws Exception {
+        ResetPasswordRequest request = new ResetPasswordRequest("new-password-123");
+
+        mockMvc.perform(patch(USERS_PATH + "/" + USER_ID + "/password/reset")
+                        .header(HttpHeaders.AUTHORIZATION, TestJwtTokens.adminBearerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNoContent());
+
+        verify(userService).resetPassword(USER_ID, request);
     }
 }
