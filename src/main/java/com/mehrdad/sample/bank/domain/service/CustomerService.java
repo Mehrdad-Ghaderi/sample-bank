@@ -64,7 +64,7 @@ public class CustomerService {
                 createCustomerRequest.getPhoneNumber());
 
         if (customerRepository.findByPhoneNumber(normalizedPhoneNumber).isPresent()) {
-            throw new CustomerAlreadyExistException(normalizedPhoneNumber);
+            throw new CustomerAlreadyExistsException(normalizedPhoneNumber);
         }
 
         CustomerEntity customerEntity = customerMapper.mapToCustomerEntity(createCustomerRequest);
@@ -132,7 +132,7 @@ public class CustomerService {
 
                 if (!normalizedPhoneNumber.equals(foundCustomer.getPhoneNumber())) {
                     if (customerRepository.existsByPhoneNumber(normalizedPhoneNumber)) {
-                        throw new PhoneNumberAlreadyExists(updateCustomerRequest.getPhoneNumber());
+                        throw new PhoneNumberAlreadyExistsException(updateCustomerRequest.getPhoneNumber());
                     }
                     foundCustomer.setPhoneNumber(normalizedPhoneNumber);
                 }
@@ -142,7 +142,7 @@ public class CustomerService {
         } catch (OptimisticLockingFailureException ex) {
             throw new ConcurrentUpdateException("Customer was updated concurrently. Please retry.", ex);
         } catch (DataIntegrityViolationException ex) {
-            throw new PhoneNumberAlreadyExists("Phone number already exists");
+            throw new PhoneNumberAlreadyExistsException();
         }
     }
 

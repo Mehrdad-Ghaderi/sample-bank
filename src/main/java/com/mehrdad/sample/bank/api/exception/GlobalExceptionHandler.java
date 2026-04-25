@@ -105,9 +105,9 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(CustomerAlreadyExistException.class)
+    @ExceptionHandler(CustomerAlreadyExistsException.class)
     public ResponseEntity<ProblemDetail> handleCustomerExist(
-            CustomerAlreadyExistException ex,
+            CustomerAlreadyExistsException ex,
             HttpServletRequest request) {
 
         return problem(
@@ -142,9 +142,9 @@ public class GlobalExceptionHandler {
         return response;
     }
 
-    @ExceptionHandler(PhoneNumberAlreadyExists.class)
+    @ExceptionHandler(PhoneNumberAlreadyExistsException.class)
     public ResponseEntity<ProblemDetail> handlePhoneNumberAlreadyExists(
-            PhoneNumberAlreadyExists ex,
+            PhoneNumberAlreadyExistsException ex,
             HttpServletRequest request
     ) {
         return problem(
