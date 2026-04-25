@@ -12,10 +12,10 @@ import com.mehrdad.sample.bank.domain.entity.Status;
 import com.mehrdad.sample.bank.domain.entity.UserEntity;
 import com.mehrdad.sample.bank.domain.exception.ConcurrentUpdateException;
 import com.mehrdad.sample.bank.domain.exception.customer.CustomerAlreadyActiveException;
-import com.mehrdad.sample.bank.domain.exception.customer.CustomerAlreadyExistException;
+import com.mehrdad.sample.bank.domain.exception.customer.CustomerAlreadyExistsException;
 import com.mehrdad.sample.bank.domain.exception.customer.CustomerAlreadyInactiveException;
 import com.mehrdad.sample.bank.domain.exception.customer.CustomerNotFoundException;
-import com.mehrdad.sample.bank.domain.exception.customer.PhoneNumberAlreadyExists;
+import com.mehrdad.sample.bank.domain.exception.customer.PhoneNumberAlreadyExistsException;
 import com.mehrdad.sample.bank.domain.mapper.AccountMapper;
 import com.mehrdad.sample.bank.domain.mapper.CustomerMapper;
 import com.mehrdad.sample.bank.domain.repository.CustomerRepository;
@@ -161,7 +161,7 @@ class CustomerServiceTest {
         when(customerRepository.findByPhoneNumber(normalizedPhoneNumber))
                 .thenReturn(Optional.of(customerEntity(20)));
 
-        assertThrows(CustomerAlreadyExistException.class, () -> customerService.createCustomer(createCustomerRequest, OWNER_USERNAME));
+        assertThrows(CustomerAlreadyExistsException.class, () -> customerService.createCustomer(createCustomerRequest, OWNER_USERNAME));
 
         verify(customerRepository).findByPhoneNumber(normalizedPhoneNumber);
         verifyNoInteractions(customerMapper);
@@ -321,7 +321,7 @@ class CustomerServiceTest {
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(existingCustomer));
         when(customerRepository.existsByPhoneNumber("+14165559090")).thenReturn(true);
 
-        assertThrows(PhoneNumberAlreadyExists.class,
+        assertThrows(PhoneNumberAlreadyExistsException.class,
                 () -> customerService.updateCustomer(customerId, updateCustomerRequest, OWNER_USERNAME));
 
         verify(customerRepository).findById(customerId);
@@ -401,7 +401,7 @@ class CustomerServiceTest {
         when(customerRepository.existsByPhoneNumber("+16475559999"))
                 .thenThrow(new DataIntegrityViolationException("duplicate phone"));
 
-        assertThrows(PhoneNumberAlreadyExists.class,
+        assertThrows(PhoneNumberAlreadyExistsException.class,
                 () -> customerService.updateCustomer(customerId, updateCustomerRequest, OWNER_USERNAME));
 
         verify(customerRepository).findById(customerId);

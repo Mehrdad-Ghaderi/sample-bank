@@ -31,8 +31,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import com.mehrdad.sample.bank.security.InvalidLoginCredentialsException;
-import com.mehrdad.sample.bank.security.TooManyLoginAttemptsException;
+import com.mehrdad.sample.bank.security.exception.InvalidLoginCredentialsException;
+import com.mehrdad.sample.bank.security.exception.TooManyLoginAttemptsException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -105,9 +105,9 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(CustomerAlreadyExistException.class)
+    @ExceptionHandler(CustomerAlreadyExistsException.class)
     public ResponseEntity<ProblemDetail> handleCustomerExist(
-            CustomerAlreadyExistException ex,
+            CustomerAlreadyExistsException ex,
             HttpServletRequest request) {
 
         return problem(
@@ -142,9 +142,9 @@ public class GlobalExceptionHandler {
         return response;
     }
 
-    @ExceptionHandler(PhoneNumberAlreadyExists.class)
+    @ExceptionHandler(PhoneNumberAlreadyExistsException.class)
     public ResponseEntity<ProblemDetail> handlePhoneNumberAlreadyExists(
-            PhoneNumberAlreadyExists ex,
+            PhoneNumberAlreadyExistsException ex,
             HttpServletRequest request
     ) {
         return problem(

@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/changes/005-create-user-entity.yaml
   - include:
       file: db/changelog/changes/006-replace-customer-owner-username-with-owner-user.yaml
+  - include:
+      file: db/changelog/changes/007-create-revoked-access-token.yaml
