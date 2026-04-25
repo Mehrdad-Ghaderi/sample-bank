@@ -2,6 +2,7 @@ package com.mehrdad.sample.bank.security;
 
 import com.mehrdad.sample.bank.security.entity.RevokedAccessTokenEntity;
 import com.mehrdad.sample.bank.security.repository.RevokedAccessTokenRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ public class RevokedAccessTokenService {
     private final RevokedAccessTokenRepository revokedAccessTokenRepository;
     private final Clock clock;
 
+    @Autowired
     public RevokedAccessTokenService(RevokedAccessTokenRepository revokedAccessTokenRepository) {
         this(revokedAccessTokenRepository, Clock.systemUTC());
     }

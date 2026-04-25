@@ -1,5 +1,6 @@
 package com.mehrdad.sample.bank.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.mehrdad.sample.bank.security.exception.TooManyLoginAttemptsException;
@@ -18,6 +19,7 @@ public class LoginAttemptService {
     private final Duration lockDuration;
     private final Clock clock;
 
+    @Autowired
     public LoginAttemptService(
             @Value("${app.security.login-rate-limit.max-failed-attempts:5}") int maxFailedAttempts,
             @Value("${app.security.login-rate-limit.lock-seconds:900}") long lockSeconds
