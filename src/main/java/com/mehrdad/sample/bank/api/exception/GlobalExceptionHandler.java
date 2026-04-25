@@ -31,6 +31,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import com.mehrdad.sample.bank.security.InvalidLoginCredentialsException;
+import com.mehrdad.sample.bank.security.TooManyLoginAttemptsException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -222,6 +224,36 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request
         );
+    }
+
+    @ExceptionHandler(InvalidLoginCredentialsException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidLoginCredentials(
+            InvalidLoginCredentialsException ex,
+            HttpServletRequest request
+    ) {
+        return problem(
+                HttpStatus.UNAUTHORIZED,
+                "INVALID_LOGIN_CREDENTIALS",
+                "Invalid login credentials",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(TooManyLoginAttemptsException.class)
+    public ResponseEntity<ProblemDetail> handleTooManyLoginAttempts(
+            TooManyLoginAttemptsException ex,
+            HttpServletRequest request
+    ) {
+        ResponseEntity<ProblemDetail> response = problem(
+                HttpStatus.TOO_MANY_REQUESTS,
+                "TOO_MANY_LOGIN_ATTEMPTS",
+                "Too many login attempts",
+                ex.getMessage(),
+                request
+        );
+        response.getBody().setProperty("retryAt", ex.getRetryAt());
+        return response;
     }
 
     @ExceptionHandler(InvalidPhoneNumberException.class)
