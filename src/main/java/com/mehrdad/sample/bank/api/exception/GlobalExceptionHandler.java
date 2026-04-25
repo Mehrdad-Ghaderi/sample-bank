@@ -13,6 +13,11 @@ import com.mehrdad.sample.bank.domain.exception.transaction.IllegalTransactionTy
 import com.mehrdad.sample.bank.domain.exception.transaction.InsufficientBalanceException;
 import com.mehrdad.sample.bank.domain.exception.transaction.InvalidIdempotencyKeyException;
 import com.mehrdad.sample.bank.domain.exception.transaction.InvalidAmountException;
+import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyDisabledException;
+import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyEnabledException;
+import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyExistsException;
+import com.mehrdad.sample.bank.domain.exception.user.InvalidCurrentPasswordException;
+import com.mehrdad.sample.bank.domain.exception.user.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +31,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import com.mehrdad.sample.bank.security.exception.InvalidLoginCredentialsException;
+import com.mehrdad.sample.bank.security.exception.TooManyLoginAttemptsException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -98,9 +105,9 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(CustomerAlreadyExistException.class)
+    @ExceptionHandler(CustomerAlreadyExistsException.class)
     public ResponseEntity<ProblemDetail> handleCustomerExist(
-            CustomerAlreadyExistException ex,
+            CustomerAlreadyExistsException ex,
             HttpServletRequest request) {
 
         return problem(
@@ -135,9 +142,9 @@ public class GlobalExceptionHandler {
         return response;
     }
 
-    @ExceptionHandler(PhoneNumberAlreadyExists.class)
+    @ExceptionHandler(PhoneNumberAlreadyExistsException.class)
     public ResponseEntity<ProblemDetail> handlePhoneNumberAlreadyExists(
-            PhoneNumberAlreadyExists ex,
+            PhoneNumberAlreadyExistsException ex,
             HttpServletRequest request
     ) {
         return problem(
@@ -147,6 +154,106 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request
         );
+    }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<ProblemDetail> handleUserAlreadyExists(
+            UserAlreadyExistsException ex,
+            HttpServletRequest request
+    ) {
+        return problem(
+                HttpStatus.CONFLICT,
+                "USER_ALREADY_EXISTS",
+                "User already exists",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleUserNotFound(
+            UserNotFoundException ex,
+            HttpServletRequest request
+    ) {
+        return problem(
+                HttpStatus.NOT_FOUND,
+                "USER_NOT_FOUND",
+                "User not found",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(UserAlreadyEnabledException.class)
+    public ResponseEntity<ProblemDetail> handleUserAlreadyEnabled(
+            UserAlreadyEnabledException ex,
+            HttpServletRequest request
+    ) {
+        return problem(
+                HttpStatus.CONFLICT,
+                "USER_ALREADY_ENABLED",
+                "User already enabled",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(UserAlreadyDisabledException.class)
+    public ResponseEntity<ProblemDetail> handleUserAlreadyDisabled(
+            UserAlreadyDisabledException ex,
+            HttpServletRequest request
+    ) {
+        return problem(
+                HttpStatus.CONFLICT,
+                "USER_ALREADY_DISABLED",
+                "User already disabled",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(InvalidCurrentPasswordException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidCurrentPassword(
+            InvalidCurrentPasswordException ex,
+            HttpServletRequest request
+    ) {
+        return problem(
+                HttpStatus.BAD_REQUEST,
+                "INVALID_CURRENT_PASSWORD",
+                "Invalid current password",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(InvalidLoginCredentialsException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidLoginCredentials(
+            InvalidLoginCredentialsException ex,
+            HttpServletRequest request
+    ) {
+        return problem(
+                HttpStatus.UNAUTHORIZED,
+                "INVALID_LOGIN_CREDENTIALS",
+                "Invalid login credentials",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(TooManyLoginAttemptsException.class)
+    public ResponseEntity<ProblemDetail> handleTooManyLoginAttempts(
+            TooManyLoginAttemptsException ex,
+            HttpServletRequest request
+    ) {
+        ResponseEntity<ProblemDetail> response = problem(
+                HttpStatus.TOO_MANY_REQUESTS,
+                "TOO_MANY_LOGIN_ATTEMPTS",
+                "Too many login attempts",
+                ex.getMessage(),
+                request
+        );
+        response.getBody().setProperty("retryAt", ex.getRetryAt());
+        return response;
     }
 
     @ExceptionHandler(InvalidPhoneNumberException.class)

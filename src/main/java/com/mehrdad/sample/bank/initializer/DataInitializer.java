@@ -5,7 +5,10 @@ import com.mehrdad.sample.bank.domain.entity.AccountRole;
 import com.mehrdad.sample.bank.domain.entity.Currency;
 import com.mehrdad.sample.bank.domain.entity.CustomerEntity;
 import com.mehrdad.sample.bank.domain.entity.Status;
+import com.mehrdad.sample.bank.domain.entity.UserEntity;
+import com.mehrdad.sample.bank.domain.entity.UserRole;
 import com.mehrdad.sample.bank.domain.repository.CustomerRepository;
+import com.mehrdad.sample.bank.domain.repository.UserRepository;
 import com.mehrdad.sample.bank.domain.util.AccountNumberGenerator;
 import com.mehrdad.sample.bank.domain.util.PhoneNumberNormalizer;
 import lombok.RequiredArgsConstructor;
@@ -33,8 +36,10 @@ public class DataInitializer implements CommandLineRunner {
     private static final String BANK_NAME = "BANK";
     private static final String BANK_PHONE = "1234567890";
     private static final String BANK_OWNER_USERNAME = "system";
+    private static final String DISABLED_PLACEHOLDER_PASSWORD_HASH = "$2a$10$7EqJtq98hPqEX7fNZaFWoOHi6M6K5vCk1vZ1tc665Ar3e8DqRL3Oe";
     private static final BigDecimal INITIAL_BALANCE = new BigDecimal("1000000000");
     private final CustomerRepository customerRepository;
+    private final UserRepository userRepository;
 
     @Override
     public void run(String... args) {
@@ -49,7 +54,7 @@ public class DataInitializer implements CommandLineRunner {
         String normalizedPhoneNumber = PhoneNumberNormalizer.normalizePhoneNumber(BANK_PHONE);
         CustomerEntity bank = new CustomerEntity();
         bank.setName(BANK_NAME);
-        bank.setOwnerUsername(BANK_OWNER_USERNAME);
+        bank.setOwnerUser(ensureSystemUser());
         bank.setPhoneNumber(normalizedPhoneNumber);
         bank.setStatus(Status.ACTIVE);
         bank.setAccounts(new ArrayList<>());
@@ -81,5 +86,17 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         customerRepository.save(bank); // Persist new accounts
+    }
+
+    private UserEntity ensureSystemUser() {
+        return userRepository.findByUsername(BANK_OWNER_USERNAME)
+                .orElseGet(() -> {
+                    UserEntity user = new UserEntity();
+                    user.setUsername(BANK_OWNER_USERNAME);
+                    user.setPasswordHash(DISABLED_PLACEHOLDER_PASSWORD_HASH);
+                    user.setRole(UserRole.ADMIN);
+                    user.setEnabled(false);
+                    return userRepository.saveAndFlush(user);
+                });
     }
 }

@@ -25,7 +25,8 @@ public interface AccountRepository extends JpaRepository<AccountEntity, UUID> {
             select a
             from AccountEntity a
             join a.customer c
-            where c.ownerUsername = :ownerUsername
+            join c.ownerUser ownerUser
+            where ownerUser.username = :ownerUsername
               and (:number is null or a.number = :number)
             """)
     Page<AccountEntity> searchAccountsByOwner(
@@ -52,9 +53,10 @@ public interface AccountRepository extends JpaRepository<AccountEntity, UUID> {
             select count(a) > 0
             from AccountEntity a
             join a.customer c
+            join c.ownerUser ownerUser
             where a.id = :id
               and a.accountRole = :accountRole
-              and c.ownerUsername = :ownerUsername
+              and ownerUser.username = :ownerUsername
             """)
     boolean existsByIdAndAccountRoleAndOwnerUsername(
             @Param("id") UUID id,
