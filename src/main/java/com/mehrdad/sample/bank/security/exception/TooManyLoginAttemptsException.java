@@ -1,4 +1,4 @@
-package com.mehrdad.sample.bank.exception.security;
+package com.mehrdad.sample.bank.security.exception;
 
 import lombok.Getter;
 
