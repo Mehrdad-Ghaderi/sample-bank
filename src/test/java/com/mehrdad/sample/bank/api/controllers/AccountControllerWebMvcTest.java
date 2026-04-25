@@ -136,6 +136,40 @@ class AccountControllerWebMvcTest {
     }
 
     @Test
+    void getAccountsRejectsBearerTokenWithWrongIssuer() throws Exception {
+        mockMvc.perform(get(ACCOUNTS_PATH)
+                        .header(HttpHeaders.AUTHORIZATION, TestJwtTokens.bearerTokenWithWrongIssuer()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("https://api.sample-bank.local/problems/authentication-required"))
+                .andExpect(jsonPath("$.title").value("Authentication required"))
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.detail").value("A valid bearer token is required to access this resource."))
+                .andExpect(jsonPath("$.instance").value(ACCOUNTS_PATH))
+                .andExpect(jsonPath("$.errorCode").value("AUTHENTICATION_REQUIRED"))
+                .andExpect(jsonPath("$.timestamp").exists());
+
+        verifyNoInteractions(accountService);
+    }
+
+    @Test
+    void getAccountsRejectsBearerTokenWithWrongAudience() throws Exception {
+        mockMvc.perform(get(ACCOUNTS_PATH)
+                        .header(HttpHeaders.AUTHORIZATION, TestJwtTokens.bearerTokenWithWrongAudience()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("https://api.sample-bank.local/problems/authentication-required"))
+                .andExpect(jsonPath("$.title").value("Authentication required"))
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.detail").value("A valid bearer token is required to access this resource."))
+                .andExpect(jsonPath("$.instance").value(ACCOUNTS_PATH))
+                .andExpect(jsonPath("$.errorCode").value("AUTHENTICATION_REQUIRED"))
+                .andExpect(jsonPath("$.timestamp").exists());
+
+        verifyNoInteractions(accountService);
+    }
+
+    @Test
     void getAccountsSearchesByAccountNumber() throws Exception {
         String accountNumber = "2026-101-000046-001";
         AccountResponse account = buildAccountResponse(accountNumber);
