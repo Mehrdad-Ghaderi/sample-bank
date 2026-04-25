@@ -7,7 +7,7 @@ The project is intentionally built as more than a CRUD demo. It includes retry-s
 ## Features
 
 - Customer and account APIs with request validation and stable response DTOs.
-- JWT login with stateless Bearer-token authentication.
+- JWT login with stateless Bearer-token authentication and revocation-backed logout.
 - Object-level authorization so users can only access their own customers, accounts, and transactions.
 - Transfer, deposit, and withdrawal commands with idempotency keys for safe retries.
 - Transaction safety using pessimistic locking and deterministic account lock ordering.
@@ -37,7 +37,7 @@ Base path: `/api/v1`
 
 | Area | Endpoints |
 | --- | --- |
-| Auth | `POST /auth/login` |
+| Auth | `POST /auth/login`, `POST /auth/logout` |
 | Customers | `GET /customers`, `POST /customers`, `GET /customers/{customerId}`, `PATCH /customers/{customerId}`, `PATCH /customers/{customerId}/activate`, `PATCH /customers/{customerId}/deactivate` |
 | Customer accounts | `POST /customers/{customerId}/accounts`, `GET /customers/{customerId}/accounts` |
 | Accounts | `GET /accounts`, `GET /accounts/{accountId}`, `PATCH /accounts/{accountId}` |
@@ -48,6 +48,8 @@ Authenticated endpoints require:
 ```http
 Authorization: Bearer <jwt>
 ```
+
+`POST /auth/logout` revokes the presented access token until its natural expiry, so the same Bearer token cannot be reused after logout.
 
 Transaction command endpoints also require:
 

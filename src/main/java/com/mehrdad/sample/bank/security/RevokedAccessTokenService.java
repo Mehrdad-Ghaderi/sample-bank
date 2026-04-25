@@ -44,8 +44,7 @@ public class RevokedAccessTokenService {
             return false;
         }
 
-        deleteExpiredTokens();
-        return revokedAccessTokenRepository.existsById(jti);
+        return revokedAccessTokenRepository.existsByJtiAndExpiresAtAfter(jti, Instant.now(clock));
     }
 
     private void deleteExpiredTokens() {

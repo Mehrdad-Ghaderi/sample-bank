@@ -20,11 +20,19 @@ public class JwtService {
 
     private final JwtEncoder jwtEncoder;
     private final long expiresInSeconds;
+    private final String issuer;
+    private final String audience;
 
-    public JwtService(JwtEncoder jwtEncoder,
-                      @Value("${app.security.jwt.expires-in-seconds:3600}") long expiresInSeconds) {
+    public JwtService(
+            JwtEncoder jwtEncoder,
+            @Value("${app.security.jwt.expires-in-seconds:3600}") long expiresInSeconds,
+            @Value("${app.security.jwt.issuer}") String issuer,
+            @Value("${app.security.jwt.audience}") String audience
+    ) {
         this.jwtEncoder = jwtEncoder;
         this.expiresInSeconds = expiresInSeconds;
+        this.issuer = issuer;
+        this.audience = audience;
     }
 
     public TokenResponse generateToken(Authentication authentication) {
@@ -38,6 +46,8 @@ public class JwtService {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .subject(authentication.getName())
                 .id(UUID.randomUUID().toString())
+                .issuer(issuer)
+                .audience(java.util.List.of(audience))
                 .issuedAt(now)
                 .expiresAt(expiresAt)
                 .claim("scope", scope)

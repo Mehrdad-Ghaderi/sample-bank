@@ -72,11 +72,10 @@ class RevokedAccessTokenServiceTest {
                 revokedAccessTokenRepository,
                 Clock.fixed(now, ZoneOffset.UTC)
         );
-        when(revokedAccessTokenRepository.existsById("jti-123")).thenReturn(true);
+        when(revokedAccessTokenRepository.existsByJtiAndExpiresAtAfter("jti-123", now)).thenReturn(true);
 
         assertTrue(service.isRevoked("jti-123"));
 
-        verify(revokedAccessTokenRepository).deleteByExpiresAtBefore(now);
-        verify(revokedAccessTokenRepository).existsById("jti-123");
+        verify(revokedAccessTokenRepository).existsByJtiAndExpiresAtAfter("jti-123", now);
     }
 }

@@ -7,5 +7,7 @@ import java.time.Instant;
 
 public interface RevokedAccessTokenRepository extends JpaRepository<RevokedAccessTokenEntity, String> {
 
+    boolean existsByJtiAndExpiresAtAfter(String jti, Instant cutoff);
+
     void deleteByExpiresAtBefore(Instant cutoff);
 }
