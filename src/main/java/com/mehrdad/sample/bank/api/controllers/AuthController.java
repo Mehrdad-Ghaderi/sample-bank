@@ -3,7 +3,7 @@ package com.mehrdad.sample.bank.api.controllers;
 import com.mehrdad.sample.bank.api.ApiPaths;
 import com.mehrdad.sample.bank.api.dto.auth.LoginRequest;
 import com.mehrdad.sample.bank.api.dto.auth.TokenResponse;
-import com.mehrdad.sample.bank.security.InvalidLoginCredentialsException;
+import com.mehrdad.sample.bank.exception.security.InvalidLoginCredentialsException;
 import com.mehrdad.sample.bank.security.JwtService;
 import com.mehrdad.sample.bank.security.LoginAttemptService;
 import jakarta.validation.Valid;

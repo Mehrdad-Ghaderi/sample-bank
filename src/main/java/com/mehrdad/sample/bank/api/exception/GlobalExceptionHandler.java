@@ -18,6 +18,8 @@ import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyEnabledException
 import com.mehrdad.sample.bank.domain.exception.user.UserAlreadyExistsException;
 import com.mehrdad.sample.bank.domain.exception.user.InvalidCurrentPasswordException;
 import com.mehrdad.sample.bank.domain.exception.user.UserNotFoundException;
+import com.mehrdad.sample.bank.exception.security.InvalidLoginCredentialsException;
+import com.mehrdad.sample.bank.exception.security.TooManyLoginAttemptsException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +33,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import com.mehrdad.sample.bank.security.InvalidLoginCredentialsException;
-import com.mehrdad.sample.bank.security.TooManyLoginAttemptsException;
 
 import java.util.Arrays;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.mehrdad.sample.bank.security;
+package com.mehrdad.sample.bank.exception.security;
 
 public class InvalidLoginCredentialsException extends RuntimeException {
     public InvalidLoginCredentialsException() {
